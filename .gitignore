@@ -1,0 +1,7 @@
+config.json
+config.json.bak
+data/
+logs/
+runtime/
+node_modules/
+*.log

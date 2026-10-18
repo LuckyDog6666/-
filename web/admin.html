@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>糯糯控制台</title>
+<style>
+  @font-face { font-family: 'KuaiLe'; src: url('fonts/ZCOOLKuaiLe-Regular.woff2') format('woff2'); }
+  :root { --pink: #ff6fa3; --ink: #5a3a4a; --bg: #fff3f8; --card: #ffffff; --ok: #34c77b; --warn: #ffb020; --err: #ff5c6c; --muted: #9b7e8d; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif; background: var(--bg); color: var(--ink); }
+  header { background: linear-gradient(90deg, #ff9ec4, #ffcf9e); color: #fff; padding: 14px 24px; font-family: 'KuaiLe', sans-serif; font-size: 26px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  header a { color: #fff; font-size: 15px; font-family: inherit; }
+  main { max-width: 1180px; margin: 0 auto; padding: 18px 16px 40px; display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 16px; }
+  .card { background: var(--card); border-radius: 18px; padding: 16px 18px; box-shadow: 0 6px 20px rgba(220, 120, 170, 0.15); }
+  .card h2 { margin: 0 0 12px; font-size: 18px; color: var(--pink); }
+  .row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 6px 0; border-bottom: 1px dashed #f3d5e3; font-size: 14px; }
+  .row:last-child { border-bottom: none; }
+  .k { color: var(--muted); white-space: nowrap; }
+  .v { text-align: right; word-break: break-all; }
+  .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; vertical-align: middle; background: #ccc; }
+  .dot.ok { background: var(--ok); } .dot.warn { background: var(--warn); } .dot.err { background: var(--err); }
+  label { display: block; font-size: 14px; margin: 10px 0 4px; color: var(--muted); }
+  input[type=text], select { width: 100%; padding: 9px 12px; border-radius: 12px; border: 2px solid #f6cfe0; font-size: 15px; color: var(--ink); background: #fffafd; outline: none; }
+  input[type=text]:focus, select:focus { border-color: var(--pink); }
+  input[type=range] { width: 100%; accent-color: var(--pink); }
+  .hint { font-size: 12px; color: var(--muted); margin-top: 4px; line-height: 1.6; }
+  button { border: none; border-radius: 14px; padding: 10px 14px; font-size: 14px; cursor: pointer; background: #ffe1ee; color: #c2457f; font-weight: bold; transition: transform 0.1s, filter 0.2s; }
+  button:hover { filter: brightness(0.97); } button:active { transform: scale(0.96); }
+  button.primary { background: var(--pink); color: #fff; }
+  .btns { display: flex; flex-wrap: wrap; gap: 8px; }
+  .list { max-height: 260px; overflow: auto; font-size: 14px; }
+  .list div { padding: 5px 0; border-bottom: 1px dashed #f3d5e3; display: flex; justify-content: space-between; gap: 8px; }
+  .msg { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: var(--ink); color: #fff; padding: 10px 18px; border-radius: 14px; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
+  .msg.show { opacity: 0.92; }
+  .vol { display: grid; grid-template-columns: 70px 1fr 40px; align-items: center; gap: 8px; font-size: 14px; }
+  .big { font-size: 15px; line-height: 1.7; }
+  code { background: #fff0f6; padding: 1px 6px; border-radius: 6px; }
+</style>
+</head>
+<body>
+<header>🐾 糯糯的 ASMR 奇遇 · 控制台 <a href="/" target="_blank">打开游戏画面 ↗</a></header>
+<main>
+  <section class="card">
+    <h2>📡 运行状态</h2>
+    <div class="row"><span class="k">直播数据</span><span class="v" id="sProvider">-</span></div>
+    <div class="row"><span class="k">直播间</span><span class="v" id="sRoom">-</span></div>
+    <div class="row"><span class="k">收到数据</span><span class="v" id="sFrames">-</span></div>
+    <div class="row"><span class="k">游戏画面</span><span class="v" id="sGame">-</span></div>
+    <div class="row"><span class="k">当前关卡</span><span class="v" id="sLevel">-</span></div>
+    <div class="row"><span class="k">帧率 / 声音</span><span class="v" id="sFps">-</span></div>
+    <div class="row"><span class="k">已运行</span><span class="v" id="sUptime">-</span></div>
+    <div class="row"><span class="k">最近错误</span><span class="v" id="sErr">无</span></div>
+  </section>
+
+  <section class="card">
+    <h2>⚙️ 设置（保存后自动生效）</h2>
+    <label>抖音直播间号 / 抖音号</label>
+    <input type="text" id="room" placeholder="例如 123456789（live.douyin.com/ 后面那串）">
+    <div class="hint">打开 <code>live.douyin.com/你的直播间号</code> 能看到你的直播即为正确。也可以直接填抖音号。</div>
+    <label>礼物数据来源</label>
+    <select id="source">
+      <option value="douyin">抖音网页直播间（推荐，自动）</option>
+      <option value="barragegrab">BarrageGrab 弹幕工具（备用）</option>
+      <option value="mock">演示模式（随机模拟礼物）</option>
+      <option value="none">不连接（只用下面的测试按钮）</option>
+    </select>
+    <label>画面布局</label>
+    <select id="layout">
+      <option value="auto">自动（按窗口宽高）</option>
+      <option value="landscape">横屏 16:9</option>
+      <option value="portrait">竖屏 9:16</option>
+    </select>
+    <label>音量</label>
+    <div class="vol"><span>总音量</span><input type="range" id="vMaster" min="0" max="1.5" step="0.05"><span id="lMaster"></span></div>
+    <div class="vol"><span>踩踏声</span><input type="range" id="vSfx" min="0" max="1.5" step="0.05"><span id="lSfx"></span></div>
+    <div class="vol"><span>环境声</span><input type="range" id="vAmb" min="0" max="1.5" step="0.05"><span id="lAmb"></span></div>
+    <div class="vol"><span>舞蹈音乐</span><input type="range" id="vMusic" min="0" max="1.5" step="0.05"><span id="lMusic"></span></div>
+    <label><input type="checkbox" id="labels"> 踩到东西时显示名字小标签</label>
+    <label><input type="checkbox" id="enter"> 显示"欢迎进入直播间"提示</label>
+    <label><input type="checkbox" id="lvis"> 显示监听浏览器窗口（抖音要求登录/滑块验证时勾选，处理完再取消）</label>
+    <div class="btns" style="margin-top:12px"><button class="primary" id="save">💾 保存设置</button><button id="applyVol">🔊 只试听音量（不保存）</button></div>
+  </section>
+
+  <section class="card">
+    <h2>🎁 测试（不开播也能看效果）</h2>
+    <div class="btns">
+      <button data-gift="小心心,1,1">小心心 ×1</button>
+      <button data-gift="玫瑰,10,1">玫瑰 ×10</button>
+      <button data-gift="加油鸭,1,15">加油鸭（15 抖币）</button>
+      <button data-gift="比心兔兔,1,199">比心兔兔（199）</button>
+      <button data-gift="嘉年华,1,3000">嘉年华（3000）</button>
+      <button id="tLike">点赞 ×20</button>
+      <button id="tFollow">新关注</button>
+      <button id="tEnter">进入直播间</button>
+    </div>
+    <label>自定义测试</label>
+    <div class="btns">
+      <input type="text" id="tName" placeholder="昵称" style="flex:1;min-width:90px">
+      <input type="text" id="tGift" placeholder="礼物名" style="flex:1;min-width:80px">
+      <input type="text" id="tDiamond" placeholder="抖币" style="width:70px">
+      <button id="tCustom" class="primary">发送</button>
+    </div>
+    <h2 style="margin-top:16px">🕹️ 操作</h2>
+    <div class="btns">
+      <button data-cmd="skip">⏭ 跳过本关</button>
+      <button data-cmd="reload">🔄 刷新游戏页面</button>
+      <button data-ctl="restartGame">🪟 重启游戏窗口</button>
+      <button data-ctl="restartListener">📡 重连直播间</button>
+      <button data-ctl="clearBoard">🧹 清空感谢榜</button>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>💖 最近礼物</h2>
+    <div class="list" id="gifts"><div>暂时还没有礼物</div></div>
+  </section>
+  <section class="card">
+    <h2>🏆 今日感谢榜</h2>
+    <div class="list" id="board"><div>虚位以待</div></div>
+  </section>
+  <section class="card">
+    <h2>📖 小贴士</h2>
+    <div class="big">
+      1. 开播：打开抖音直播伴侣 → 添加「窗口」素材 → 选择「糯糯的ASMR奇遇」窗口。<br>
+      2. 声音：直播伴侣默认会采集电脑声音；监听浏览器已自动静音，不会产生回声。<br>
+      3. 这个页面只在本机可以打开，观众看不到。<br>
+      4. 详细教程见项目里的 <code>docs/使用手册.md</code>。
+    </div>
+  </section>
+</main>
+<div class="msg" id="msg"></div>
+<script>
+const $ = (id) => document.getElementById(id);
+const toast = (t) => { const m = $('msg'); m.textContent = t; m.classList.add('show'); clearTimeout(toast.t); toast.t = setTimeout(() => m.classList.remove('show'), 2200); };
+const post = (url, body) => fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }).then((r) => r.json());
+const STATE = { listening: ['ok', '正在监听'], connecting: ['warn', '连接中'], starting: ['warn', '启动中'], silent: ['warn', '暂无数据'], error: ['err', '出错'], idle: ['', '未启动'] };
+const fmtAgo = (ts) => { if (!ts) return '从未'; const s = Math.round((Date.now() - ts) / 1000); return s < 60 ? `${s} 秒前` : `${Math.round(s / 60)} 分钟前`; };
+
+let full = null;
+async function loadConfig() {
+  full = await fetch('/api/config/full').then((r) => r.json());
+  $('room').value = full.room || '';
+  $('source').value = full.source || 'douyin';
+  $('layout').value = full.game?.layout || 'auto';
+  const a = full.game?.audio || {};
+  for (const [id, key] of [['Master', 'master'], ['Sfx', 'sfx'], ['Amb', 'ambience'], ['Music', 'music']]) { $('v' + id).value = a[key] ?? 1; $('l' + id).textContent = Number($('v' + id).value).toFixed(2); }
+  $('labels').checked = full.game?.showSoundLabels !== false;
+  $('enter').checked = full.game?.showEnter !== false;
+  $('lvis').checked = !!full.listener?.visible;
+}
+for (const id of ['Master', 'Sfx', 'Amb', 'Music']) $('v' + id).addEventListener('input', () => { $('l' + id).textContent = Number($('v' + id).value).toFixed(2); });
+const volumes = () => ({ master: +$('vMaster').value, sfx: +$('vSfx').value, ambience: +$('vAmb').value, music: +$('vMusic').value });
+
+$('save').onclick = async () => {
+  const patch = {
+    room: $('room').value.trim(), source: $('source').value, listener: { visible: $('lvis').checked },
+    game: { layout: $('layout').value, audio: volumes(), showSoundLabels: $('labels').checked, showEnter: $('enter').checked },
+  };
+  const r = await post('/api/config', patch);
+  toast(r.ok ? '已保存，游戏页面会自动刷新～' : '保存失败：' + (r.error || ''));
+};
+$('applyVol').onclick = () => { post('/api/control', { cmd: 'volume', volumes: volumes() }); toast('已临时应用音量（刷新后恢复，满意请点保存）'); };
+
+document.querySelectorAll('[data-gift]').forEach((b) => b.onclick = () => {
+  const [gift, count, diamond] = b.dataset.gift.split(',');
+  post('/api/test', { type: 'gift', name: '测试老板', gift, count: +count, diamond: +diamond }); toast('已发送测试礼物');
+});
+$('tLike').onclick = () => post('/api/test', { type: 'like', name: '点赞的朋友', count: 20 });
+$('tFollow').onclick = () => post('/api/test', { type: 'follow', name: '新朋友' });
+$('tEnter').onclick = () => post('/api/test', { type: 'enter', name: '路过的小可爱' });
+$('tCustom').onclick = () => { post('/api/test', { type: 'gift', name: $('tName').value || '测试老板', gift: $('tGift').value || '小心心', count: 1, diamond: +$('tDiamond').value || 1 }); toast('已发送'); };
+document.querySelectorAll('[data-cmd]').forEach((b) => b.onclick = () => { post('/api/control', { cmd: b.dataset.cmd }); toast('已发送指令'); });
+document.querySelectorAll('[data-ctl]').forEach((b) => b.onclick = () => { post('/api/control', { cmd: b.dataset.ctl }); toast('已发送指令'); });
+
+async function refresh() {
+  let s;
+  try { s = await fetch('/api/status', { cache: 'no-store' }).then((r) => r.json()); } catch { $('sGame').innerHTML = '<span class="dot err"></span>服务器未运行'; return; }
+  const p = s.provider || {};
+  const [cls, label] = STATE[p.state] || ['', p.state || '未启动'];
+  $('sProvider').innerHTML = `<span class="dot ${cls}"></span>${label}（${{ douyin: '抖音网页', barragegrab: 'BarrageGrab', mock: '演示' }[s.source] || s.source}）`;
+  $('sProvider').title = p.message || '';
+  $('sRoom').textContent = s.room || '未填写';
+  $('sFrames').textContent = p.frames != null ? `${p.frames} 帧 / ${p.events} 条事件，最近 ${fmtAgo(p.lastFrameAt)}` : (p.events != null ? `${p.events} 条事件` : '-');
+  if (p.message && p.state !== 'listening') $('sFrames').textContent += ` · ${p.message}`;
+  const g = s.game;
+  if (g && s.lastBeatAgo != null && s.lastBeatAgo < 20) {
+    $('sGame').innerHTML = `<span class="dot ok"></span>运行中（${s.lastBeatAgo} 秒前心跳）`;
+    $('sLevel').textContent = `第 ${g.game?.level} 关 · ${g.game?.theme || ''} · ${g.game?.dancing ? '正在跳舞答谢' : ({ play: '闯关中', intro: '开场', outro: '过关', loading: '加载' }[g.game?.state] || g.game?.state)}`;
+    $('sFps').textContent = `${g.fps} FPS · 声音 ${g.audio === 'running' ? '正常' : '未开启(' + g.audio + ')'}`;
+  } else {
+    $('sGame').innerHTML = `<span class="dot err"></span>${s.launchGame ? '等待游戏窗口…' : '游戏页面未打开'}`;
+  }
+  $('sUptime').textContent = `${Math.floor(s.uptime / 3600)} 小时 ${Math.floor((s.uptime % 3600) / 60)} 分`;
+  $('sErr').textContent = s.gameLog && s.gameLog.length ? `${fmtAgo(s.gameLog[0].ts)}：${s.gameLog[0].m.slice(0, 80)}` : '无';
+  $('gifts').innerHTML = '';
+  if (!s.gifts.length) $('gifts').innerHTML = '<div>暂时还没有礼物</div>';
+  for (const ev of s.gifts) { const d = document.createElement('div'); const a = document.createElement('span'); a.textContent = `${ev.user?.name} · ${ev.gift?.name} ×${ev.gift?.count}`; const b = document.createElement('span'); b.textContent = new Date(ev.ts).toLocaleTimeString(); b.style.color = '#9b7e8d'; d.append(a, b); $('gifts').appendChild(d); }
+  $('board').innerHTML = '';
+  if (!s.board.length) $('board').innerHTML = '<div>虚位以待</div>';
+  s.board.forEach((u, i) => { const d = document.createElement('div'); const a = document.createElement('span'); a.textContent = `${i + 1}. ${u.name}`; const b = document.createElement('span'); b.textContent = u.value + ' 抖币'; d.append(a, b); $('board').appendChild(d); });
+}
+loadConfig().catch(() => {});
+refresh(); setInterval(refresh, 2000);
+</script>
+</body>
+</html>

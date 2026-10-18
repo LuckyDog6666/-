@@ -1,0 +1,93 @@
+{
+  // ================== 糯糯的 ASMR 奇遇 · 配置文件 ==================
+  // 第一次运行时会自动复制成 config.json。推荐直接在控制台 http://127.0.0.1:17890/admin 里修改，
+  // 也可以用记事本改这个文件（// 后面是说明文字，可以保留）。改完重新启动即可。
+
+  // 你的抖音直播间号：打开 https://live.douyin.com/xxxxxx 能看到你的直播，就填 xxxxxx。
+  // 也可以直接填你的抖音号。
+  "room": "",
+
+  // 礼物数据来源：
+  //   "douyin"      —— 推荐。程序自动用 Edge/Chrome 打开你的网页直播间读取礼物（静音、不拉视频流）
+  //   "barragegrab" —— 备用。配合开源工具 DouyinBarrageGrab（WssBarrageService.exe）使用
+  //   "mock"        —— 演示模式，随机模拟礼物，不开播也能看效果
+  //   "none"        —— 不连接，只能在控制台点测试按钮
+  "source": "douyin",
+
+  // 本地端口（一般不用改）
+  "port": 17890,
+
+  // 浏览器路径，留空会自动寻找 Chrome，找不到再用 Windows 自带的 Edge
+  "browserPath": "",
+
+  // 启动时自动打开游戏窗口（直播伴侣里用"窗口捕获"选它）
+  "launchGame": true,
+  "gameWindow": {
+    // 横屏建议 1280x720 或 1920x1080；竖屏建议 608x1080 或 720x1280（并把 game.layout 设为 portrait）
+    "width": 1280,
+    "height": 720,
+    "x": 40,
+    "y": 40,
+    "fullscreen": false,
+    // 如果你的 Windows 显示缩放不是 100%，觉得画面模糊，可以填 1
+    "deviceScaleFactor": 0
+  },
+
+  "listener": {
+    // 抖音要求登录或滑块验证时，改成 true 显示监听窗口，处理完再改回 false
+    "visible": false,
+    // 多少秒收不到任何数据就自动刷新直播间页面
+    "reloadIfSilentSec": 150,
+    // 不加载直播视频流（省带宽、省电脑性能）
+    "blockVideo": true,
+    "cdpPort": 19333
+  },
+
+  // 使用 BarrageGrab 时它的 WebSocket 地址
+  "barrageGrabUrl": "ws://127.0.0.1:8888",
+
+  // 感谢榜：每天几点清零（默认早上 5 点），显示前几名
+  "board": { "resetHour": 5, "size": 5 },
+
+  "game": {
+    // 画面布局："auto" 按窗口宽高自动；"landscape" 横屏；"portrait" 竖屏
+    "layout": "auto",
+    // 渲染精度（电脑卡就调低到 1，显卡好可以 1.5）
+    "pixelRatio": 1.25,
+    // 每隔几小时在关卡之间自动刷新一次页面，彻底清理内存（0 = 不刷新）
+    "reloadHours": 6,
+    // 每关期望时长（秒），超过后糯糯会加快脚步、少做停顿
+    "levelBudget": 170,
+    // 踩到东西时显示名字小标签（如"Q弹果冻～"）
+    "showSoundLabels": true,
+    // 显示"欢迎 XX 来看糯糯"提示
+    "showEnter": true,
+    // 只想要部分场景就填，例如 ["candy","ocean","snow"]；留空 = 全部 8 个场景轮换
+    // 可选：candy 糖果森林 / ocean 海底泡泡城 / snow 雪国冰晶谷 / forest 蘑菇森林 /
+    //       bakery 甜品烘焙屋 / sky 云朵天空城 / toy 梦幻玩具屋 / cave 水晶秘境
+    "themes": [],
+    "audio": {
+      "master": 0.9,
+      "sfx": 1.0,
+      "ambience": 0.8,
+      "music": 0.7,
+      // "hrtf" 双耳立体声（戴耳机更沉浸）；"stereo" 普通立体声
+      "spatial": "hrtf"
+    },
+    "gifts": {
+      // 礼物价值分级（抖币）：≥10 中礼物，≥100 大礼物（皇冠+彩带，跳两支舞），≥1000 超级礼物（跳三支舞）
+      "tierThresholds": [10, 100, 1000],
+      // 小礼物刷屏时，两次答谢舞蹈之间至少间隔几秒（期间的礼物会攒起来一起答谢）
+      "smallCooldown": 14,
+      // 消息里没有价格时，按这里的礼物名估算抖币，例如 { "小心心": 1, "嘉年华": 3000 }
+      "giftValues": {}
+    },
+    "hud": {
+      "showBoard": true,
+      "showTips": true,
+      "boardSize": 5,
+      // 自定义底部轮播提示，留空用默认
+      "tips": []
+    }
+  }
+}
