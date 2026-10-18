@@ -668,6 +668,9 @@ export class World {
 
   dispose() {
     this.scene.remove(this.group);
+    // 灯光的阴影贴图不会随场景移除自动释放，必须手动释放（否则每关泄漏一张 2048² 深度贴图）
+    if (this.sun) this.sun.dispose();
+    if (this.petLight) this.petLight.dispose();
     this.group.traverse((o) => { if (o.isInstancedMesh) o.dispose(); });
     this.M.dispose();
     this.G.dispose();

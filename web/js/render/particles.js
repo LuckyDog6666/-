@@ -198,7 +198,7 @@ export class Particles {
       case 'sparkles':
         for (let i = 0; i < (o.count || 12); i++) {
           const a = rand(0, TAU), sp = rand(0.5, 2) * k;
-          this.emit('sparkle', { x, y: y + rand(0.1, 0.6), z, vx: Math.cos(a) * sp, vy: rand(0.5, 2.5) * k, vz: Math.sin(a) * sp, grav: 1.5, drag: 1.5, life: rand(0.5, 1.0), size: rand(0.25, 0.5) * k, size1: 0.05, color: col(), vr: rand(-2, 2), fadeStart: 0.3 });
+          this.emit('sparkle', { x, y: y + rand(0.1, 0.6), z, vx: Math.cos(a) * sp, vy: rand(0.5, 2.5) * k, vz: Math.sin(a) * sp, grav: 1.5, drag: 1.5, life: rand(0.5, 1.0), size: rand(0.18, 0.36) * k, size1: 0.04, color: col(), alpha: 0.8, vr: rand(-2, 2), fadeStart: 0.3 });
         }
         break;
       case 'stars':

@@ -220,18 +220,26 @@ function tryGenerate(theme, rng, o, seed) {
     }
   }
   const gapCells = new Set(gaps.flatMap((g) => g.cells));
+  const pathKeys = new Set(all.map((c) => key(c.gx, c.gz)));
+  // 镜头在小路的 +Z 一侧往下看：小路"前方"(靠近镜头) 2 格内不放高大的装饰，避免挡住糯糯
+  const frontOfPath = (gx, gz) => {
+    for (let dz = 1; dz <= 2; dz++) for (let dx = -1; dx <= 1; dx++) if (pathKeys.has(key(gx + dx, gz - dz))) return dz;
+    return 0;
+  };
   for (const n of near.values()) {
     // 小河两侧留出水道
     const gapLane = gaps.some((g) => g.cells.some((id) => all[id].gx === n.gx));
     if (gapLane && n.d <= 3) continue;
+    const front = frontOfPath(n.gx, n.gz);
+    if (front === 1) continue;
     const p = n.d === 1 ? 0.18 : n.d === 2 ? 0.32 : n.d === 3 ? 0.3 : 0.18;
     if (!rng.chance(p)) continue;
-    const big = n.d >= 2;
+    const big = n.d >= 2 && front === 0;
     props.push({
       type: rng.pick(theme.props),
       x: (n.gx + rng.range(-0.3, 0.3)) * CELL,
       z: (n.gz + rng.range(-0.3, 0.3)) * CELL,
-      s: (big ? rng.range(0.9, 1.4) : rng.range(0.45, 0.7)),
+      s: (big ? rng.range(0.9, 1.4) : front ? rng.range(0.35, 0.5) : rng.range(0.45, 0.7)),
       rot: rng.range(0, Math.PI * 2),
       d: n.d,
     });

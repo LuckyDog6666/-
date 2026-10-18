@@ -67,7 +67,7 @@
     //       bakery 甜品烘焙屋 / sky 云朵天空城 / toy 梦幻玩具屋 / cave 水晶秘境
     "themes": [],
     "audio": {
-      "master": 0.9,
+      "master": 1.0,
       "sfx": 1.0,
       "ambience": 0.8,
       "music": 0.7,

@@ -11,21 +11,21 @@
 
 import {
   Rng, alloc, finalize, addSine, addModal, addNoise, addClick, addPing, addNoiseGrain, addBubble,
-  addChirp, addThump, scatter, envAD, smooth, hann, MODES, Biquad, filterAll, midiToHz, makeLoop, Noise, TAU,
+  addChirp, addThump, scatter, envAD, smooth, MODES, Biquad, filterAll, midiToHz, makeLoop, TAU,
 } from './dsp.js';
 
 // 不同类别的目标短时响度（dB，K 加权 30ms 窗 RMS 最大值）。脚步最轻，主触发音最突出。
 export const LOUDNESS = {
-  step: -31,
-  soft: -27,
-  item: -21.5,
-  pop: -22,
-  chime: -24,
-  music: -25,
-  voice: -25,
-  fx: -23,
-  amb: -36,
-  ambEvt: -33,
+  step: -27,
+  soft: -23,
+  item: -18,
+  pop: -18.5,
+  chime: -20.5,
+  music: -23,
+  voice: -22,
+  fx: -20,
+  amb: -33,
+  ambEvt: -30,
 };
 
 // C 大调五声音阶（多个八度），旋律类物件只会出现和谐的音
@@ -473,7 +473,7 @@ export const RECIPES = {
   biscuit: { // 饼干：酥脆的"咔嚓咔嚓"
     cat: 'item', variants: 7, len: 0.6,
     gen(r, sr, b) {
-      addClick(b, sr, r, 0, 0.8, { f: 2500, q: 0.6 });
+      addClick(b, sr, r, 0.002, 0.3, { f: 2500, q: 0.6 });
       crunchCloud(b, sr, r, 0, { dur: r.range(0.2, 0.32), rate: 1400, fLo: 900, fHi: 7000, qLo: 0.8, qHi: 3, amp: 0.8, shape: (u) => Math.exp(-u * 2.2) * smooth(u * 15) });
     },
   },

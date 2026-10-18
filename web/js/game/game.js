@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import { THEMES, themeById } from '../world/themes.js';
 import { generateLevel } from '../world/levelGen.js';
 import { World } from '../world/world.js';
-import { ITEM_META, MECH_SOUNDS, SHARED_SOUNDS, soundsForTheme } from '../world/itemMeta.js';
+import { MECH_SOUNDS, SHARED_SOUNDS, soundsForTheme } from '../world/itemMeta.js';
 import { Brain } from '../ai/brain.js';
 import { Pet } from '../pet/pet.js';
 import { DANCES } from '../pet/dances.js';
@@ -87,6 +87,12 @@ export class Game {
 
   async loadLevel() {
     this.state = 'loading';
+    // 即使上一关因异常中断，也把状态恢复干净
+    this.dancing = false;
+    this.hud.hideThanks();
+    this.hud.unsay();
+    this.audio.stopMusic(0.1);
+    this.pet.cancelAction();
     if (this.world) { this.world.dispose(); this.world = null; }
     this.particles.clear();
     this.levelNo++;
@@ -150,7 +156,7 @@ export class Game {
     this.sfx('level_clear', gp);
     this.particles.burst('confetti', gp.x, gp.y, gp.z, { colors: ['#ff8fb3', '#ffd166', '#7fd6ff', '#9be89b', '#c9a0ff'], floor: w.cellTop(this.level.main[this.level.main.length - 1]) });
     // 糯糯被传送门吸进去
-    for (let i = 0; i < 20; i++) { pet.root.scale.setScalar(Math.max(0.01, 1 - i / 20)); pet.root.rotation.y += 0.4; await this.wait(0.03); }
+    for (let i = 0; i < 20; i++) { pet.root.scale.setScalar(Math.max(0.01, 1 - i / 20)); pet.facing += 0.4; pet.targetFacing = pet.facing; await this.wait(0.03); }
     pet.root.scale.setScalar(0.01);
     const stars = w.collectedStars.size;
     this.hud.toast(`第 ${this.levelNo} 关通关！收集到 ${stars} 颗星星 ⭐`, 'follow', 4000);
@@ -162,7 +168,7 @@ export class Game {
   // ---------------- 闯关 ----------------
   async playLevel() {
     this.state = 'play';
-    const b = this.brain, w = this.world, lv = this.level;
+    const b = this.brain;
     let guard = 0;
     while (guard++ < 5000) {
       await this.serviceInterrupts();
@@ -483,6 +489,7 @@ export class Game {
   }
 
   _pickDance(big) {
+    if (this.__forceDance) { const f = DANCES.find((d) => d.id === this.__forceDance); if (f) return f; }
     let pool = DANCES.filter((d) => !this.recentDances.includes(d.id));
     if (!big) pool = pool.filter((d) => !d.big || Math.random() < 0.3);
     if (!pool.length) pool = DANCES;
@@ -492,6 +499,35 @@ export class Game {
     return d;
   }
 
+  // 跳舞特写时，选一个前面没有星星/钥匙/大物件挡住糯糯的镜头角度
+  _clearDanceAngle() {
+    const p = this.pet.root.position;
+    const head = new THREE.Vector3(p.x, p.y + 0.75, p.z);
+    const occ = [];
+    if (this.world) {
+      for (const g of this.world.starObjs.values()) if (g.visible) occ.push(g.position);
+      if (this.world.keyObj && this.world.keyObj.visible) occ.push(this.world.keyObj.position);
+      if (this.world.gateObj) occ.push(this.world.gateObj.position.clone().setY(this.world.gateObj.position.y + 0.6));
+      if (this.world.portal) occ.push(this.world.portal.position);
+      for (const it of this.world.items.values()) if (it.meta.h > 0.2 || it.built.float) occ.push(it.obj.position.clone().setY(it.obj.position.y + 0.3));
+      for (const pr of this.level.props) if (pr.s > 0.75) occ.push(new THREE.Vector3(pr.x, 0.8 * pr.s, pr.z));
+    }
+    const seg = new THREE.Line3();
+    const tmp = new THREE.Vector3();
+    for (const az of [0, 0.45, -0.45, 0.85, -0.85]) {
+      const cam = head.clone().add(new THREE.Vector3(0, 2.0, 5.0).applyAxisAngle(new THREE.Vector3(0, 1, 0), az));
+      seg.set(cam, head);
+      let ok = true;
+      for (const o of occ) {
+        if (o.distanceTo(head) < 0.5) continue; // 就在脚下的物件不算
+        seg.closestPointToPoint(o, true, tmp);
+        if (tmp.distanceTo(o) < 0.75) { ok = false; break; }
+      }
+      if (ok) return az;
+    }
+    return 0;
+  }
+
   async thankDance(ev) {
     const tier = TIERS[ev.tier] || TIERS[0];
     const pet = this.pet;
@@ -499,10 +535,12 @@ export class Game {
     this.gifts.danceStarted();
     const prevMode = this.camMode;
     this.camMode = 'dance';
-    pet.face(0);
+    this.danceAz = this._clearDanceAngle();
+    pet.face(this.danceAz);
     pet.sinkTarget = 0;
     const names = ev.users.length > 1 ? `${ev.users.slice(0, 3).join('、')}${ev.users.length > 3 ? ` 等${ev.users.length}位` : ''}` : ev.user;
-    const line1 = ev.users.length > 1 ? `谢谢 ${names} 老板们！` : `谢谢 ${names} 老板！`;
+    const boss = (n) => (/老板$/.test(n) ? n : `${n} 老板`);
+    const line1 = ev.users.length > 1 ? `谢谢 ${names} 老板们！` : `谢谢 ${boss(names)}！`;
     const giftLine = ev.group ? `${ev.users.length} 位老板的礼物` : `${ev.gift} ×${ev.count}`;
     this.hud.showThanks(line1, `${giftLine} · ${pick(DANCE_SUFFIX)}`, !!tier.superBanner);
     this.hud.say(pick(THANK_LINES));
@@ -577,15 +615,18 @@ export class Game {
     const portrait = this.hud.portrait;
     const t = this.time;
     let off, look;
-    if (this.camMode === 'dance') {
-      off = portrait ? new THREE.Vector3(0, 2.6, 6.2) : new THREE.Vector3(0, 2.2, 5.2);
-      look = new THREE.Vector3(p.x, p.y + 0.7, p.z);
+    if (this.__camOverride) {
+      off = this.__camOverride.off.clone();
+      look = new THREE.Vector3(p.x, p.y + this.__camOverride.lookY, p.z);
+    } else if (this.camMode === 'dance') {
+      off = (portrait ? new THREE.Vector3(0, 3.0, 6.0) : new THREE.Vector3(0, 2.7, 5.0)).applyAxisAngle(new THREE.Vector3(0, 1, 0), this.danceAz || 0);
+      look = new THREE.Vector3(p.x, p.y + 0.75, p.z);
     } else if (this.camMode === 'intro') {
       off = portrait ? new THREE.Vector3(-1, 8, 11) : new THREE.Vector3(-1.5, 6.5, 9.5);
       look = new THREE.Vector3(p.x + 1, p.y + 0.4, p.z);
     } else {
-      off = portrait ? new THREE.Vector3(-0.6, 7.4, 9.6) : new THREE.Vector3(-0.8, 5.3, 8.2);
-      look = new THREE.Vector3(p.x + (portrait ? 0.6 : 1.4), 0.5 + p.y * 0.3, p.z - 0.3);
+      off = portrait ? new THREE.Vector3(-0.6, 6.8, 8.8) : new THREE.Vector3(-0.7, 4.6, 7.0);
+      look = new THREE.Vector3(p.x + (portrait ? 0.6 : 1.2), 0.5 + p.y * 0.3, p.z - 0.3);
     }
     // 缓慢的镜头呼吸感
     const sway = Math.sin(t * 0.05) * 0.14;

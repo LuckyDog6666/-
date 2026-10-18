@@ -125,7 +125,7 @@ export class DouyinProvider {
     cdp.on('Network.webSocketClosed', (p) => { if (this.wsIds.delete(p.requestId)) this.log('[抖音] 弹幕通道关闭（页面会自动重连）'); });
     cdp.on('Network.webSocketFrameReceived', (p) => {
       if (!this.wsIds.has(p.requestId) || p.response.opcode !== 2) return;
-      try { this.onBinary(Buffer.from(p.response.payloadData, 'base64'), 'ws'); } catch (e) { this.decodeErrors = (this.decodeErrors || 0) + 1; }
+      try { this.onBinary(Buffer.from(p.response.payloadData, 'base64'), 'ws'); } catch { this.decodeErrors = (this.decodeErrors || 0) + 1; }
     });
     cdp.on('Network.responseReceived', (p) => { if (/webcast\/im\/fetch/.test(p.response.url)) this.fetchIds.add(p.requestId); });
     cdp.on('Network.loadingFinished', async (p) => {
@@ -137,6 +137,16 @@ export class DouyinProvider {
       } catch {}
     });
 
+    // 抖音如果把弹幕连接放进 Web Worker / SharedWorker，也要能抓到：自动附加到所有 worker 并开启网络监听
+    cdp.on('Target.attachedToTarget', async (p) => {
+      const type = p.targetInfo && p.targetInfo.type;
+      if (type === 'worker' || type === 'shared_worker' || type === 'service_worker') {
+        try { await cdp.send('Network.enable', {}, p.sessionId); } catch {}
+        try { await cdp.send('Runtime.runIfWaitingForDebugger', {}, p.sessionId); } catch {}
+      }
+    });
+    try { await S('Target.setAutoAttach', { autoAttach: true, waitForDebuggerOnStart: false, flatten: true }); } catch {}
+    try { await cdp.send('Target.setAutoAttach', { autoAttach: true, waitForDebuggerOnStart: false, flatten: true }); } catch {}
     await S('Network.enable', { maxTotalBufferSize: 10_000_000, maxResourceBufferSize: 5_000_000 });
     await S('Page.enable');
     await S('Page.addScriptToEvaluateOnNewDocument', { source: ANTI_PAUSE });

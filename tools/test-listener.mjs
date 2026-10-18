@@ -33,13 +33,21 @@ function wsFrame(buf) {
   return Buffer.concat([head, buf]);
 }
 
-const PAGE = `<!doctype html><title>fake live</title><script>
+// 模式 page：页面里直接建立 WebSocket；模式 worker：在 Web Worker 里建立（模拟抖音以后可能的改版）
+const MODE = process.argv.includes('--worker') ? 'worker' : 'page';
+const PAGE = MODE === 'page' ? `<!doctype html><title>fake live</title><script>
   const ws = new WebSocket('ws://' + location.host + '/webcast/im/push/v2/?room=test');
   ws.binaryType = 'arraybuffer';
   ws.onmessage = () => {};
+</script>` : `<!doctype html><title>fake live</title><script>
+  setTimeout(() => new Worker('/worker.js'), 1500);
 </script>`;
+const WORKER = `const ws = new WebSocket('ws://' + location.host + '/webcast/im/push/v2/?room=test'); ws.binaryType = 'arraybuffer'; ws.onmessage = () => {};`;
 
-const server = http.createServer((req, res) => { res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' }); res.end(PAGE); });
+const server = http.createServer((req, res) => {
+  if (req.url.startsWith('/worker.js')) { res.writeHead(200, { 'Content-Type': 'text/javascript' }); res.end(WORKER); return; }
+  res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' }); res.end(PAGE);
+});
 const sockets = new Set();
 server.on('upgrade', (req, socket) => {
   const key = req.headers['sec-websocket-key'];
@@ -62,7 +70,7 @@ const provider = new DouyinProvider({
   log: (m) => console.log('   ' + m),
   dataDir,
 });
-console.log('■ 启动监听浏览器，抓取假直播间的数据帧…');
+console.log(`■ 启动监听浏览器，抓取假直播间的数据帧（${MODE === 'worker' ? 'Worker 内连接' : '页面内连接'}）…`);
 provider.start();
 const t0 = Date.now();
 while (Date.now() - t0 < 30000 && events.filter((e) => e.type === 'gift').length < 3) await new Promise((r) => setTimeout(r, 300));

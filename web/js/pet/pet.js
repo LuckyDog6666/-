@@ -240,11 +240,12 @@ export class Pet {
     this.lean.add(this.sproutPivot);
 
     // ---- 小手 ----
-    const armGeo = ellipsoid(0.085, 0.11, 0.085, 16, 12); armGeo.translate(0, -0.07, 0); this.disposables.push(armGeo);
+    // 小短手：肩膀在身体表面，手臂向外伸出（像小团子的两只小爪爪）
+    const armGeo = ellipsoid(0.095, 0.16, 0.095, 16, 12); armGeo.translate(0, -0.12, 0); this.disposables.push(armGeo);
     this.arms = [];
     for (const s of [-1, 1]) {
       const pivot = new THREE.Group();
-      pivot.position.set(0.43 * s, 0.4, 0.06);
+      pivot.position.set(0.49 * s, 0.44, 0.1);
       const arm = new THREE.Mesh(armGeo, earMat);
       arm.castShadow = true;
       addOutline(arm, 0.012);
@@ -361,9 +362,9 @@ export class Pet {
     const dur = o.dur ?? 0.46 + dist * 0.06;
     if (dist > 0.05) this.faceTowards(to.x, to.z);
     return new Promise((resolve) => {
-      this.action = {
+      this._start({
         kind: 'hop', t: 0, from, to: to.clone(), height, dur, ant: o.anticipation ?? 0.11, spin: o.spin || 0, flip: o.flip || 0, resolve, onTakeoff: o.onTakeoff, launched: false,
-      };
+      });
     });
   }
 
@@ -374,22 +375,29 @@ export class Pet {
   slide(to, dur = 0.9) {
     const from = this.root.position.clone();
     this.faceTowards(to.x, to.z);
-    return new Promise((resolve) => { this.action = { kind: 'slide', t: 0, from, to: to.clone(), dur, resolve }; });
+    return new Promise((resolve) => { this._start({ kind: 'slide', t: 0, from, to: to.clone(), dur, resolve }); });
   }
 
   // 舞蹈：dance = {fn(pose, t, beat, pet), beats}
   dance(dance, seconds, bpm = 112) {
     this.face(0);
-    return new Promise((resolve) => { this.action = { kind: 'dance', t: 0, dance, seconds, bps: bpm / 60, resolve, events: dance.events ? dance.events.map((e) => ({ ...e, done: false })) : [] }; });
+    return new Promise((resolve) => { this._start({ kind: 'dance', t: 0, dance, seconds, bps: bpm / 60, resolve, events: dance.events ? dance.events.map((e) => ({ ...e, done: false })) : [] }); });
   }
 
   // 停顿/姿态（看看四周、闻一闻、坐下）
   idleAction(kind, seconds) {
-    return new Promise((resolve) => { this.action = { kind: 'idle', sub: kind, t: 0, seconds, resolve }; });
+    return new Promise((resolve) => { this._start({ kind: 'idle', sub: kind, t: 0, seconds, resolve }); });
   }
 
   cancelAction() {
-    if (this.action && this.action.resolve) { const r = this.action.resolve; this.action = null; r(); }
+    if (this.action && this.action.resolve) { const r = this.action.resolve; this.action = null; this.sq.target = 1; r(); }
+  }
+
+  // 新动作替换旧动作时，先让旧动作的 Promise 结束（防止调用方永远等待），并恢复挤压
+  _start(a) {
+    if (this.action) this.cancelAction();
+    this.sq.target = 1;
+    this.action = a;
   }
 
   kickEars(v) { this.earL.kick(v * (0.8 + Math.random() * 0.4)); this.earR.kick(-v * (0.8 + Math.random() * 0.4)); this.sprout.kick(v * 1.4); }
@@ -408,7 +416,7 @@ export class Pet {
     // 默认呼吸起伏
     const breath = Math.sin(t * 2.2) * 0.018 * this.idleBob;
     P.sy += breath; P.sx -= breath * 0.5;
-    P.armL.z = 0.12 + Math.sin(t * 2.2) * 0.04; P.armR.z = -0.12 - Math.sin(t * 2.2) * 0.04;
+    P.armL.z = 0.3 + Math.sin(t * 2.2) * 0.05; P.armR.z = -0.3 - Math.sin(t * 2.2) * 0.05;
     P.tail = Math.sin(t * 3.1) * 0.15;
 
     if (a && a.kind === 'hop') {
@@ -503,6 +511,10 @@ export class Pet {
     // 手脚
     this.arms[0].pivot.rotation.z = -P.armL.z; this.arms[0].pivot.rotation.x = -P.armL.x;
     this.arms[1].pivot.rotation.z = -P.armR.z; this.arms[1].pivot.rotation.x = -P.armR.x;
+    // 卡通式"伸长"：手举得越高越长，舞蹈动作更好认
+    const stretch = (z) => 1 + clamp((Math.abs(z) - 1.1) / 1.4, 0, 1) * 0.4;
+    this.arms[0].pivot.scale.set(1, stretch(P.armL.z), 1);
+    this.arms[1].pivot.scale.set(1, stretch(P.armR.z), 1);
     this.feet[0].m.position.set(this.feet[0].baseX + P.footL.x, 0.05 + P.footL.y, this.feet[0].baseZ + P.footL.z);
     this.feet[1].m.position.set(this.feet[1].baseX + P.footR.x, 0.05 + P.footR.y, this.feet[1].baseZ + P.footR.z);
     this.feet[0].m.scale.setScalar(1 / Math.max(0.7, Math.min(1.3, sxz)));

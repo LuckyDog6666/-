@@ -8,7 +8,7 @@
 //  - 支持用真实录音覆盖：把音频放进 assets/sounds/<声音ID>/ 即可
 
 import { analyze } from './dsp.js';
-import { LOUDNESS } from './recipes.js';
+import { LOUDNESS, RECIPES, AMB_EVENTS } from './recipes.js';
 
 const now = () => performance.now() / 1000;
 
@@ -16,7 +16,7 @@ export class AudioEngine {
   constructor(opts = {}) {
     this.opts = Object.assign({
       spatial: 'hrtf', // 'hrtf' | 'stereo'
-      master: 0.9,
+      master: 1.0,
       sfx: 1.0,
       ambience: 0.8,
       music: 0.7,
@@ -52,13 +52,25 @@ export class AudioEngine {
     const glue = ctx.createDynamicsCompressor();
     glue.threshold.value = -20; glue.knee.value = 10; glue.ratio.value = 2.2; glue.attack.value = 0.012; glue.release.value = 0.25;
     const limiter = ctx.createDynamicsCompressor();
-    limiter.threshold.value = -4; limiter.knee.value = 0; limiter.ratio.value = 20; limiter.attack.value = 0.001; limiter.release.value = 0.12;
+    limiter.threshold.value = -3.5; limiter.knee.value = 0; limiter.ratio.value = 20; limiter.attack.value = 0.001; limiter.release.value = 0.12;
+    // 最后一道保险：极少数瞬态冲过限幅器时做柔和的软削波，绝不会出现刺耳的数字爆音
+    const safety = ctx.createWaveShaper();
+    const curve = new Float32Array(2048);
+    for (let i = 0; i < curve.length; i++) {
+      const x = (i / (curve.length - 1)) * 2 - 1;
+      const ax = Math.abs(x);
+      curve[i] = ax < 0.8 ? x : Math.sign(x) * (0.8 + 0.18 * Math.tanh((ax - 0.8) / 0.18));
+    }
+    safety.curve = curve;
+    safety.oversample = '4x';
     this.masterGain = ctx.createGain();
     this.masterGain.gain.value = this.opts.master;
     this.analyser = ctx.createAnalyser();
     this.analyser.fftSize = 1024;
-    this.masterIn.connect(hp); hp.connect(warm); warm.connect(air); air.connect(glue); glue.connect(limiter);
-    limiter.connect(this.masterGain); this.masterGain.connect(ctx.destination); this.masterGain.connect(this.analyser);
+    // 补偿增益：让整体响度落在约 -19 LUFS（ASMR 直播的舒适响度），峰值由限幅器兜住
+    const makeup = ctx.createGain(); makeup.gain.value = 1.42;
+    this.masterIn.connect(hp); hp.connect(warm); warm.connect(air); air.connect(glue); glue.connect(makeup); makeup.connect(limiter);
+    limiter.connect(this.masterGain); this.masterGain.connect(safety); safety.connect(ctx.destination); safety.connect(this.analyser);
 
     // ---- 子母线 ----
     this.sfxBus = ctx.createGain(); this.sfxBus.gain.value = this.opts.sfx;
@@ -102,7 +114,8 @@ export class AudioEngine {
     tryResume();
   }
 
-  get running() { return this.ctx && this.ctx.state === 'running'; }
+  get running() { return !!this.ctx && this.ctx.state === 'running'; }
+  get state() { return this.ctx ? this.ctx.state : 'unavailable'; }
 
   _onWorker(m) {
     const p = this.pending.get(m.reqId);
@@ -141,6 +154,7 @@ export class AudioEngine {
 
   // 预先生成一批声音（只生成还没有的）
   async ensure(ids) {
+    if (!this.worker) return;
     const need = [...new Set(ids)].filter((id) => !this.sounds.has(id));
     if (!need.length) return;
     await this._loadCustom(need);
@@ -170,12 +184,13 @@ export class AudioEngine {
           // 按同类别的响度目标自动对齐音量
           const data = buf.getChannelData(0);
           const a = analyze(data, buf.sampleRate);
-          buffers.push({ buf, gain: Math.pow(10, ((LOUDNESS.item) - a.loudDb) / 20) });
+          const cat = (RECIPES[id] || AMB_EVENTS[id] || {}).cat || 'item';
+          buffers.push({ buf, gain: Math.pow(10, ((LOUDNESS[cat] ?? LOUDNESS.item) - a.loudDb) / 20), cat });
         } catch (e) { console.warn('[audio] 自定义音频加载失败', f, e); }
       }
       if (buffers.length) {
         const out = buffers.map((x) => x.buf);
-        this.sounds.set(id, { buffers: out, gains: buffers.map((x) => Math.min(4, x.gain)), pitched: false, cat: 'item', last: -1, custom: true });
+        this.sounds.set(id, { buffers: out, gains: buffers.map((x) => Math.min(4, x.gain)), pitched: false, cat: buffers[0].cat, last: -1, custom: true });
         console.log(`[audio] 使用真实录音覆盖 ${id}（${out.length} 个文件）`);
       }
     }
@@ -278,6 +293,7 @@ export class AudioEngine {
    * audio = { reverb:{decay,predelay,damp,wet}, tone, ambience, events:[{id, every:[a,b], gain, reverb}] }
    */
   async setScene(audio) {
+    if (!this.ready) return;
     const ctx = this.ctx;
     const rv = audio.reverb || {};
     const ir = await this._request({ type: 'ir', opts: { decay: rv.decay || 1, predelay: rv.predelay || 0.012, damp: rv.damp || 7000, early: rv.early ?? 0.5, seed: (rv.decay || 1) * 100 | 0 } });
@@ -421,7 +437,8 @@ export class AudioEngine {
   }
 
   setVolumes(v = {}) {
-    const t = this.ctx ? this.ctx.currentTime : 0;
+    if (!this.ctx) return;
+    const t = this.ctx.currentTime;
     if (v.master != null) { this.opts.master = v.master; this.masterGain && this.masterGain.gain.setTargetAtTime(v.master, t, 0.1); }
     if (v.sfx != null) { this.opts.sfx = v.sfx; this.sfxBus && this.sfxBus.gain.setTargetAtTime(v.sfx, t, 0.1); }
     if (v.ambience != null) { this.opts.ambience = v.ambience; this.ambBus && this.ambBus.gain.setTargetAtTime(v.ambience, t, 0.1); }

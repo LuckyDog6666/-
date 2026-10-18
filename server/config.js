@@ -31,7 +31,7 @@ export const DEFAULTS = {
     showEnter: true,
     enterInterval: 10,
     themes: [],
-    audio: { master: 0.9, sfx: 1.0, ambience: 0.8, music: 0.7, spatial: 'hrtf' },
+    audio: { master: 1.0, sfx: 1.0, ambience: 0.8, music: 0.7, spatial: 'hrtf' },
     gifts: { tierThresholds: [10, 100, 1000], smallCooldown: 14, comboWindow: 2.2, maxDanceShare: 0.65, minAdventure: 8, giftValues: {} },
     hud: { showBoard: true, showTips: true, boardSize: 5, tips: [] },
   },

@@ -134,7 +134,9 @@ async function launchGame() {
 }
 function gameUrl() {
   const layout = cfg.game?.layout && cfg.game.layout !== 'auto' ? `&layout=${cfg.game.layout}` : '';
-  return `http://127.0.0.1:${cfg.port}/?mode=live${layout}`;
+  const W = cfg.gameWindow || {};
+  const size = W.fullscreen ? '' : `&cw=${W.width || 1280}&ch=${W.height || 720}`;
+  return `http://127.0.0.1:${cfg.port}/?mode=live${layout}${size}`;
 }
 setInterval(() => {
   if (!cfg.launchGame || !gameChild) return;
