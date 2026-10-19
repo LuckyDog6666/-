@@ -1,0 +1,1204 @@
+{
+ "version": 2,
+ "sounds": {
+  "snow_step": {
+   "cat": "trigger",
+   "gain": 0,
+   "label": "踩雪",
+   "files": [
+    {
+     "src": "snow_step/snow_step_01.ogg",
+     "dur": 0.82,
+     "gain": 0.0
+    },
+    {
+     "src": "snow_step/snow_step_02.ogg",
+     "dur": 0.565,
+     "gain": 0.0
+    },
+    {
+     "src": "snow_step/snow_step_03.ogg",
+     "dur": 0.505,
+     "gain": 0.0
+    },
+    {
+     "src": "snow_step/snow_step_04.ogg",
+     "dur": 0.76,
+     "gain": 0.0
+    },
+    {
+     "src": "snow_step/snow_step_05.ogg",
+     "dur": 0.585,
+     "gain": 0.0
+    },
+    {
+     "src": "snow_step/snow_step_06.ogg",
+     "dur": 0.49,
+     "gain": 0.0
+    },
+    {
+     "src": "snow_step/snow_step_07.ogg",
+     "dur": 0.635,
+     "gain": 0.0
+    },
+    {
+     "src": "snow_step/snow_step_08.ogg",
+     "dur": 0.615,
+     "gain": 0.0
+    },
+    {
+     "src": "snow_step/snow_step_09.ogg",
+     "dur": 0.765,
+     "gain": 0.0
+    },
+    {
+     "src": "snow_step/snow_step_10.ogg",
+     "dur": 0.44,
+     "gain": 0.0
+    },
+    {
+     "src": "snow_step/snow_step_11.ogg",
+     "dur": 0.695,
+     "gain": 0.0
+    },
+    {
+     "src": "snow_step/snow_step_12.ogg",
+     "dur": 0.675,
+     "gain": 0.0
+    }
+   ],
+   "credits": [
+    "Moodist 收录（Pixabay / Freesound）"
+   ]
+  },
+  "snow_press": {
+   "cat": "sustain",
+   "gain": 0,
+   "label": "雪地坐下",
+   "files": [
+    {
+     "src": "snow_press/snow_press_01.ogg",
+     "dur": 1.16,
+     "gain": 0.0
+    },
+    {
+     "src": "snow_press/snow_press_02.ogg",
+     "dur": 1.165,
+     "gain": 0.0
+    },
+    {
+     "src": "snow_press/snow_press_03.ogg",
+     "dur": 1.305,
+     "gain": 0.0
+    },
+    {
+     "src": "snow_press/snow_press_04.ogg",
+     "dur": 1.245,
+     "gain": 0.0
+    },
+    {
+     "src": "snow_press/snow_press_05.ogg",
+     "dur": 1.24,
+     "gain": 0.0
+    },
+    {
+     "src": "snow_press/snow_press_06.ogg",
+     "dur": 1.3,
+     "gain": 0.0
+    }
+   ],
+   "credits": [
+    "Moodist 收录（Pixabay / Freesound）"
+   ]
+  },
+  "leaves_step": {
+   "cat": "trigger",
+   "gain": 0,
+   "label": "踩落叶",
+   "files": [
+    {
+     "src": "leaves_step/leaves_step_01.ogg",
+     "dur": 0.77,
+     "gain": 0.0
+    },
+    {
+     "src": "leaves_step/leaves_step_02.ogg",
+     "dur": 0.75,
+     "gain": 0.0
+    },
+    {
+     "src": "leaves_step/leaves_step_03.ogg",
+     "dur": 0.755,
+     "gain": 0.0
+    },
+    {
+     "src": "leaves_step/leaves_step_04.ogg",
+     "dur": 0.605,
+     "gain": 0.0
+    },
+    {
+     "src": "leaves_step/leaves_step_05.ogg",
+     "dur": 0.81,
+     "gain": 0.0
+    },
+    {
+     "src": "leaves_step/leaves_step_06.ogg",
+     "dur": 0.715,
+     "gain": 0.0
+    },
+    {
+     "src": "leaves_step/leaves_step_07.ogg",
+     "dur": 0.645,
+     "gain": 0.0
+    },
+    {
+     "src": "leaves_step/leaves_step_08.ogg",
+     "dur": 0.735,
+     "gain": 0.0
+    },
+    {
+     "src": "leaves_step/leaves_step_09.ogg",
+     "dur": 0.705,
+     "gain": 0.0
+    },
+    {
+     "src": "leaves_step/leaves_step_10.ogg",
+     "dur": 0.865,
+     "gain": 0.0
+    }
+   ],
+   "credits": [
+    "Moodist 收录（Pixabay / Freesound）"
+   ]
+  },
+  "gravel_step": {
+   "cat": "trigger",
+   "gain": 0,
+   "label": "踩小石子",
+   "files": [
+    {
+     "src": "gravel_step/gravel_step_01.ogg",
+     "dur": 0.655,
+     "gain": 0.0
+    },
+    {
+     "src": "gravel_step/gravel_step_02.ogg",
+     "dur": 0.625,
+     "gain": 0.0
+    },
+    {
+     "src": "gravel_step/gravel_step_03.ogg",
+     "dur": 0.985,
+     "gain": 0.0
+    },
+    {
+     "src": "gravel_step/gravel_step_04.ogg",
+     "dur": 1.0,
+     "gain": 0.0
+    },
+    {
+     "src": "gravel_step/gravel_step_05.ogg",
+     "dur": 0.435,
+     "gain": 0.0
+    },
+    {
+     "src": "gravel_step/gravel_step_06.ogg",
+     "dur": 0.675,
+     "gain": 0.0
+    },
+    {
+     "src": "gravel_step/gravel_step_07.ogg",
+     "dur": 0.635,
+     "gain": 0.0
+    },
+    {
+     "src": "gravel_step/gravel_step_08.ogg",
+     "dur": 0.415,
+     "gain": 0.0
+    },
+    {
+     "src": "gravel_step/gravel_step_09.ogg",
+     "dur": 0.59,
+     "gain": 0.0
+    },
+    {
+     "src": "gravel_step/gravel_step_10.ogg",
+     "dur": 0.63,
+     "gain": 0.0
+    }
+   ],
+   "credits": [
+    "Moodist 收录（Pixabay / Freesound）"
+   ]
+  },
+  "sand_step": {
+   "cat": "trigger",
+   "gain": 0,
+   "label": "踩沙子",
+   "files": [
+    {
+     "src": "sand_step/sand_step_01.ogg",
+     "dur": 0.28,
+     "gain": 0.0
+    },
+    {
+     "src": "sand_step/sand_step_02.ogg",
+     "dur": 0.29,
+     "gain": 0.0
+    },
+    {
+     "src": "sand_step/sand_step_03.ogg",
+     "dur": 0.28,
+     "gain": 0.0
+    }
+   ],
+   "credits": [
+    "worthahep88"
+   ]
+  },
+  "slime_squish": {
+   "cat": "sustain",
+   "gain": 0,
+   "label": "捏史莱姆",
+   "files": [
+    {
+     "src": "slime_squish/slime_squish_01.ogg",
+     "dur": 1.7,
+     "gain": 0.0
+    },
+    {
+     "src": "slime_squish/slime_squish_02.ogg",
+     "dur": 1.965,
+     "gain": 0.0
+    },
+    {
+     "src": "slime_squish/slime_squish_03.ogg",
+     "dur": 1.955,
+     "gain": 0.0
+    },
+    {
+     "src": "slime_squish/slime_squish_04.ogg",
+     "dur": 1.44,
+     "gain": 0.0
+    },
+    {
+     "src": "slime_squish/slime_squish_05.ogg",
+     "dur": 1.62,
+     "gain": 0.0
+    },
+    {
+     "src": "slime_squish/slime_squish_06.ogg",
+     "dur": 2.135,
+     "gain": 0.0
+    },
+    {
+     "src": "slime_squish/slime_squish_07.ogg",
+     "dur": 1.94,
+     "gain": 0.0
+    },
+    {
+     "src": "slime_squish/slime_squish_08.ogg",
+     "dur": 2.1,
+     "gain": 0.0
+    },
+    {
+     "src": "slime_squish/slime_squish_09.ogg",
+     "dur": 2.445,
+     "gain": 0.0
+    },
+    {
+     "src": "slime_squish/slime_squish_10.ogg",
+     "dur": 2.065,
+     "gain": 0.0
+    },
+    {
+     "src": "slime_squish/slime_squish_11.ogg",
+     "dur": 1.16,
+     "gain": 0.0
+    }
+   ],
+   "credits": [
+    "Ben Burnes"
+   ]
+  },
+  "squishy_press": {
+   "cat": "sustain",
+   "gain": 0,
+   "label": "压捏捏",
+   "files": [
+    {
+     "src": "squishy_press/squishy_press_01.ogg",
+     "dur": 2.175,
+     "gain": 0.0
+    },
+    {
+     "src": "squishy_press/squishy_press_02.ogg",
+     "dur": 1.75,
+     "gain": 0.0
+    },
+    {
+     "src": "squishy_press/squishy_press_03.ogg",
+     "dur": 1.52,
+     "gain": 0.0
+    },
+    {
+     "src": "squishy_press/squishy_press_04.ogg",
+     "dur": 1.56,
+     "gain": 0.0
+    },
+    {
+     "src": "squishy_press/squishy_press_05.ogg",
+     "dur": 1.435,
+     "gain": 0.0
+    },
+    {
+     "src": "squishy_press/squishy_press_06.ogg",
+     "dur": 1.6,
+     "gain": 0.0
+    },
+    {
+     "src": "squishy_press/squishy_press_07.ogg",
+     "dur": 1.215,
+     "gain": 0.0
+    }
+   ],
+   "credits": [
+    "Ben Burnes"
+   ]
+  },
+  "slime_pull": {
+   "cat": "sustain",
+   "gain": 0,
+   "label": "史莱姆拉丝",
+   "files": [
+    {
+     "src": "slime_pull/slime_pull_01.ogg",
+     "dur": 3.426,
+     "gain": 0.0
+    },
+    {
+     "src": "slime_pull/slime_pull_02.ogg",
+     "dur": 3.6,
+     "gain": 0.0
+    },
+    {
+     "src": "slime_pull/slime_pull_03.ogg",
+     "dur": 3.422,
+     "gain": 0.0
+    },
+    {
+     "src": "slime_pull/slime_pull_04.ogg",
+     "dur": 3.29,
+     "gain": 0.0
+    }
+   ],
+   "credits": [
+    "Ben Burnes"
+   ]
+  },
+  "jelly_bounce": {
+   "cat": "trigger",
+   "gain": 0,
+   "label": "果冻 Q 弹",
+   "files": [
+    {
+     "src": "jelly_bounce/jelly_bounce_01.ogg",
+     "dur": 0.269,
+     "gain": 0.0
+    },
+    {
+     "src": "jelly_bounce/jelly_bounce_02.ogg",
+     "dur": 0.573,
+     "gain": 1.56
+    },
+    {
+     "src": "jelly_bounce/jelly_bounce_03.ogg",
+     "dur": 0.391,
+     "gain": 0.91
+    }
+   ],
+   "credits": [
+    "Ben Burnes"
+   ]
+  },
+  "mud_squelch": {
+   "cat": "trigger",
+   "gain": 0,
+   "label": "踩泥巴",
+   "files": [
+    {
+     "src": "mud_squelch/mud_squelch_01.ogg",
+     "dur": 0.535,
+     "gain": 0.0
+    },
+    {
+     "src": "mud_squelch/mud_squelch_02.ogg",
+     "dur": 0.62,
+     "gain": 0.0
+    },
+    {
+     "src": "mud_squelch/mud_squelch_03.ogg",
+     "dur": 0.615,
+     "gain": 0.0
+    },
+    {
+     "src": "mud_squelch/mud_squelch_04.ogg",
+     "dur": 0.49,
+     "gain": 0.0
+    },
+    {
+     "src": "mud_squelch/mud_squelch_05.ogg",
+     "dur": 0.26,
+     "gain": 0.0
+    },
+    {
+     "src": "mud_squelch/mud_squelch_06.ogg",
+     "dur": 0.427,
+     "gain": 0.0
+    },
+    {
+     "src": "mud_squelch/mud_squelch_07.ogg",
+     "dur": 0.317,
+     "gain": 0.0
+    },
+    {
+     "src": "mud_squelch/mud_squelch_08.ogg",
+     "dur": 0.5,
+     "gain": 0.0
+    }
+   ],
+   "credits": [
+    "rubberduck"
+   ]
+  },
+  "water_splash": {
+   "cat": "trigger",
+   "gain": 0,
+   "label": "踩水花",
+   "files": [
+    {
+     "src": "water_splash/water_splash_01.ogg",
+     "dur": 1.01,
+     "gain": 0.0
+    },
+    {
+     "src": "water_splash/water_splash_02.ogg",
+     "dur": 0.93,
+     "gain": 0.0
+    },
+    {
+     "src": "water_splash/water_splash_03.ogg",
+     "dur": 1.085,
+     "gain": 0.0
+    },
+    {
+     "src": "water_splash/water_splash_04.ogg",
+     "dur": 1.205,
+     "gain": 0.0
+    },
+    {
+     "src": "water_splash/water_splash_05.ogg",
+     "dur": 1.127,
+     "gain": 0.0
+    },
+    {
+     "src": "water_splash/water_splash_06.ogg",
+     "dur": 2.2,
+     "gain": 0.0
+    },
+    {
+     "src": "water_splash/water_splash_07.ogg",
+     "dur": 2.08,
+     "gain": 0.0
+    },
+    {
+     "src": "water_splash/water_splash_08.ogg",
+     "dur": 2.2,
+     "gain": 0.0
+    }
+   ],
+   "credits": [
+    "AGFX",
+    "rubberduck"
+   ]
+  },
+  "bubble_pop": {
+   "cat": "trigger",
+   "gain": 0,
+   "label": "戳泡泡",
+   "files": [
+    {
+     "src": "bubble_pop/bubble_pop_01.ogg",
+     "dur": 0.185,
+     "gain": 0.0
+    },
+    {
+     "src": "bubble_pop/bubble_pop_02.ogg",
+     "dur": 0.265,
+     "gain": 0.0
+    },
+    {
+     "src": "bubble_pop/bubble_pop_03.ogg",
+     "dur": 0.145,
+     "gain": 0.0
+    },
+    {
+     "src": "bubble_pop/bubble_pop_04.ogg",
+     "dur": 0.17,
+     "gain": 0.0
+    },
+    {
+     "src": "bubble_pop/bubble_pop_05.ogg",
+     "dur": 0.22,
+     "gain": 0.0
+    },
+    {
+     "src": "bubble_pop/bubble_pop_06.ogg",
+     "dur": 0.145,
+     "gain": 0.0
+    },
+    {
+     "src": "bubble_pop/bubble_pop_07.ogg",
+     "dur": 0.175,
+     "gain": 0.0
+    },
+    {
+     "src": "bubble_pop/bubble_pop_08.ogg",
+     "dur": 0.135,
+     "gain": 0.0
+    },
+    {
+     "src": "bubble_pop/bubble_pop_09.ogg",
+     "dur": 0.195,
+     "gain": 0.0
+    },
+    {
+     "src": "bubble_pop/bubble_pop_10.ogg",
+     "dur": 0.18,
+     "gain": 0.0
+    }
+   ],
+   "credits": [
+    "Moodist 收录（Pixabay / Freesound）",
+    "rubberduck"
+   ]
+  },
+  "plop_pop": {
+   "cat": "trigger",
+   "gain": 0,
+   "label": "按泡泡 啵",
+   "files": [
+    {
+     "src": "plop_pop/plop_pop_01.ogg",
+     "dur": 0.52,
+     "gain": 0.7
+    },
+    {
+     "src": "plop_pop/plop_pop_02.ogg",
+     "dur": 0.52,
+     "gain": 1.28
+    },
+    {
+     "src": "plop_pop/plop_pop_03.ogg",
+     "dur": 0.52,
+     "gain": 1.94
+    },
+    {
+     "src": "plop_pop/plop_pop_04.ogg",
+     "dur": 0.52,
+     "gain": 1.41
+    },
+    {
+     "src": "plop_pop/plop_pop_05.ogg",
+     "dur": 0.52,
+     "gain": 1.08
+    },
+    {
+     "src": "plop_pop/plop_pop_06.ogg",
+     "dur": 0.52,
+     "gain": 0.87
+    },
+    {
+     "src": "plop_pop/plop_pop_07.ogg",
+     "dur": 0.52,
+     "gain": 1.93
+    },
+    {
+     "src": "plop_pop/plop_pop_08.ogg",
+     "dur": 0.52,
+     "gain": 2.19
+    }
+   ],
+   "credits": [
+    "Josh Comeau"
+   ]
+  },
+  "key_thock": {
+   "cat": "trigger",
+   "gain": 0,
+   "label": "按大键帽",
+   "files": [
+    {
+     "src": "key_thock/key_thock_01.ogg",
+     "dur": 0.44,
+     "gain": 4.63
+    },
+    {
+     "src": "key_thock/key_thock_02.ogg",
+     "dur": 0.44,
+     "gain": 5.15
+    },
+    {
+     "src": "key_thock/key_thock_03.ogg",
+     "dur": 0.44,
+     "gain": 5.01
+    },
+    {
+     "src": "key_thock/key_thock_04.ogg",
+     "dur": 0.44,
+     "gain": 6
+    },
+    {
+     "src": "key_thock/key_thock_05.ogg",
+     "dur": 0.44,
+     "gain": 3.23
+    },
+    {
+     "src": "key_thock/key_thock_06.ogg",
+     "dur": 0.44,
+     "gain": 1.61
+    },
+    {
+     "src": "key_thock/key_thock_07.ogg",
+     "dur": 0.44,
+     "gain": 2.15
+    },
+    {
+     "src": "key_thock/key_thock_08.ogg",
+     "dur": 0.44,
+     "gain": 4.08
+    },
+    {
+     "src": "key_thock/key_thock_09.ogg",
+     "dur": 0.44,
+     "gain": 2.3
+    },
+    {
+     "src": "key_thock/key_thock_10.ogg",
+     "dur": 0.44,
+     "gain": 6
+    }
+   ],
+   "credits": [
+    "Josh Comeau"
+   ]
+  },
+  "paper_crinkle": {
+   "cat": "trigger",
+   "gain": 0,
+   "label": "踩包装纸",
+   "files": [
+    {
+     "src": "paper_crinkle/paper_crinkle_01.ogg",
+     "dur": 1.06,
+     "gain": 0.0
+    },
+    {
+     "src": "paper_crinkle/paper_crinkle_02.ogg",
+     "dur": 1.3,
+     "gain": 0.0
+    },
+    {
+     "src": "paper_crinkle/paper_crinkle_03.ogg",
+     "dur": 1.3,
+     "gain": 0.0
+    },
+    {
+     "src": "paper_crinkle/paper_crinkle_04.ogg",
+     "dur": 1.3,
+     "gain": 0.0
+    },
+    {
+     "src": "paper_crinkle/paper_crinkle_05.ogg",
+     "dur": 1.3,
+     "gain": 0.0
+    },
+    {
+     "src": "paper_crinkle/paper_crinkle_06.ogg",
+     "dur": 1.3,
+     "gain": 0.0
+    },
+    {
+     "src": "paper_crinkle/paper_crinkle_07.ogg",
+     "dur": 1.3,
+     "gain": 0.0
+    }
+   ],
+   "credits": [
+    "Moodist 收录（Pixabay / Freesound）"
+   ]
+  },
+  "ice_crack": {
+   "cat": "trigger",
+   "gain": 0,
+   "label": "踩薄冰",
+   "files": [
+    {
+     "src": "ice_crack/ice_crack_01.ogg",
+     "dur": 0.227,
+     "gain": 0.0
+    },
+    {
+     "src": "ice_crack/ice_crack_02.ogg",
+     "dur": 0.227,
+     "gain": 0.0
+    },
+    {
+     "src": "ice_crack/ice_crack_03.ogg",
+     "dur": 0.227,
+     "gain": 0.0
+    },
+    {
+     "src": "ice_crack/ice_crack_04.ogg",
+     "dur": 0.344,
+     "gain": 0.0
+    },
+    {
+     "src": "ice_crack/ice_crack_05.ogg",
+     "dur": 0.344,
+     "gain": 0.0
+    },
+    {
+     "src": "ice_crack/ice_crack_06.ogg",
+     "dur": 0.435,
+     "gain": 0.0
+    }
+   ],
+   "credits": [
+    "Angel_Perez_Grandi",
+    "InspectorJ",
+    "dheming"
+   ]
+  },
+  "path_step": {
+   "cat": "step",
+   "gain": 0,
+   "label": "软垫脚步",
+   "files": [
+    {
+     "src": "path_step/path_step_01.ogg",
+     "dur": 0.167,
+     "gain": 0.0
+    },
+    {
+     "src": "path_step/path_step_02.ogg",
+     "dur": 0.142,
+     "gain": 0.0
+    },
+    {
+     "src": "path_step/path_step_03.ogg",
+     "dur": 0.142,
+     "gain": 0.0
+    },
+    {
+     "src": "path_step/path_step_04.ogg",
+     "dur": 0.142,
+     "gain": 0.0
+    },
+    {
+     "src": "path_step/path_step_05.ogg",
+     "dur": 0.142,
+     "gain": 0.0
+    }
+   ],
+   "credits": [
+    "Kenney"
+   ]
+  },
+  "grass_step": {
+   "cat": "step",
+   "gain": 0,
+   "label": "草地脚步",
+   "files": [
+    {
+     "src": "grass_step/grass_step_01.ogg",
+     "dur": 0.205,
+     "gain": 0.0
+    },
+    {
+     "src": "grass_step/grass_step_02.ogg",
+     "dur": 0.22,
+     "gain": 0.0
+    },
+    {
+     "src": "grass_step/grass_step_03.ogg",
+     "dur": 0.225,
+     "gain": 0.0
+    },
+    {
+     "src": "grass_step/grass_step_04.ogg",
+     "dur": 0.195,
+     "gain": 0.0
+    },
+    {
+     "src": "grass_step/grass_step_05.ogg",
+     "dur": 0.19,
+     "gain": 0.0
+    }
+   ],
+   "credits": [
+    "Kenney"
+   ]
+  },
+  "land_soft": {
+   "cat": "step",
+   "gain": 0,
+   "label": "轻轻落地",
+   "files": [
+    {
+     "src": "land_soft/land_soft_01.ogg",
+     "dur": 0.527,
+     "gain": 0.0
+    },
+    {
+     "src": "land_soft/land_soft_02.ogg",
+     "dur": 0.569,
+     "gain": 0.0
+    },
+    {
+     "src": "land_soft/land_soft_03.ogg",
+     "dur": 0.569,
+     "gain": 0.0
+    },
+    {
+     "src": "land_soft/land_soft_04.ogg",
+     "dur": 0.541,
+     "gain": 0.0
+    }
+   ],
+   "credits": [
+    "Kenney"
+   ]
+  },
+  "purr": {
+   "cat": "soft",
+   "gain": 0,
+   "label": "呼噜呼噜",
+   "files": [
+    {
+     "src": "purr/purr_01.ogg",
+     "dur": 8.0,
+     "gain": 0.0
+    },
+    {
+     "src": "purr/purr_02.ogg",
+     "dur": 8.0,
+     "gain": 0.0
+    },
+    {
+     "src": "purr/purr_03.ogg",
+     "dur": 8.0,
+     "gain": 0.0
+    }
+   ],
+   "credits": [
+    "Moodist 收录（Pixabay / Freesound）"
+   ]
+  },
+  "amb_wind": {
+   "cat": "ambience",
+   "gain": 0,
+   "label": "微风",
+   "files": [
+    {
+     "src": "amb_wind/amb_wind_01.ogg",
+     "dur": 45.0,
+     "gain": 0.0
+    }
+   ],
+   "credits": [
+    "Moodist 收录（Pixabay / Freesound）"
+   ]
+  },
+  "amb_birds": {
+   "cat": "ambience",
+   "gain": 0,
+   "label": "林间鸟鸣",
+   "files": [
+    {
+     "src": "amb_birds/amb_birds_01.ogg",
+     "dur": 45.0,
+     "gain": 0.0
+    }
+   ],
+   "credits": [
+    "kvgarlic"
+   ]
+  },
+  "amb_stream": {
+   "cat": "ambience",
+   "gain": 0,
+   "label": "小溪",
+   "files": [
+    {
+     "src": "amb_stream/amb_stream_01.ogg",
+     "dur": 45.0,
+     "gain": 0.0
+    }
+   ],
+   "credits": [
+    "gluckose"
+   ]
+  },
+  "amb_rain": {
+   "cat": "ambience",
+   "gain": 0,
+   "label": "小雨",
+   "files": [
+    {
+     "src": "amb_rain/amb_rain_01.ogg",
+     "dur": 45.0,
+     "gain": 1.85
+    }
+   ],
+   "credits": [
+    "Moodist 收录（Pixabay / Freesound）"
+   ]
+  },
+  "amb_night": {
+   "cat": "ambience",
+   "gain": 0,
+   "label": "夏夜虫鸣",
+   "files": [
+    {
+     "src": "amb_night/amb_night_01.ogg",
+     "dur": 40.0,
+     "gain": 0.0
+    }
+   ],
+   "credits": [
+    "Lisa Redfern"
+   ]
+  },
+  "amb_fire": {
+   "cat": "ambience",
+   "gain": 0,
+   "label": "壁炉",
+   "files": [
+    {
+     "src": "amb_fire/amb_fire_01.ogg",
+     "dur": 20.038,
+     "gain": 0.0
+    }
+   ],
+   "credits": [
+    "ezwa"
+   ]
+  },
+  "amb_waves": {
+   "cat": "ambience",
+   "gain": 0,
+   "label": "海浪",
+   "files": [
+    {
+     "src": "amb_waves/amb_waves_01.ogg",
+     "dur": 45.0,
+     "gain": 0.0
+    }
+   ],
+   "credits": [
+    "Luftrum"
+   ]
+  },
+  "music_dance": {
+   "cat": "music",
+   "gain": 0,
+   "label": "答谢舞曲",
+   "files": [
+    {
+     "src": "music_dance/music_dance_01.ogg",
+     "dur": 40.0,
+     "gain": 0.0,
+     "bpm": 122.0,
+     "beat0": 0.005,
+     "title": "Fluffing a Duck"
+    },
+    {
+     "src": "music_dance/music_dance_02.ogg",
+     "dur": 40.0,
+     "gain": 0.0,
+     "bpm": 144.0,
+     "beat0": 0.043,
+     "title": "Monkeys Spinning Monkeys"
+    },
+    {
+     "src": "music_dance/music_dance_03.ogg",
+     "dur": 40.0,
+     "gain": 0.0,
+     "bpm": 87.0,
+     "beat0": 0.048,
+     "title": "Sneaky Snitch"
+    },
+    {
+     "src": "music_dance/music_dance_04.ogg",
+     "dur": 40.0,
+     "gain": 0.0,
+     "bpm": 100.0,
+     "beat0": 0.011,
+     "title": "Hyperfun"
+    },
+    {
+     "src": "music_dance/music_dance_05.ogg",
+     "dur": 40.0,
+     "gain": 0.0,
+     "bpm": 127.0,
+     "beat0": 0.325,
+     "title": "If I Had a Chicken"
+    },
+    {
+     "src": "music_dance/music_dance_06.ogg",
+     "dur": 40.0,
+     "gain": 0.0,
+     "bpm": 97.0,
+     "beat0": 0.016,
+     "title": "Plucky Daisy"
+    }
+   ],
+   "credits": [
+    "Kevin MacLeod (incompetech.com)"
+   ]
+  },
+  "sand_press": {
+   "cat": "sustain",
+   "gain": 0,
+   "label": "按进沙子",
+   "files": [
+    {
+     "src": "sand_press/sand_press_01.ogg",
+     "dur": 1.08,
+     "gain": 0.0
+    }
+   ],
+   "credits": [
+    "jorickhoofd（+ Ali_6868, lolamadeus, fthrll, Hankof 的 CC0 素材）"
+   ]
+  },
+  "leaves_crunch": {
+   "cat": "trigger",
+   "gain": 0,
+   "label": "踩落叶（重）",
+   "files": [
+    {
+     "src": "leaves_crunch/leaves_crunch_01.ogg",
+     "dur": 0.985,
+     "gain": 0.0
+    },
+    {
+     "src": "leaves_crunch/leaves_crunch_02.ogg",
+     "dur": 1.13,
+     "gain": 0.0
+    },
+    {
+     "src": "leaves_crunch/leaves_crunch_03.ogg",
+     "dur": 1.2,
+     "gain": 0.0
+    },
+    {
+     "src": "leaves_crunch/leaves_crunch_04.ogg",
+     "dur": 0.6,
+     "gain": 0.0
+    },
+    {
+     "src": "leaves_crunch/leaves_crunch_05.ogg",
+     "dur": 0.855,
+     "gain": 0.0
+    },
+    {
+     "src": "leaves_crunch/leaves_crunch_06.ogg",
+     "dur": 1.0,
+     "gain": 0.0
+    },
+    {
+     "src": "leaves_crunch/leaves_crunch_07.ogg",
+     "dur": 1.2,
+     "gain": 0.0
+    }
+   ],
+   "credits": [
+    "DSOADigital",
+    "nicoproson（Space Station 14 裁剪）"
+   ]
+  },
+  "slime_step": {
+   "cat": "trigger",
+   "gain": 0,
+   "label": "踩史莱姆",
+   "files": [
+    {
+     "src": "slime_step/slime_step_01.ogg",
+     "dur": 0.49,
+     "gain": 0.0
+    },
+    {
+     "src": "slime_step/slime_step_02.ogg",
+     "dur": 0.893,
+     "gain": 0.0
+    },
+    {
+     "src": "slime_step/slime_step_03.ogg",
+     "dur": 0.39,
+     "gain": 0.0
+    },
+    {
+     "src": "slime_step/slime_step_04.ogg",
+     "dur": 0.395,
+     "gain": 0.0
+    },
+    {
+     "src": "slime_step/slime_step_05.ogg",
+     "dur": 0.38,
+     "gain": 0.0
+    },
+    {
+     "src": "slime_step/slime_step_06.ogg",
+     "dur": 0.44,
+     "gain": 0.0
+    }
+   ],
+   "credits": [
+    "SoundDesignForYou（EmoGarbage404 编辑）",
+    "rubberduck"
+   ]
+  },
+  "snow_crunch": {
+   "cat": "trigger",
+   "gain": 0,
+   "label": "踩雪（重）",
+   "files": [
+    {
+     "src": "snow_crunch/snow_crunch_01.ogg",
+     "dur": 0.601,
+     "gain": 0.0
+    },
+    {
+     "src": "snow_crunch/snow_crunch_02.ogg",
+     "dur": 0.686,
+     "gain": 0.0
+    },
+    {
+     "src": "snow_crunch/snow_crunch_03.ogg",
+     "dur": 0.834,
+     "gain": 0.0
+    },
+    {
+     "src": "snow_crunch/snow_crunch_04.ogg",
+     "dur": 0.412,
+     "gain": 0.0
+    }
+   ],
+   "credits": [
+    "alexo400（EmoGarbage404 切分）"
+   ]
+  }
+ }
+}

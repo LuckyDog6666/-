@@ -1,5 +1,6 @@
-// 演示/测试模式：随机生成礼物、点赞、关注，方便不开播时预览效果。
+// 演示/测试模式：随机生成礼物、点赞、关注、弹幕，方便不开播时预览效果。
 const NAMES = ['小橘子', '奶茶不加糖', '星星眨眼', '晚风轻轻', '甜甜圈', '布丁酱', '一只小熊', '月亮邮递员', '草莓味的云', '柚子', '摸鱼大师', '熬夜冠军'];
+const CHATS = ['踩奶', '坐下坐下', '跳一跳', '用力踩！', '下一关去雪地', '想看史莱姆', '好治愈啊', '转圈圈', '糯糯好可爱', '沙滩！', '落叶', '加油'];
 const GIFTS = [
   { name: '小心心', diamond: 1, w: 6 }, { name: '玫瑰', diamond: 1, w: 4 }, { name: '抖音', diamond: 1, w: 3 },
   { name: '你最好看', diamond: 2, w: 2 }, { name: '加油鸭', diamond: 15, w: 1.5 }, { name: '爱你哟', diamond: 52, w: 1 },
@@ -12,7 +13,7 @@ export class MockProvider {
   start() {
     this.state = 'listening';
     this.emit({ type: 'status', ...this.status() });
-    this.log('[演示] 已开启演示模式，会随机模拟礼物/点赞/关注');
+    this.log('[演示] 已开启演示模式，会随机模拟礼物/点赞/关注/弹幕');
     const [a, b] = this.cfg.mock?.intervalSec || [15, 45];
     const tick = () => {
       const r = Math.random();
@@ -22,7 +23,8 @@ export class MockProvider {
         let total = GIFTS.reduce((s, g) => s + g.w, 0), x = Math.random() * total, g = GIFTS[0];
         for (const it of GIFTS) { x -= it.w; if (x <= 0) { g = it; break; } }
         this.emit({ type: 'gift', user, gift: { id: g.name, name: g.name, count: g.diamond < 5 ? 1 + Math.floor(Math.random() * 3) : 1, diamond: g.diamond } });
-      } else if (r < 0.85) this.emit({ type: 'like', user, count: 1 + Math.floor(Math.random() * 15) });
+      } else if (r < 0.7) this.emit({ type: 'like', user, count: 1 + Math.floor(Math.random() * 15) });
+      else if (r < 0.85) this.emit({ type: 'chat', user, text: CHATS[Math.floor(Math.random() * CHATS.length)] });
       else if (r < 0.93) this.emit({ type: 'follow', user });
       else this.emit({ type: 'enter', user });
       this.events++;

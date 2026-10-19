@@ -1,0 +1,1307 @@
+{
+ "_说明": "声音打包配置：每一项 = 游戏里的一个声音 id。sources 指向原始录音（由 tools/fetch_sound_sources.sh 下载到 raw 目录）。mode: humps=按包络波谷切出完整的一下（连续录音）| events=按起音切 | whole=整段（去首尾静音）| ranges=手动时间段 | loop=做成无缝循环。",
+ "sounds": [
+  {
+   "id": "snow_step",
+   "cat": "trigger",
+   "label": "踩雪",
+   "mode": "humps",
+   "count": 12,
+   "minDur": 0.4,
+   "maxDur": 1.0,
+   "ideal": 0.7,
+   "minGap": 0.42,
+   "hp": 60,
+   "lp": 15000,
+   "deharsh": 2,
+   "sources": [
+    {
+     "file": "moodist/nature/walk-in-snow.mp3",
+     "title": "Walk in Snow",
+     "author": "Moodist 收录（Pixabay / Freesound）",
+     "url": "https://github.com/remvze/moodist",
+     "license": "Pixabay Content License / CC0",
+     "via": "Moodist"
+    }
+   ]
+  },
+  {
+   "id": "snow_press",
+   "cat": "sustain",
+   "label": "雪地坐下",
+   "mode": "humps",
+   "count": 6,
+   "minDur": 0.9,
+   "maxDur": 1.8,
+   "ideal": 1.3,
+   "minGap": 0.9,
+   "smooth": 0.2,
+   "hp": 60,
+   "lp": 15000,
+   "deharsh": 2,
+   "sources": [
+    {
+     "file": "moodist/nature/walk-in-snow.mp3",
+     "title": "Walk in Snow",
+     "author": "Moodist 收录（Pixabay / Freesound）",
+     "url": "https://github.com/remvze/moodist",
+     "license": "Pixabay Content License / CC0",
+     "via": "Moodist"
+    }
+   ]
+  },
+  {
+   "id": "leaves_step",
+   "cat": "trigger",
+   "label": "踩落叶",
+   "mode": "humps",
+   "count": 10,
+   "minDur": 0.45,
+   "maxDur": 1.15,
+   "ideal": 0.75,
+   "minGap": 0.45,
+   "hp": 70,
+   "lp": 14000,
+   "deharsh": 3,
+   "sources": [
+    {
+     "file": "moodist/nature/walk-on-leaves.mp3",
+     "title": "Walk on Leaves",
+     "author": "Moodist 收录（Pixabay / Freesound）",
+     "url": "https://github.com/remvze/moodist",
+     "license": "Pixabay Content License / CC0",
+     "via": "Moodist"
+    }
+   ]
+  },
+  {
+   "id": "gravel_step",
+   "cat": "trigger",
+   "label": "踩小石子",
+   "mode": "humps",
+   "count": 10,
+   "minDur": 0.4,
+   "maxDur": 1.0,
+   "ideal": 0.65,
+   "minGap": 0.42,
+   "hp": 70,
+   "lp": 12000,
+   "deharsh": 2,
+   "sources": [
+    {
+     "file": "moodist/nature/walk-on-gravel.mp3",
+     "title": "Walk on Gravel",
+     "author": "Moodist 收录（Pixabay / Freesound）",
+     "url": "https://github.com/remvze/moodist",
+     "license": "Pixabay Content License / CC0",
+     "via": "Moodist"
+    }
+   ]
+  },
+  {
+   "id": "sand_step",
+   "cat": "trigger",
+   "label": "踩沙子",
+   "mode": "whole",
+   "hp": 60,
+   "lp": 14000,
+   "trimDb": 40,
+   "sources": [
+    {
+     "file": "mtg/default_sand_footstep.1.ogg",
+     "title": "Sand footsteps",
+     "author": "worthahep88",
+     "url": "https://freesound.org/people/worthahep88/sounds/319224/",
+     "license": "CC0 1.0",
+     "via": "Minetest Game"
+    },
+    {
+     "file": "mtg/default_sand_footstep.2.ogg",
+     "title": "Sand footsteps",
+     "author": "worthahep88",
+     "url": "https://freesound.org/people/worthahep88/sounds/319224/",
+     "license": "CC0 1.0",
+     "via": "Minetest Game"
+    },
+    {
+     "file": "mtg/default_sand_footstep.3.ogg",
+     "title": "Sand footsteps",
+     "author": "worthahep88",
+     "url": "https://freesound.org/people/worthahep88/sounds/319224/",
+     "license": "CC0 1.0",
+     "via": "Minetest Game"
+    }
+   ]
+  },
+  {
+   "id": "sand_press",
+   "cat": "sustain",
+   "label": "按进沙子",
+   "mode": "whole",
+   "hp": 60,
+   "lp": 12000,
+   "sources": [
+    {
+     "file": "extra/tgstation__soil_plop.ogg",
+     "title": "soil_plop",
+     "author": "jorickhoofd（+ Ali_6868, lolamadeus, fthrll, Hankof 的 CC0 素材）",
+     "url": "https://freesound.org/people/jorickhoofd/sounds/169551/",
+     "license": "CC BY 4.0",
+     "via": "tgstation/tgstation"
+    }
+   ]
+  },
+  {
+   "id": "leaves_crunch",
+   "cat": "trigger",
+   "label": "踩落叶（重）",
+   "mode": "chunks",
+   "hp": 70,
+   "lp": 14000,
+   "deharsh": 3,
+   "sources": [
+    {
+     "file": "extra/mod-sounds__sounds_leaves_01.flac",
+     "title": "Leaves",
+     "author": "DSOADigital",
+     "url": "https://freesound.org/s/362253/",
+     "license": "CC0 1.0",
+     "via": "AntumMT/mod-sounds"
+    },
+    {
+     "file": "extra/mod-sounds__sounds_leaves_02.flac",
+     "title": "Leaves",
+     "author": "DSOADigital",
+     "url": "https://freesound.org/s/362253/",
+     "license": "CC0 1.0",
+     "via": "AntumMT/mod-sounds"
+    },
+    {
+     "file": "extra/space-station-14__diona_rustle1.ogg",
+     "title": "Leaves rustle",
+     "author": "nicoproson（Space Station 14 裁剪）",
+     "url": "https://freesound.org/people/nicoproson/sounds/631406/",
+     "license": "CC0 1.0",
+     "via": "space-wizards/space-station-14"
+    }
+   ],
+   "count": 3,
+   "minDur": 0.6,
+   "ideal": 0.9,
+   "smooth": 0.12,
+   "maxDur": 1.2
+  },
+  {
+   "id": "slime_step",
+   "cat": "trigger",
+   "label": "踩史莱姆",
+   "mode": "whole",
+   "hp": 70,
+   "lp": 13000,
+   "deharsh": 2,
+   "sources": [
+    {
+     "file": "extra/space-station-14__slime1.ogg",
+     "title": "Space Station 14 footsteps",
+     "author": "SoundDesignForYou（EmoGarbage404 编辑）",
+     "url": "https://freesound.org/people/SoundDesignForYou/packs/36178/",
+     "license": "CC0 1.0",
+     "via": "space-wizards/space-station-14"
+    },
+    {
+     "file": "extra/space-station-14__slime2.ogg",
+     "title": "Space Station 14 footsteps",
+     "author": "SoundDesignForYou（EmoGarbage404 编辑）",
+     "url": "https://freesound.org/people/SoundDesignForYou/packs/36178/",
+     "license": "CC0 1.0",
+     "via": "space-wizards/space-station-14"
+    },
+    {
+     "file": "extra/space-station-14__slime3.ogg",
+     "title": "Space Station 14 footsteps",
+     "author": "SoundDesignForYou（EmoGarbage404 编辑）",
+     "url": "https://freesound.org/people/SoundDesignForYou/packs/36178/",
+     "license": "CC0 1.0",
+     "via": "space-wizards/space-station-14"
+    },
+    {
+     "file": "extra/space-station-14__slime4.ogg",
+     "title": "Space Station 14 footsteps",
+     "author": "SoundDesignForYou（EmoGarbage404 编辑）",
+     "url": "https://freesound.org/people/SoundDesignForYou/packs/36178/",
+     "license": "CC0 1.0",
+     "via": "space-wizards/space-station-14"
+    },
+    {
+     "file": "cc0col/40-cc0-water-splash-slime-sfx/slime_04.ogg",
+     "title": "40 CC0 water / splash / slime SFX",
+     "author": "rubberduck",
+     "url": "https://opengameart.org/content/40-cc0-water-splash-slime-sfx",
+     "license": "CC0 1.0",
+     "via": "CC0-Public-Domain-Sounds"
+    },
+    {
+     "file": "cc0col/40-cc0-water-splash-slime-sfx/slime_07.ogg",
+     "title": "40 CC0 water / splash / slime SFX",
+     "author": "rubberduck",
+     "url": "https://opengameart.org/content/40-cc0-water-splash-slime-sfx",
+     "license": "CC0 1.0",
+     "via": "CC0-Public-Domain-Sounds"
+    }
+   ]
+  },
+  {
+   "id": "snow_crunch",
+   "cat": "trigger",
+   "label": "踩雪（重）",
+   "mode": "whole",
+   "hp": 60,
+   "lp": 15000,
+   "deharsh": 2,
+   "sources": [
+    {
+     "file": "extra/space-station-14__snowstep1.ogg",
+     "title": "Space Station 14 footsteps",
+     "author": "alexo400（EmoGarbage404 切分）",
+     "url": "https://freesound.org/people/alexo400/sounds/543385/",
+     "license": "CC0 1.0",
+     "via": "space-wizards/space-station-14"
+    },
+    {
+     "file": "extra/space-station-14__snowstep2.ogg",
+     "title": "Space Station 14 footsteps",
+     "author": "alexo400（EmoGarbage404 切分）",
+     "url": "https://freesound.org/people/alexo400/sounds/543385/",
+     "license": "CC0 1.0",
+     "via": "space-wizards/space-station-14"
+    },
+    {
+     "file": "extra/space-station-14__snowstep3.ogg",
+     "title": "Space Station 14 footsteps",
+     "author": "alexo400（EmoGarbage404 切分）",
+     "url": "https://freesound.org/people/alexo400/sounds/543385/",
+     "license": "CC0 1.0",
+     "via": "space-wizards/space-station-14"
+    },
+    {
+     "file": "extra/space-station-14__snowstep4.ogg",
+     "title": "Space Station 14 footsteps",
+     "author": "alexo400（EmoGarbage404 切分）",
+     "url": "https://freesound.org/people/alexo400/sounds/543385/",
+     "license": "CC0 1.0",
+     "via": "space-wizards/space-station-14"
+    }
+   ]
+  },
+  {
+   "id": "slime_squish",
+   "cat": "sustain",
+   "label": "捏史莱姆",
+   "mode": "chunks",
+   "count": 3,
+   "minDur": 1.1,
+   "maxDur": 2.6,
+   "ideal": 1.8,
+   "smooth": 0.15,
+   "hp": 70,
+   "lp": 13000,
+   "deharsh": 3,
+   "sources": [
+    {
+     "file": "cc0col/Micro Pack - CaptSubtle - Melon/Uncomfortable Gooshy Sounds 1.wav",
+     "title": "Micro Pack: Melon — Gooshy Sounds",
+     "author": "Ben Burnes",
+     "url": "https://ben-burnes.gumroad.com/",
+     "license": "CC0 1.0",
+     "via": "CC0-Public-Domain-Sounds"
+    },
+    {
+     "file": "cc0col/Micro Pack - CaptSubtle - Melon/Uncomfortable Gooshy Sounds 2.wav",
+     "title": "Micro Pack: Melon — Gooshy Sounds",
+     "author": "Ben Burnes",
+     "url": "https://ben-burnes.gumroad.com/",
+     "license": "CC0 1.0",
+     "via": "CC0-Public-Domain-Sounds"
+    },
+    {
+     "file": "cc0col/Micro Pack - CaptSubtle - Melon/Unimaginably Uncomfortable Gooshy Sounds 3.wav",
+     "title": "Micro Pack: Melon — Gooshy Sounds",
+     "author": "Ben Burnes",
+     "url": "https://ben-burnes.gumroad.com/",
+     "license": "CC0 1.0",
+     "via": "CC0-Public-Domain-Sounds"
+    },
+    {
+     "file": "cc0col/Micro Pack - CaptSubtle - Melon/Unimaginably Uncomfortable Gooshy Sounds 4.wav",
+     "title": "Micro Pack: Melon — Gooshy Sounds",
+     "author": "Ben Burnes",
+     "url": "https://ben-burnes.gumroad.com/",
+     "license": "CC0 1.0",
+     "via": "CC0-Public-Domain-Sounds"
+    }
+   ]
+  },
+  {
+   "id": "squishy_press",
+   "cat": "sustain",
+   "label": "压捏捏",
+   "mode": "chunks",
+   "count": 4,
+   "minDur": 1.0,
+   "maxDur": 2.4,
+   "ideal": 1.6,
+   "smooth": 0.15,
+   "hp": 60,
+   "lp": 9000,
+   "deharsh": 2,
+   "sources": [
+    {
+     "file": "cc0col/Micro Pack - CaptSubtle - Melon/Uncomfortable Gooshy Sounds 3.wav",
+     "title": "Micro Pack: Melon — Gooshy Sounds",
+     "author": "Ben Burnes",
+     "url": "https://ben-burnes.gumroad.com/",
+     "license": "CC0 1.0",
+     "via": "CC0-Public-Domain-Sounds"
+    },
+    {
+     "file": "cc0col/Micro Pack - CaptSubtle - Melon/Unimaginably Uncomfortable Gooshy Sounds 2.wav",
+     "title": "Micro Pack: Melon — Gooshy Sounds",
+     "author": "Ben Burnes",
+     "url": "https://ben-burnes.gumroad.com/",
+     "license": "CC0 1.0",
+     "via": "CC0-Public-Domain-Sounds"
+    }
+   ]
+  },
+  {
+   "id": "slime_pull",
+   "cat": "sustain",
+   "label": "史莱姆拉丝",
+   "mode": "whole",
+   "maxDur": 3.6,
+   "hp": 70,
+   "lp": 12000,
+   "deharsh": 2,
+   "sources": [
+    {
+     "file": "cc0col/bb - Bottle Plops (Apr 2021)/Plop - Viscous 1.wav",
+     "title": "Bottle Plops — Viscous",
+     "author": "Ben Burnes",
+     "url": "https://ben-burnes.gumroad.com/",
+     "license": "CC0 1.0",
+     "via": "CC0-Public-Domain-Sounds"
+    },
+    {
+     "file": "cc0col/bb - Bottle Plops (Apr 2021)/Plop - Viscous 2.wav",
+     "title": "Bottle Plops — Viscous",
+     "author": "Ben Burnes",
+     "url": "https://ben-burnes.gumroad.com/",
+     "license": "CC0 1.0",
+     "via": "CC0-Public-Domain-Sounds"
+    },
+    {
+     "file": "cc0col/bb - Bottle Plops (Apr 2021)/Plop - Viscous 3.wav",
+     "title": "Bottle Plops — Viscous",
+     "author": "Ben Burnes",
+     "url": "https://ben-burnes.gumroad.com/",
+     "license": "CC0 1.0",
+     "via": "CC0-Public-Domain-Sounds"
+    },
+    {
+     "file": "cc0col/bb - Bottle Plops (Apr 2021)/Plop - Viscous 4.wav",
+     "title": "Bottle Plops — Viscous",
+     "author": "Ben Burnes",
+     "url": "https://ben-burnes.gumroad.com/",
+     "license": "CC0 1.0",
+     "via": "CC0-Public-Domain-Sounds"
+    }
+   ]
+  },
+  {
+   "id": "jelly_bounce",
+   "cat": "trigger",
+   "label": "果冻 Q 弹",
+   "mode": "whole",
+   "hp": 60,
+   "lp": 11000,
+   "deharsh": 3,
+   "sources": [
+    {
+     "file": "cc0col/Micro Pack - CaptSubtle - Melon/Slap the Melon 1.wav",
+     "title": "Micro Pack: Melon — Slap",
+     "author": "Ben Burnes",
+     "url": "https://ben-burnes.gumroad.com/",
+     "license": "CC0 1.0",
+     "via": "CC0-Public-Domain-Sounds"
+    },
+    {
+     "file": "cc0col/Micro Pack - CaptSubtle - Melon/Slap the Melon 2.wav",
+     "title": "Micro Pack: Melon — Slap",
+     "author": "Ben Burnes",
+     "url": "https://ben-burnes.gumroad.com/",
+     "license": "CC0 1.0",
+     "via": "CC0-Public-Domain-Sounds"
+    },
+    {
+     "file": "cc0col/Micro Pack - CaptSubtle - Melon/Slap the Melon 3.wav",
+     "title": "Micro Pack: Melon — Slap",
+     "author": "Ben Burnes",
+     "url": "https://ben-burnes.gumroad.com/",
+     "license": "CC0 1.0",
+     "via": "CC0-Public-Domain-Sounds"
+    }
+   ]
+  },
+  {
+   "id": "mud_squelch",
+   "cat": "trigger",
+   "label": "踩泥巴",
+   "mode": "whole",
+   "hp": 60,
+   "lp": 12000,
+   "deharsh": 2,
+   "sources": [
+    {
+     "file": "cc0col/25-CC0-mud-sfx/mud_02.ogg",
+     "title": "25 CC0 mud SFX",
+     "author": "rubberduck",
+     "url": "https://opengameart.org/content/25-cc0-mud-sfx",
+     "license": "CC0 1.0",
+     "via": "CC0-Public-Domain-Sounds"
+    },
+    {
+     "file": "cc0col/25-CC0-mud-sfx/mud_03.ogg",
+     "title": "25 CC0 mud SFX",
+     "author": "rubberduck",
+     "url": "https://opengameart.org/content/25-cc0-mud-sfx",
+     "license": "CC0 1.0",
+     "via": "CC0-Public-Domain-Sounds"
+    },
+    {
+     "file": "cc0col/25-CC0-mud-sfx/mud_04.ogg",
+     "title": "25 CC0 mud SFX",
+     "author": "rubberduck",
+     "url": "https://opengameart.org/content/25-cc0-mud-sfx",
+     "license": "CC0 1.0",
+     "via": "CC0-Public-Domain-Sounds"
+    },
+    {
+     "file": "cc0col/25-CC0-mud-sfx/mud_05.ogg",
+     "title": "25 CC0 mud SFX",
+     "author": "rubberduck",
+     "url": "https://opengameart.org/content/25-cc0-mud-sfx",
+     "license": "CC0 1.0",
+     "via": "CC0-Public-Domain-Sounds"
+    },
+    {
+     "file": "cc0col/25-CC0-mud-sfx/mud_10.ogg",
+     "title": "25 CC0 mud SFX",
+     "author": "rubberduck",
+     "url": "https://opengameart.org/content/25-cc0-mud-sfx",
+     "license": "CC0 1.0",
+     "via": "CC0-Public-Domain-Sounds"
+    },
+    {
+     "file": "cc0col/25-CC0-mud-sfx/mud_12.ogg",
+     "title": "25 CC0 mud SFX",
+     "author": "rubberduck",
+     "url": "https://opengameart.org/content/25-cc0-mud-sfx",
+     "license": "CC0 1.0",
+     "via": "CC0-Public-Domain-Sounds"
+    },
+    {
+     "file": "cc0col/25-CC0-mud-sfx/mud_15.ogg",
+     "title": "25 CC0 mud SFX",
+     "author": "rubberduck",
+     "url": "https://opengameart.org/content/25-cc0-mud-sfx",
+     "license": "CC0 1.0",
+     "via": "CC0-Public-Domain-Sounds"
+    },
+    {
+     "file": "cc0col/25-CC0-mud-sfx/mud_18.ogg",
+     "title": "25 CC0 mud SFX",
+     "author": "rubberduck",
+     "url": "https://opengameart.org/content/25-cc0-mud-sfx",
+     "license": "CC0 1.0",
+     "via": "CC0-Public-Domain-Sounds"
+    }
+   ]
+  },
+  {
+   "id": "water_splash",
+   "cat": "trigger",
+   "label": "踩水花",
+   "mode": "whole",
+   "maxDur": 2.2,
+   "hp": 60,
+   "lp": 13000,
+   "deharsh": 2,
+   "sources": [
+    {
+     "file": "cc0col/40-cc0-water-splash-slime-sfx/splash_01.ogg",
+     "title": "40 CC0 water / splash / slime SFX",
+     "author": "rubberduck",
+     "url": "https://opengameart.org/content/40-cc0-water-splash-slime-sfx",
+     "license": "CC0 1.0",
+     "via": "CC0-Public-Domain-Sounds"
+    },
+    {
+     "file": "cc0col/40-cc0-water-splash-slime-sfx/splash_04.ogg",
+     "title": "40 CC0 water / splash / slime SFX",
+     "author": "rubberduck",
+     "url": "https://opengameart.org/content/40-cc0-water-splash-slime-sfx",
+     "license": "CC0 1.0",
+     "via": "CC0-Public-Domain-Sounds"
+    },
+    {
+     "file": "cc0col/40-cc0-water-splash-slime-sfx/splash_05.ogg",
+     "title": "40 CC0 water / splash / slime SFX",
+     "author": "rubberduck",
+     "url": "https://opengameart.org/content/40-cc0-water-splash-slime-sfx",
+     "license": "CC0 1.0",
+     "via": "CC0-Public-Domain-Sounds"
+    },
+    {
+     "file": "cc0col/40-cc0-water-splash-slime-sfx/splash_07.ogg",
+     "title": "40 CC0 water / splash / slime SFX",
+     "author": "rubberduck",
+     "url": "https://opengameart.org/content/40-cc0-water-splash-slime-sfx",
+     "license": "CC0 1.0",
+     "via": "CC0-Public-Domain-Sounds"
+    },
+    {
+     "file": "cc0col/40-cc0-water-splash-slime-sfx/splash_11.ogg",
+     "title": "40 CC0 water / splash / slime SFX",
+     "author": "rubberduck",
+     "url": "https://opengameart.org/content/40-cc0-water-splash-slime-sfx",
+     "license": "CC0 1.0",
+     "via": "CC0-Public-Domain-Sounds"
+    },
+    {
+     "file": "mtg/default_water_footstep.1.ogg",
+     "title": "Water footsteps",
+     "author": "AGFX",
+     "url": "https://freesound.org/people/AGFX/packs/1253/",
+     "license": "CC BY 3.0",
+     "via": "Minetest Game"
+    },
+    {
+     "file": "mtg/default_water_footstep.2.ogg",
+     "title": "Water footsteps",
+     "author": "AGFX",
+     "url": "https://freesound.org/people/AGFX/packs/1253/",
+     "license": "CC BY 3.0",
+     "via": "Minetest Game"
+    },
+    {
+     "file": "mtg/default_water_footstep.3.ogg",
+     "title": "Water footsteps",
+     "author": "AGFX",
+     "url": "https://freesound.org/people/AGFX/packs/1253/",
+     "license": "CC BY 3.0",
+     "via": "Minetest Game"
+    }
+   ]
+  },
+  {
+   "id": "bubble_pop",
+   "cat": "trigger",
+   "label": "戳泡泡",
+   "mode": "events",
+   "count": 8,
+   "minDur": 0.12,
+   "maxDur": 1.0,
+   "minGap": 0.15,
+   "tailDb": 40,
+   "hp": 80,
+   "lp": 13000,
+   "sources": [
+    {
+     "file": "moodist/things/bubbles.mp3",
+     "title": "Bubbles",
+     "author": "Moodist 收录（Pixabay / Freesound）",
+     "url": "https://github.com/remvze/moodist",
+     "license": "Pixabay Content License / CC0",
+     "via": "Moodist"
+    },
+    {
+     "file": "cc0col/40-cc0-water-splash-slime-sfx/bubble_01.ogg",
+     "count": 1,
+     "title": "40 CC0 water / splash / slime SFX",
+     "author": "rubberduck",
+     "url": "https://opengameart.org/content/40-cc0-water-splash-slime-sfx",
+     "license": "CC0 1.0",
+     "via": "CC0-Public-Domain-Sounds"
+    },
+    {
+     "file": "cc0col/40-cc0-water-splash-slime-sfx/bubble_03.ogg",
+     "count": 1,
+     "title": "40 CC0 water / splash / slime SFX",
+     "author": "rubberduck",
+     "url": "https://opengameart.org/content/40-cc0-water-splash-slime-sfx",
+     "license": "CC0 1.0",
+     "via": "CC0-Public-Domain-Sounds"
+    }
+   ]
+  },
+  {
+   "id": "plop_pop",
+   "cat": "trigger",
+   "label": "按泡泡 啵",
+   "mode": "ranges",
+   "fadeIn": 0.002,
+   "fadeOut": 0.08,
+   "hp": 70,
+   "lp": 13000,
+   "deharsh": 2,
+   "sources": [
+    {
+     "title": "Button Sounds (Zoom H4 recordings)",
+     "author": "Josh Comeau",
+     "url": "https://www.npmjs.com/package/button-sounds",
+     "license": "MIT",
+     "via": "npm button-sounds",
+     "file": "extra/npm-button-sounds__popper-dice.mp3",
+     "ranges": [
+      [
+       0.98,
+       1.5
+      ],
+      [
+       1.98,
+       2.5
+      ],
+      [
+       3.98,
+       4.5
+      ],
+      [
+       4.98,
+       5.5
+      ]
+     ]
+    },
+    {
+     "title": "Button Sounds (Zoom H4 recordings)",
+     "author": "Josh Comeau",
+     "url": "https://www.npmjs.com/package/button-sounds",
+     "license": "MIT",
+     "via": "npm button-sounds",
+     "file": "extra/npm-button-sounds__popper-empty.mp3",
+     "ranges": [
+      [
+       0.98,
+       1.5
+      ],
+      [
+       1.98,
+       2.5
+      ],
+      [
+       3.98,
+       4.5
+      ],
+      [
+       4.98,
+       5.5
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "key_thock",
+   "cat": "trigger",
+   "label": "按大键帽",
+   "mode": "ranges",
+   "fadeIn": 0.002,
+   "fadeOut": 0.06,
+   "hp": 70,
+   "lp": 12000,
+   "deharsh": 3,
+   "sources": [
+    {
+     "title": "Button Sounds (Zoom H4 recordings)",
+     "author": "Josh Comeau",
+     "url": "https://www.npmjs.com/package/button-sounds",
+     "license": "MIT",
+     "via": "npm button-sounds",
+     "file": "extra/npm-button-sounds__hi75-hard.mp3",
+     "ranges": [
+      [
+       0.98,
+       1.42
+      ],
+      [
+       1.98,
+       2.42
+      ],
+      [
+       3.98,
+       4.42
+      ],
+      [
+       4.98,
+       5.42
+      ]
+     ]
+    },
+    {
+     "title": "Button Sounds (Zoom H4 recordings)",
+     "author": "Josh Comeau",
+     "url": "https://www.npmjs.com/package/button-sounds",
+     "license": "MIT",
+     "via": "npm button-sounds",
+     "file": "extra/npm-button-sounds__asus-kbd-medium.mp3",
+     "ranges": [
+      [
+       0.98,
+       1.42
+      ],
+      [
+       1.98,
+       2.42
+      ],
+      [
+       3.98,
+       4.42
+      ]
+     ]
+    },
+    {
+     "title": "Button Sounds (Zoom H4 recordings)",
+     "author": "Josh Comeau",
+     "url": "https://www.npmjs.com/package/button-sounds",
+     "license": "MIT",
+     "via": "npm button-sounds",
+     "file": "extra/npm-button-sounds__halo-soft.mp3",
+     "ranges": [
+      [
+       0.98,
+       1.42
+      ],
+      [
+       2.98,
+       3.42
+      ],
+      [
+       4.98,
+       5.42
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "paper_crinkle",
+   "cat": "trigger",
+   "label": "踩包装纸",
+   "mode": "humps",
+   "count": 8,
+   "minDur": 0.45,
+   "maxDur": 1.3,
+   "ideal": 0.8,
+   "minGap": 0.45,
+   "hp": 80,
+   "lp": 12000,
+   "deharsh": 4,
+   "sources": [
+    {
+     "file": "moodist/things/paper.mp3",
+     "title": "Paper",
+     "author": "Moodist 收录（Pixabay / Freesound）",
+     "url": "https://github.com/remvze/moodist",
+     "license": "Pixabay Content License / CC0",
+     "via": "Moodist"
+    }
+   ]
+  },
+  {
+   "id": "ice_crack",
+   "cat": "trigger",
+   "label": "踩薄冰",
+   "mode": "whole",
+   "hp": 80,
+   "lp": 12000,
+   "deharsh": 4,
+   "sources": [
+    {
+     "file": "mtg/default_ice_footstep.1.ogg",
+     "title": "Ice footsteps",
+     "author": "InspectorJ",
+     "url": "https://freesound.org/people/InspectorJ/sounds/416967/",
+     "license": "CC BY 3.0",
+     "via": "Minetest Game"
+    },
+    {
+     "file": "mtg/default_ice_footstep.2.ogg",
+     "title": "Ice footsteps",
+     "author": "InspectorJ",
+     "url": "https://freesound.org/people/InspectorJ/sounds/416967/",
+     "license": "CC BY 3.0",
+     "via": "Minetest Game"
+    },
+    {
+     "file": "mtg/default_ice_footstep.3.ogg",
+     "title": "Ice footsteps",
+     "author": "InspectorJ",
+     "url": "https://freesound.org/people/InspectorJ/sounds/416967/",
+     "license": "CC BY 3.0",
+     "via": "Minetest Game"
+    },
+    {
+     "file": "mtg/default_ice_dig.1.ogg",
+     "title": "Ice digging",
+     "author": "dheming",
+     "url": "https://freesound.org/people/dheming/sounds/268023/",
+     "license": "CC BY 3.0",
+     "via": "Minetest Game"
+    },
+    {
+     "file": "mtg/default_ice_dig.2.ogg",
+     "title": "Ice digging",
+     "author": "dheming",
+     "url": "https://freesound.org/people/dheming/sounds/268023/",
+     "license": "CC BY 3.0",
+     "via": "Minetest Game"
+    },
+    {
+     "file": "mtg/default_ice_dug.ogg",
+     "title": "Ice",
+     "author": "Angel_Perez_Grandi",
+     "url": "https://freesound.org/people/Angel_Perez_Grandi/sounds/49190/",
+     "license": "CC BY 3.0",
+     "via": "Minetest Game"
+    }
+   ]
+  },
+  {
+   "id": "path_step",
+   "cat": "step",
+   "label": "软垫脚步",
+   "mode": "whole",
+   "hp": 60,
+   "lp": 10000,
+   "sources": [
+    {
+     "file": "cc0col/kenney_impactsounds/Audio/footstep_carpet_000.ogg",
+     "title": "Impact Sounds",
+     "author": "Kenney",
+     "url": "https://kenney.nl/assets/impact-sounds",
+     "license": "CC0 1.0",
+     "via": "CC0-Public-Domain-Sounds"
+    },
+    {
+     "file": "cc0col/kenney_impactsounds/Audio/footstep_carpet_001.ogg",
+     "title": "Impact Sounds",
+     "author": "Kenney",
+     "url": "https://kenney.nl/assets/impact-sounds",
+     "license": "CC0 1.0",
+     "via": "CC0-Public-Domain-Sounds"
+    },
+    {
+     "file": "cc0col/kenney_impactsounds/Audio/footstep_carpet_002.ogg",
+     "title": "Impact Sounds",
+     "author": "Kenney",
+     "url": "https://kenney.nl/assets/impact-sounds",
+     "license": "CC0 1.0",
+     "via": "CC0-Public-Domain-Sounds"
+    },
+    {
+     "file": "cc0col/kenney_impactsounds/Audio/footstep_carpet_003.ogg",
+     "title": "Impact Sounds",
+     "author": "Kenney",
+     "url": "https://kenney.nl/assets/impact-sounds",
+     "license": "CC0 1.0",
+     "via": "CC0-Public-Domain-Sounds"
+    },
+    {
+     "file": "cc0col/kenney_impactsounds/Audio/footstep_carpet_004.ogg",
+     "title": "Impact Sounds",
+     "author": "Kenney",
+     "url": "https://kenney.nl/assets/impact-sounds",
+     "license": "CC0 1.0",
+     "via": "CC0-Public-Domain-Sounds"
+    }
+   ]
+  },
+  {
+   "id": "grass_step",
+   "cat": "step",
+   "label": "草地脚步",
+   "mode": "whole",
+   "hp": 60,
+   "lp": 12000,
+   "sources": [
+    {
+     "file": "cc0col/kenney_impactsounds/Audio/footstep_grass_000.ogg",
+     "title": "Impact Sounds",
+     "author": "Kenney",
+     "url": "https://kenney.nl/assets/impact-sounds",
+     "license": "CC0 1.0",
+     "via": "CC0-Public-Domain-Sounds"
+    },
+    {
+     "file": "cc0col/kenney_impactsounds/Audio/footstep_grass_001.ogg",
+     "title": "Impact Sounds",
+     "author": "Kenney",
+     "url": "https://kenney.nl/assets/impact-sounds",
+     "license": "CC0 1.0",
+     "via": "CC0-Public-Domain-Sounds"
+    },
+    {
+     "file": "cc0col/kenney_impactsounds/Audio/footstep_grass_002.ogg",
+     "title": "Impact Sounds",
+     "author": "Kenney",
+     "url": "https://kenney.nl/assets/impact-sounds",
+     "license": "CC0 1.0",
+     "via": "CC0-Public-Domain-Sounds"
+    },
+    {
+     "file": "cc0col/kenney_impactsounds/Audio/footstep_grass_003.ogg",
+     "title": "Impact Sounds",
+     "author": "Kenney",
+     "url": "https://kenney.nl/assets/impact-sounds",
+     "license": "CC0 1.0",
+     "via": "CC0-Public-Domain-Sounds"
+    },
+    {
+     "file": "cc0col/kenney_impactsounds/Audio/footstep_grass_004.ogg",
+     "title": "Impact Sounds",
+     "author": "Kenney",
+     "url": "https://kenney.nl/assets/impact-sounds",
+     "license": "CC0 1.0",
+     "via": "CC0-Public-Domain-Sounds"
+    }
+   ]
+  },
+  {
+   "id": "land_soft",
+   "cat": "step",
+   "label": "轻轻落地",
+   "mode": "whole",
+   "hp": 40,
+   "lp": 6000,
+   "sources": [
+    {
+     "file": "cc0col/kenney_impactsounds/Audio/impactSoft_heavy_000.ogg",
+     "title": "Impact Sounds",
+     "author": "Kenney",
+     "url": "https://kenney.nl/assets/impact-sounds",
+     "license": "CC0 1.0",
+     "via": "CC0-Public-Domain-Sounds"
+    },
+    {
+     "file": "cc0col/kenney_impactsounds/Audio/impactSoft_heavy_001.ogg",
+     "title": "Impact Sounds",
+     "author": "Kenney",
+     "url": "https://kenney.nl/assets/impact-sounds",
+     "license": "CC0 1.0",
+     "via": "CC0-Public-Domain-Sounds"
+    },
+    {
+     "file": "cc0col/kenney_impactsounds/Audio/impactSoft_heavy_002.ogg",
+     "title": "Impact Sounds",
+     "author": "Kenney",
+     "url": "https://kenney.nl/assets/impact-sounds",
+     "license": "CC0 1.0",
+     "via": "CC0-Public-Domain-Sounds"
+    },
+    {
+     "file": "cc0col/kenney_impactsounds/Audio/impactSoft_heavy_003.ogg",
+     "title": "Impact Sounds",
+     "author": "Kenney",
+     "url": "https://kenney.nl/assets/impact-sounds",
+     "license": "CC0 1.0",
+     "via": "CC0-Public-Domain-Sounds"
+    }
+   ]
+  },
+  {
+   "id": "purr",
+   "cat": "soft",
+   "label": "呼噜呼噜",
+   "mode": "ranges",
+   "fadeIn": 0.6,
+   "fadeOut": 1.2,
+   "hp": 50,
+   "lp": 9000,
+   "sources": [
+    {
+     "file": "moodist/animals/cat-purring.mp3",
+     "ranges": [
+      [
+       1,
+       9
+      ],
+      [
+       12,
+       20
+      ],
+      [
+       24,
+       32
+      ]
+     ],
+     "title": "Cat Purring",
+     "author": "Moodist 收录（Pixabay / Freesound）",
+     "url": "https://github.com/remvze/moodist",
+     "license": "Pixabay Content License / CC0",
+     "via": "Moodist"
+    }
+   ]
+  },
+  {
+   "id": "amb_wind",
+   "cat": "ambience",
+   "label": "微风",
+   "mode": "loop",
+   "loopLen": 45,
+   "start": 5,
+   "crossfade": 2.5,
+   "hp": 60,
+   "lp": 11000,
+   "quality": 3,
+   "sources": [
+    {
+     "file": "moodist/nature/wind.mp3",
+     "title": "Wind",
+     "author": "Moodist 收录（Pixabay / Freesound）",
+     "url": "https://github.com/remvze/moodist",
+     "license": "Pixabay Content License / CC0",
+     "via": "Moodist"
+    }
+   ]
+  },
+  {
+   "id": "amb_birds",
+   "cat": "ambience",
+   "label": "林间鸟鸣",
+   "mode": "loop",
+   "loopLen": 45,
+   "start": 3,
+   "crossfade": 2.5,
+   "hp": 120,
+   "lp": 11000,
+   "deharsh": 2,
+   "quality": 3,
+   "sources": [
+    {
+     "file": "blanket/birds.ogg",
+     "title": "Birds",
+     "author": "kvgarlic",
+     "url": "https://freesound.org/people/kvgarlic/sounds/156826/",
+     "license": "CC0 1.0",
+     "via": "Blanket"
+    }
+   ]
+  },
+  {
+   "id": "amb_stream",
+   "cat": "ambience",
+   "label": "小溪",
+   "mode": "loop",
+   "loopLen": 45,
+   "start": 3,
+   "crossfade": 2.5,
+   "hp": 80,
+   "lp": 10000,
+   "quality": 3,
+   "sources": [
+    {
+     "file": "blanket/stream.ogg",
+     "title": "Stream",
+     "author": "gluckose",
+     "url": "https://freesound.org/people/gluckose/sounds/333987/",
+     "license": "CC0 1.0",
+     "via": "Blanket"
+    }
+   ]
+  },
+  {
+   "id": "amb_rain",
+   "cat": "ambience",
+   "label": "小雨",
+   "mode": "loop",
+   "loopLen": 45,
+   "start": 10,
+   "crossfade": 2.5,
+   "hp": 80,
+   "lp": 10000,
+   "quality": 3,
+   "sources": [
+    {
+     "file": "moodist/rain/light-rain.mp3",
+     "title": "Light Rain",
+     "author": "Moodist 收录（Pixabay / Freesound）",
+     "url": "https://github.com/remvze/moodist",
+     "license": "Pixabay Content License / CC0",
+     "via": "Moodist"
+    }
+   ]
+  },
+  {
+   "id": "amb_night",
+   "cat": "ambience",
+   "label": "夏夜虫鸣",
+   "mode": "loop",
+   "loopLen": 40,
+   "start": 2,
+   "crossfade": 2.5,
+   "hp": 150,
+   "lp": 9000,
+   "deharsh": 3,
+   "quality": 3,
+   "sources": [
+    {
+     "file": "blanket/summer-night.ogg",
+     "title": "Crickets Chirping At Night",
+     "author": "Lisa Redfern",
+     "url": "https://soundbible.com/2083-Crickets-Chirping-At-Night.html",
+     "license": "Public Domain",
+     "via": "Blanket"
+    }
+   ]
+  },
+  {
+   "id": "amb_fire",
+   "cat": "ambience",
+   "label": "壁炉",
+   "mode": "loop",
+   "loopLen": 40,
+   "start": 3,
+   "crossfade": 2.5,
+   "hp": 60,
+   "lp": 9000,
+   "quality": 3,
+   "sources": [
+    {
+     "file": "blanket/fireplace.ogg",
+     "title": "Fireplace",
+     "author": "ezwa",
+     "url": "https://soundbible.com/1543-Fireplace.html",
+     "license": "Public Domain",
+     "via": "Blanket"
+    }
+   ]
+  },
+  {
+   "id": "amb_waves",
+   "cat": "ambience",
+   "label": "海浪",
+   "mode": "loop",
+   "loopLen": 45,
+   "start": 5,
+   "crossfade": 3,
+   "hp": 60,
+   "lp": 10000,
+   "quality": 3,
+   "sources": [
+    {
+     "file": "blanket/waves.ogg",
+     "title": "Waves",
+     "author": "Luftrum",
+     "url": "https://freesound.org/people/Luftrum/sounds/48412/",
+     "license": "CC BY",
+     "via": "Blanket"
+    }
+   ]
+  },
+  {
+   "id": "music_dance",
+   "cat": "music",
+   "label": "答谢舞曲",
+   "mode": "ranges",
+   "fadeIn": 0.15,
+   "fadeOut": 2.0,
+   "hp": 30,
+   "quality": 4,
+   "sources": [
+    {
+     "file": "music/fluffing_a_duck.mp3",
+     "ranges": [
+      [
+       0,
+       40
+      ]
+     ],
+     "title": "Fluffing a Duck",
+     "author": "Kevin MacLeod (incompetech.com)",
+     "url": "https://incompetech.com",
+     "license": "CC BY 4.0",
+     "via": "mcmusic-kevin-macleod"
+    },
+    {
+     "file": "music/monkeys_spinning_monkeys.mp3",
+     "ranges": [
+      [
+       0,
+       40
+      ]
+     ],
+     "title": "Monkeys Spinning Monkeys",
+     "author": "Kevin MacLeod (incompetech.com)",
+     "url": "https://incompetech.com",
+     "license": "CC BY 4.0",
+     "via": "mcmusic-kevin-macleod"
+    },
+    {
+     "file": "music/sneaky_snitch.mp3",
+     "ranges": [
+      [
+       0,
+       40
+      ]
+     ],
+     "title": "Sneaky Snitch",
+     "author": "Kevin MacLeod (incompetech.com)",
+     "url": "https://incompetech.com",
+     "license": "CC BY 4.0",
+     "via": "mcmusic-kevin-macleod"
+    },
+    {
+     "file": "music/hyperfun.mp3",
+     "ranges": [
+      [
+       0,
+       40
+      ]
+     ],
+     "title": "Hyperfun",
+     "author": "Kevin MacLeod (incompetech.com)",
+     "url": "https://incompetech.com",
+     "license": "CC BY 4.0",
+     "via": "mcmusic-kevin-macleod"
+    },
+    {
+     "file": "music/if_i_had_a_chicken.mp3",
+     "ranges": [
+      [
+       0,
+       40
+      ]
+     ],
+     "title": "If I Had a Chicken",
+     "author": "Kevin MacLeod (incompetech.com)",
+     "url": "https://incompetech.com",
+     "license": "CC BY 4.0",
+     "via": "mcmusic-kevin-macleod"
+    },
+    {
+     "file": "music/plucky_daisy.webm",
+     "ranges": [
+      [
+       0,
+       40
+      ]
+     ],
+     "title": "Plucky Daisy",
+     "author": "Kevin MacLeod (incompetech.com)",
+     "url": "https://incompetech.com",
+     "license": "CC BY 4.0",
+     "via": "mcmusic-kevin-macleod"
+    }
+   ]
+  }
+ ]
+}

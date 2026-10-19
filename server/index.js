@@ -59,6 +59,7 @@ function broadcast(ev, { store = true } = {}) {
 }
 
 const board = new Board(path.join(DATA_DIR, 'board.json'), cfg.board);
+const chatWindow = { t: 0, n: 0 };
 function onLiveEvent(ev) {
   if (ev.type === 'status') { recent.status = ev; broadcast(ev, { store: false }); return; }
   if (ev.type === 'gift') {
@@ -69,7 +70,16 @@ function onLiveEvent(ev) {
   }
   if (ev.type === 'follow') log(`[关注] ${ev.user?.name}`);
   if (ev.type === 'online') { recent.online = ev.count; return; }
-  if (ev.type === 'chat') { recent.lastChat = ev; if (!cfg.forwardChat) return; }
+  if (ev.type === 'chat') {
+    // 弹幕默认转发给游戏（观众可以用弹幕指挥糯糯、投票下一关）；限流，防止大房间刷屏
+    recent.lastChat = ev;
+    if (cfg.forwardChat === false) return;
+    const now = Date.now();
+    if (now - chatWindow.t > 1000) { chatWindow.t = now; chatWindow.n = 0; }
+    if (++chatWindow.n > 15) return;
+    broadcast(ev, { store: false });
+    return;
+  }
   broadcast(ev);
 }
 
@@ -261,6 +271,7 @@ const server = http.createServer(async (req, res) => {
       else if (b.type === 'like') onLiveEvent({ type: 'like', user, count: Number(b.count) || 10 });
       else if (b.type === 'follow') onLiveEvent({ type: 'follow', user });
       else if (b.type === 'enter') onLiveEvent({ type: 'enter', user });
+      else if (b.type === 'chat') onLiveEvent({ type: 'chat', user, text: String(b.text || '').slice(0, 60) });
       return send(res, 200, { ok: true });
     }
     if (p === '/api/control' && req.method === 'POST') {

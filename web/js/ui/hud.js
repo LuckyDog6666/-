@@ -12,15 +12,28 @@ export class Hud {
     this.cfg = cfg;
     this.root = root;
     h('div', 'vignette', root);
-    // 关卡卡片
+    // 关卡卡片：世界名、解压站进度点、解压进度条、累计踩踏数
     const card = h('div', 'level-card', root);
     const r1 = h('div', 'row1', card);
     this.elLv = h('span', 'lv', r1, '第 1 关');
     this.elName = h('span', 'name', r1, '');
-    const r2 = h('div', 'row2', card);
-    this.elStars = h('span', 'stars', r2);
-    this.elKey = h('span', 'keyicon', r2, '🔑');
-    this.elProg = h('i', null, h('div', 'progress', card));
+    this.elDots = h('div', 'dots', card);
+    const r3 = h('div', 'row3', card);
+    h('span', 'mlabel', r3, '解压进度');
+    this.elProg = h('i', null, h('div', 'progress', r3));
+    this.elPct = h('span', 'pct', r3, '0%');
+    this.elSteps = h('div', 'steps', card, '');
+    // 弹幕互动面板（抖音要求直播要有真实互动：观众的弹幕会直接改变糯糯的动作和下一关）
+    this.cmds = h('div', 'cmds', root);
+    h('div', 'ct', this.cmds, '💬 发弹幕指挥糯糯');
+    for (const [k, v] of [['踩', '重重踩一脚'], ['坐', '一屁股坐下'], ['踩奶', '踩踩奶'], ['跳', '蹦蹦跳'], ['转圈', '转个圈']]) {
+      const row = h('div', 'cr', this.cmds);
+      h('b', null, row, k); h('span', null, row, v);
+    }
+    this.elVoteHint = h('div', 'cv', this.cmds, '打「雪/落叶/史莱姆/水洼/沙滩/键盘」投票下一关');
+    this.elVotes = h('div', 'votes', this.cmds);
+    // 当前解压站的小标签
+    this.elStation = h('div', 'station-pill', root, '');
     // 感谢榜
     const board = h('div', 'board', root);
     h('h3', null, board, cfg.boardTitle || '💖 今日感谢榜 💖');
@@ -45,10 +58,11 @@ export class Hud {
     this.irisR = 150;
     this.tipList = cfg.tips && cfg.tips.length ? cfg.tips : [
       '送任意礼物，糯糯会停下来给你跳支舞～',
-      '大礼物会解锁皇冠和彩带特效哦 ✨',
-      '戴上耳机听，每一步都是不同的 ASMR 声音 🎧',
-      '点赞会冒出小爱心 💗  关注糯糯，陪它闯关吧',
-      '糯糯正在自己闯关：收集 3 颗星星，找到钥匙打开小门！',
+      '中礼物：糯糯把你的名字踩进雪地/沙子里 ✍️',
+      '大礼物：巨人糯糯出动，每一脚都超级重！',
+      '戴上耳机听 🎧 每种材质都是真实录制的 ASMR 声音',
+      '发弹幕「踩奶」，糯糯会给你踩踩奶 🐾',
+      '点赞会冒出小爱心 💗  关注糯糯，陪它一起解压',
     ];
     this.tipIdx = 0;
     this._rotateTips();
@@ -68,15 +82,51 @@ export class Hud {
     this.portrait = portrait;
   }
 
-  setLevel({ n, name, stars = 0, total = 3, needKey = false, hasKey = false }) {
+  setStage({ n, name, stations = [] }) {
     this.elLv.textContent = `第 ${n} 关`;
     this.elName.textContent = name;
-    this.elStars.textContent = '';
-    for (let i = 0; i < total; i++) h('span', i < stars ? 'on' : 'off', this.elStars, '★');
-    this.elKey.style.display = needKey ? '' : 'none';
-    this.elKey.classList.toggle('on', hasKey);
+    this.elDots.textContent = '';
+    this.dots = stations.map((label, i) => {
+      const d = h('span', i === stations.length - 1 ? 'dot big' : 'dot', this.elDots, i === stations.length - 1 ? '★' : '');
+      d.title = label;
+      return d;
+    });
   }
-  setProgress(p) { this.elProg.style.width = `${Math.round(p * 100)}%`; }
+  setStation(i, label) {
+    (this.dots || []).forEach((d, k) => d.classList.toggle('cur', k === i));
+    this.curStation = label;
+  }
+  stationDone(i) { const d = (this.dots || [])[i]; if (d) { d.classList.remove('cur'); d.classList.add('done'); } }
+  setMeter(p) {
+    const v = Math.max(0, Math.min(1, p || 0));
+    this.elProg.style.width = `${Math.round(v * 100)}%`;
+    this.elPct.textContent = `${Math.round(v * 100)}%`;
+  }
+  setProgress(p) { this.setMeter(p); }
+  setSteps(n) {
+    if (this._stepsShown === n) return;
+    this._stepsShown = n;
+    this.elSteps.textContent = `🐾 糯糯已经踩了 ${Number(n).toLocaleString('zh-CN')} 脚`;
+  }
+  // 走进一个新的解压站时，屏幕下方浮出它的名字
+  floatStation(label) {
+    if (this.cfg.showSoundLabels === false) return;
+    this.elStation.textContent = `✦ ${label} ✦`;
+    this.elStation.classList.add('show');
+    clearTimeout(this._stT);
+    this._stT = setTimeout(() => this.elStation.classList.remove('show'), 3200);
+  }
+  setVotes(votes, stages) {
+    this.elVotes.textContent = '';
+    if (!votes || !votes.size) { this.elVotes.style.display = 'none'; return; }
+    this.elVotes.style.display = '';
+    const list = [...votes.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3);
+    h('span', 'vt', this.elVotes, '下一关投票：');
+    for (const [id, n] of list) {
+      const st = (stages || []).find((x) => x.id === id);
+      h('span', 'vi', this.elVotes, `${st ? st.name : id} ${n} 票`);
+    }
+  }
 
   setBoard(list) {
     this.elBoard.textContent = '';

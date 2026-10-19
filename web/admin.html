@@ -76,7 +76,8 @@
     <div class="vol"><span>踩踏声</span><input type="range" id="vSfx" min="0" max="1.5" step="0.05"><span id="lSfx"></span></div>
     <div class="vol"><span>环境声</span><input type="range" id="vAmb" min="0" max="1.5" step="0.05"><span id="lAmb"></span></div>
     <div class="vol"><span>舞蹈音乐</span><input type="range" id="vMusic" min="0" max="1.5" step="0.05"><span id="lMusic"></span></div>
-    <label><input type="checkbox" id="labels"> 踩到东西时显示名字小标签</label>
+    <label><input type="checkbox" id="labels"> 走进解压站时显示它的名字</label>
+    <label><input type="checkbox" id="chatcmd"> 观众可以用弹幕指挥糯糯、投票下一关</label>
     <label><input type="checkbox" id="enter"> 显示"欢迎进入直播间"提示</label>
     <label><input type="checkbox" id="lvis"> 显示监听浏览器窗口（抖音要求登录/滑块验证时勾选，处理完再取消）</label>
     <div class="btns" style="margin-top:12px"><button class="primary" id="save">💾 保存设置</button><button id="applyVol">🔊 只试听音量（不保存）</button></div>
@@ -93,6 +94,16 @@
       <button id="tLike">点赞 ×20</button>
       <button id="tFollow">新关注</button>
       <button id="tEnter">进入直播间</button>
+    </div>
+    <label>测试弹幕指令（观众发这些弹幕，糯糯会照做）</label>
+    <div class="btns">
+      <button data-chat="踩奶">「踩奶」</button>
+      <button data-chat="坐下">「坐」</button>
+      <button data-chat="用力踩">「踩」</button>
+      <button data-chat="跳一跳">「跳」</button>
+      <button data-chat="转圈圈">「转圈」</button>
+      <button data-chat="下一关去史莱姆">投票：史莱姆</button>
+      <button data-chat="去沙滩">投票：沙滩</button>
     </div>
     <label>自定义测试</label>
     <div class="btns">
@@ -146,6 +157,7 @@ async function loadConfig() {
   const a = full.game?.audio || {};
   for (const [id, key] of [['Master', 'master'], ['Sfx', 'sfx'], ['Amb', 'ambience'], ['Music', 'music']]) { $('v' + id).value = a[key] ?? 1; $('l' + id).textContent = Number($('v' + id).value).toFixed(2); }
   $('labels').checked = full.game?.showSoundLabels !== false;
+  $('chatcmd').checked = full.game?.chatCommands !== false;
   $('enter').checked = full.game?.showEnter !== false;
   $('lvis').checked = !!full.listener?.visible;
 }
@@ -155,7 +167,7 @@ const volumes = () => ({ master: +$('vMaster').value, sfx: +$('vSfx').value, amb
 $('save').onclick = async () => {
   const patch = {
     room: $('room').value.trim(), source: $('source').value, listener: { visible: $('lvis').checked },
-    game: { layout: $('layout').value, audio: volumes(), showSoundLabels: $('labels').checked, showEnter: $('enter').checked },
+    game: { layout: $('layout').value, audio: volumes(), showSoundLabels: $('labels').checked, showEnter: $('enter').checked, chatCommands: $('chatcmd').checked },
   };
   const r = await post('/api/config', patch);
   toast(r.ok ? '已保存，游戏页面会自动刷新～' : '保存失败：' + (r.error || ''));
@@ -166,6 +178,7 @@ document.querySelectorAll('[data-gift]').forEach((b) => b.onclick = () => {
   const [gift, count, diamond] = b.dataset.gift.split(',');
   post('/api/test', { type: 'gift', name: '测试老板', gift, count: +count, diamond: +diamond }); toast('已发送测试礼物');
 });
+document.querySelectorAll('[data-chat]').forEach((el) => { el.onclick = () => { post('/api/test', { type: 'chat', name: '测试观众', text: el.dataset.chat }); toast('已发送弹幕：' + el.dataset.chat); }; });
 $('tLike').onclick = () => post('/api/test', { type: 'like', name: '点赞的朋友', count: 20 });
 $('tFollow').onclick = () => post('/api/test', { type: 'follow', name: '新朋友' });
 $('tEnter').onclick = () => post('/api/test', { type: 'enter', name: '路过的小可爱' });
@@ -186,7 +199,8 @@ async function refresh() {
   const g = s.game;
   if (g && s.lastBeatAgo != null && s.lastBeatAgo < 20) {
     $('sGame').innerHTML = `<span class="dot ok"></span>运行中（${s.lastBeatAgo} 秒前心跳）`;
-    $('sLevel').textContent = `第 ${g.game?.level} 关 · ${g.game?.theme || ''} · ${g.game?.dancing ? '正在跳舞答谢' : ({ play: '闯关中', intro: '开场', outro: '过关', loading: '加载' }[g.game?.state] || g.game?.state)}`;
+    const STN = { snow: '雪国棉花糖谷', forest: '秋日落叶林', slime: '史莱姆果冻工坊', rain: '雨天水洼花园', beach: '彩虹沙滩', toy: '软糖键盘小屋' };
+    $('sLevel').textContent = `第 ${g.game?.level} 关 · ${STN[g.game?.theme] || g.game?.theme || ''} · ${g.game?.dancing ? '正在跳舞答谢' : ({ play: '解压中', intro: '开场', outro: '通关', loading: '加载' }[g.game?.state] || g.game?.state)}${g.game?.station ? ' · ' + g.game.station : ''} · 进度 ${g.game?.progress ?? 0}% · 累计 ${g.game?.steps ?? 0} 脚`;
     $('sFps').textContent = `${g.fps} FPS · 声音 ${g.audio === 'running' ? '正常' : '未开启(' + g.audio + ')'}`;
   } else {
     $('sGame').innerHTML = `<span class="dot err"></span>${s.launchGame ? '等待游戏窗口…' : '游戏页面未打开'}`;

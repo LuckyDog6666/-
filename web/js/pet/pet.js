@@ -3,7 +3,7 @@
 import * as THREE from 'three';
 import { outlineMaterial } from '../render/materials.js';
 import { Tex } from '../render/textures.js';
-import { Spring, clamp, lerp, damp, dampAngle, TAU, ease, rand } from '../core/util.js';
+import { Spring, clamp, lerp, damp, dampAngle, TAU, ease, rand, smoothstep } from '../core/util.js';
 
 const C = {
   body: '#fff4ea',
@@ -371,6 +371,38 @@ export class Pet {
   // 原地小跳（踩泡泡膜、开心）
   bounceInPlace(height = 0.25, dur = 0.4) { return this.hop(this.root.position.clone(), { height, dur, anticipation: 0.06 }); }
 
+  /**
+   * 踮着小脚一步一步走（踩踏型 ASMR 的核心动作）。
+   * o: { steps, stepDur, lift(抬脚高度), heavy(重踩，身体下沉更多), onStep(side, footWorldPos, index), yAt(x,z)→地面高度 }
+   * 每一步脚落地时回调 onStep，用来压脚印、播放声音。
+   */
+  walk(to, o = {}) {
+    const from = this.root.position.clone();
+    const dist = Math.hypot(to.x - from.x, to.z - from.z);
+    const steps = Math.max(1, o.steps || Math.round(dist / 0.3));
+    const stepDur = o.stepDur || 0.6;
+    if (dist > 0.02 && !o.keepFacing) this.faceTowards(to.x, to.z);
+    return new Promise((resolve) => {
+      this._start({ kind: 'walk', t: 0, from, to: to.clone(), steps, stepDur, lift: o.lift ?? 0.07, heavy: o.heavy || 0, gait: o.gait || 'normal', onStep: o.onStep, yAt: o.yAt, done: -1, side: this._nextFoot || 1, resolve });
+    });
+  }
+
+  /**
+   * 踩奶：站在原地，左右小脚轮流往下按（猫咪"踩奶"），每按一下回调 onPress(side, footWorldPos, i)。
+   * o: { count, pressDur, depth }
+   */
+  knead(o = {}) {
+    return new Promise((resolve) => {
+      this._start({ kind: 'knead', t: 0, count: o.count || 4, dur: o.pressDur || 0.75, depth: o.depth ?? 1, onPress: o.onPress, done: -1, side: this._nextFoot || 1, resolve });
+    });
+  }
+
+  // 脚在世界坐标中的位置（side: 1 右脚 / -1 左脚）
+  footWorld(side) {
+    const s = this.root.scale.x;
+    return new THREE.Vector3(0.19 * (side > 0 ? 1 : -1) * s, 0, 0.14 * s).applyAxisAngle(new THREE.Vector3(0, 1, 0), this.root.rotation.y).add(new THREE.Vector3(this.root.position.x, this.groundY, this.root.position.z));
+  }
+
   // 冰面滑行
   slide(to, dur = 0.9) {
     const from = this.root.position.clone();
@@ -454,6 +486,67 @@ export class Pet {
           a.resolve();
         }
       }
+    } else if (a && a.kind === 'walk') {
+      a.t += dt;
+      const total = a.steps * a.stepDur;
+      const u = clamp(a.t / total, 0, 1);
+      const k = Math.min(a.steps - 1e-6, a.t / a.stepDur);
+      const i = Math.floor(k), ph = k - i; // 当前第 i 步，步内相位 0..1
+      // 位置：每一步里前 70% 移动，后 30% 站稳（踮脚走路的顿挫感）
+      const stepU = Math.min(1, ph / 0.7);
+      const prog = (i + ease.inOutSine(stepU)) / a.steps;
+      pos.x = lerp(a.from.x, a.to.x, prog);
+      pos.z = lerp(a.from.z, a.to.z, prog);
+      const ground = a.yAt ? a.yAt(pos.x, pos.z) : lerp(a.from.y, a.to.y, prog);
+      const side = (i % 2 === 0 ? 1 : -1) * a.side;
+      // 步态：普通（正弦抬脚）/ 重踩 stomp（快速抬高、空中停一下、再"啪"地踩下去）/ 踮脚 tiptoe（小碎步）
+      const lift = a.gait === 'stomp' ? smoothstep(0, 0.3, ph) * (1 - smoothstep(0.58, 0.7, ph)) : Math.sin(Math.min(1, ph / 0.7) * Math.PI);
+      pos.y = ground + lift * (a.gait === 'stomp' ? 0.06 : 0.035);
+      // 抬脚、踮脚、身体左右轻摆、小手张开保持平衡
+      const f = side > 0 ? P.footR : P.footL;
+      f.y = lift * a.lift; f.z = (stepU - 0.5) * 0.12 * (ph < 0.7 ? 1 : 0);
+      P.rz += side * 0.07 * lift;
+      P.rx += 0.04;
+      P.sy *= 1 + 0.03 * lift - (ph > 0.7 ? 0.05 + a.heavy * 0.08 : 0);
+      P.armL.z = 0.55 + 0.15 * lift; P.armR.z = -0.55 - 0.15 * lift;
+      P.ear = side * 2 * lift;
+      // 落脚瞬间
+      if (ph >= 0.7 && a.done < i) {
+        a.done = i;
+        this.sq.kick(-1.2 - a.heavy * 2.5);
+        this.kickEars(1.5 + a.heavy * 2);
+        if (a.onStep) {
+          const sc = this.root.scale.x;
+          const local = new THREE.Vector3(0.19 * (side > 0 ? 1 : -1) * sc, 0, 0.14 * sc);
+          const wp = local.applyAxisAngle(new THREE.Vector3(0, 1, 0), this.root.rotation.y).add(new THREE.Vector3(pos.x, ground, pos.z));
+          try { a.onStep(side, wp, i); } catch (e) { console.error(e); }
+        }
+      }
+      if (a.gait === 'stomp' && ph > 0.25 && ph < 0.62) { P.armL.z = 0.9; P.armR.z = -0.9; P.sy *= 1.04; }
+      if (a.gait === 'tiptoe') { P.sy *= 1.03; P.armL.z = 0.25; P.armR.z = -0.25; P.armL.x = P.armR.x = -0.3; }
+      if (u >= 1) { this.action = null; this._nextFoot = -side; pos.set(a.to.x, a.yAt ? a.yAt(a.to.x, a.to.z) : a.to.y, a.to.z); a.resolve(); }
+    } else if (a && a.kind === 'knead') {
+      // 踩奶：轮流按压，身体随之一沉一沉，小手放在胸前，眯着眼很享受
+      a.t += dt;
+      const k = Math.min(a.count - 1e-6, a.t / a.dur);
+      const i = Math.floor(k), ph = k - i;
+      const side = (i % 2 === 0 ? 1 : -1) * a.side;
+      const f = side > 0 ? P.footR : P.footL;
+      const lift = smoothstep(0, 0.35, ph) * (1 - smoothstep(0.45, 0.6, ph));
+      f.y = lift * 0.07; f.z = 0.03 * lift;
+      const press = smoothstep(0.55, 0.65, ph) * (1 - smoothstep(0.75, 1, ph));
+      P.sy *= 1 - press * 0.07 * a.depth;
+      P.rz += side * 0.06 * (lift - press * 0.5);
+      P.rx += 0.07 + press * 0.05;
+      P.armL.z = 0.25; P.armR.z = -0.25; P.armL.x = P.armR.x = -0.55;
+      P.happy = true; P.blush = 0.6;
+      P.ear = side * 1.5 * lift;
+      if (ph >= 0.6 && a.done < i) {
+        a.done = i;
+        this.sq.kick(-0.8 * a.depth);
+        if (a.onPress) { try { a.onPress(side, this.footWorld(side), i); } catch (e) { console.error(e); } }
+      }
+      if (a.t >= a.count * a.dur) { this.action = null; this._nextFoot = -side; a.resolve(); }
     } else if (a && a.kind === 'slide') {
       a.t += dt;
       const u = clamp(a.t / a.dur, 0, 1);
@@ -592,6 +685,39 @@ function idlePose(kind, P, t, dur, pet) {
     case 'celebrate':
       P.armL.z = 2.5 * fade; P.armR.z = -2.5 * fade;
       P.y += Math.abs(Math.sin(t * 9)) * 0.12 * fade;
+      break;
+    case 'sitdown': // 一屁股坐进软软的东西里
+      P.sy *= 1 - 0.16 * fade; P.sx *= 1 + 0.08 * fade;
+      P.footL.z = P.footR.z = 0.12 * fade; P.footL.y = P.footR.y = 0.03 * fade;
+      P.rx += -0.1 * fade;
+      P.armL.z = 0.7 * fade + 0.3; P.armR.z = -0.7 * fade - 0.3;
+      P.happy = t > 0.35; P.blush = 0.5 * fade;
+      break;
+    case 'reach': // 俯身用小手按下去
+      P.rx += 0.32 * fade;
+      P.armL.z = 0.35; P.armR.z = -0.35; P.armL.x = P.armR.x = -1.25 * fade;
+      P.sy *= 1 - 0.05 * fade;
+      pet.lookTY = -0.9;
+      break;
+    case 'peek': // 走到边上先低头看一看（期待感）
+      P.rx += 0.2 * fade;
+      P.y += Math.sin(t * 3) * 0.004;
+      pet.lookTY = -0.8; pet.lookTX = Math.sin(t * 1.4) * 0.5;
+      break;
+    case 'bliss': // 舒服得眯起眼睛轻轻摇
+      P.rz += Math.sin(t * 2.2) * 0.05 * fade;
+      P.sy *= 1 - 0.03 * fade;
+      P.happy = true; P.blush = 0.8 * fade;
+      P.armL.z = 0.2; P.armR.z = -0.2;
+      break;
+    case 'shiver': // 爽到抖一抖
+      P.rz += Math.sin(t * 38) * 0.035 * fade;
+      P.sx *= 1 + Math.sin(t * 38) * 0.015 * fade;
+      P.happy = true;
+      break;
+    case 'lookback': // 回头看看自己留下的脚印
+      P.ry += 2.4 * fade;
+      pet.lookTY = -0.6;
       break;
     default:
       break;

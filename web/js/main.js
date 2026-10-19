@@ -1,6 +1,7 @@
 // 入口：渲染器、配置、声音、界面、直播事件连接、看门狗心跳、自动画质。
 import * as THREE from 'three';
-import { AudioEngine } from './audio/audioEngine.js';
+import { AsmrAudio } from './audio/asmrAudio.js';
+import { RoomEnvironment } from '../vendor/addons/RoomEnvironment.js';
 import { Particles } from './render/particles.js';
 import { MaterialBank } from './render/materials.js';
 import { Hud } from './ui/hud.js';
@@ -47,11 +48,11 @@ async function main() {
   fitWindow();
   const cfgAll = await loadConfig();
   const cfg = Object.assign({
-    pixelRatio: 1.25, shadowSize: 2048, reloadHours: 6, levelBudget: 170, levelLength: [34, 46], showSoundLabels: true,
+    pixelRatio: 1.25, shadowSize: 2048, reloadHours: 6, stageSeconds: 210, showSoundLabels: true,
     audio: {}, gifts: {}, hud: {},
   }, cfgAll.game || {});
   if (params.get('layout')) cfg.layout = params.get('layout');
-  if (params.get('themes')) cfg.themes = params.get('themes').split(',');
+  if (params.get('stages')) cfg.stages = params.get('stages').split(',');
   if (params.get('hud') === '0') document.body.classList.add('hide-board', 'hide-tips');
   if (cfg.hud && cfg.hud.showBoard === false) document.body.classList.add('hide-board');
   if (cfg.hud && cfg.hud.showTips === false) document.body.classList.add('hide-tips');
@@ -66,6 +67,13 @@ async function main() {
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   stage.prepend(renderer.domElement);
   const scene = new THREE.Scene();
+  // 柔和的室内环境光照（让史莱姆、果冻、泡泡有真实的高光和反射）
+  try {
+    const pmrem = new THREE.PMREMGenerator(renderer);
+    scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+    scene.environmentIntensity = 0.45;
+    pmrem.dispose();
+  } catch (e) { console.warn('[env] 环境贴图创建失败', e); }
   const camera = new THREE.PerspectiveCamera(40, 16 / 9, 0.1, 400);
   let pixelRatio = Math.min(window.devicePixelRatio || 1, Number(params.get('pr')) || cfg.pixelRatio);
   const particles = new Particles(scene);
@@ -85,8 +93,8 @@ async function main() {
   renderer.domElement.addEventListener('webglcontextlost', (e) => { e.preventDefault(); report('error', 'webgl context lost'); setTimeout(() => location.reload(), 2500); });
 
   // ---- 声音 ----
-  setLoading('正在调制 ASMR 声音…');
-  const audio = new AudioEngine(Object.assign({}, cfg.audio));
+  setLoading('正在加载真实录制的 ASMR 声音…');
+  const audio = new AsmrAudio(Object.assign({}, cfg.audio));
   try {
     await audio.init();
   } catch (e) {

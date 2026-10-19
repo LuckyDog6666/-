@@ -1,20 +1,20 @@
 // 一键自检：node tools/selftest.mjs
-// 检查：协议解码、礼物去重/连击、BarrageGrab 解析、配置解析、关卡可解性、AI 能否通关、全部声音质量。
+// 检查：协议解码、礼物去重/连击、BarrageGrab 解析、配置解析、解压世界与 AI 导演、弹幕互动、全部声音素材与授权。
 import zlib from 'node:zlib';
 import { encode } from '../server/douyin/proto.js';
 import { decodePushFrame, decodeFetchBody, messagesToEvents, GiftDeduper } from '../server/douyin/decode.js';
 import { BarrageGrabProvider } from '../server/providers/barragegrab.js';
 import { stripComments, deepMerge, DEFAULTS } from '../server/config.js';
-import { THEMES } from '../web/js/world/themes.js';
-import { ITEM_META } from '../web/js/world/itemMeta.js';
-import { generateLevel, validateLevel } from '../web/js/world/levelGen.js';
-import { Brain } from '../web/js/ai/brain.js';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { STAGES } from '../web/js/course/stages.js';
+import { Director } from '../web/js/ai/director.js';
 import { Rng } from '../web/js/core/util.js';
-import { RECIPES, AMB_EVENTS, renderRecipe } from '../web/js/audio/recipes.js';
-import { analyze } from '../web/js/audio/dsp.js';
 import { GiftManager } from '../web/js/game/giftManager.js';
 import { DANCES } from '../web/js/pet/dances.js';
 
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 let pass = 0, fail = 0;
 function ok(cond, name, extra = '') {
   if (cond) { pass++; console.log('  ✔ ' + name); }
@@ -112,38 +112,58 @@ section('配置文件');
   const j = JSON.parse(stripComments('{ // 注释\n "room": "123", /* 块注释 */ "a": "http://x//y", }'));
   ok(j.room === '123' && j.a === 'http://x//y', '支持注释与尾逗号，不误伤字符串');
   const m = deepMerge(DEFAULTS, { game: { audio: { master: 0.5 } } });
-  ok(m.game.audio.master === 0.5 && m.game.audio.sfx === 1 && m.port === 17890, '用户配置与默认值合并');
+  ok(m.game.audio.master === 0.5 && m.game.audio.sfx === DEFAULTS.game.audio.sfx && m.port === 17890 && m.forwardChat === true, '用户配置与默认值合并');
 }
 
-section('关卡生成与自主闯关 AI');
+section('解压世界与 AI 导演');
 {
-  let bad = 0, stuck = 0, levels = 0, stars = 0, missingMeta = [];
-  for (const th of THEMES) {
-    for (const it of th.items) if (!ITEM_META[it.type]) missingMeta.push(it.type);
-    for (let s = 1; s <= 60; s++) {
-      const lv = generateLevel(th, { seed: s * 7919 + th.id.length });
-      levels++;
-      if (!validateLevel(lv).ok) bad++;
-      const b = new Brain(lv, new Rng(s), { budget: 170 });
-      let done = false, t = 0;
-      for (let k = 0; k < 4000; k++) {
-        const a = b.decide();
-        if (a.type === 'finish') { done = true; break; }
-        if (a.type === 'move') { b.arrived(a.to); t += 0.7; }
-        else if (a.type === 'idle') t += a.secs;
-        else if (a.type === 'repeat') t += a.times * 0.6;
-        else if (a.type === 'gateLocked') b.onGateLocked();
-        else if (a.type === 'openGate') b.onGateOpened();
-        b.tick(t - b.elapsed);
-      }
-      if (!done) stuck++;
-      stars += 3 - b.stars.size;
+  // 站点类型（从源码里读，避免在 Node 里加载 three.js）
+  const stSrc = fs.readFileSync(path.join(ROOT, 'web/js/course/stations.js'), 'utf8');
+  const typeBlock = stSrc.slice(stSrc.indexOf('export const STATION_TYPES = {'));
+  const types = new Set([...typeBlock.slice(0, typeBlock.indexOf('};')).matchAll(/(\w+): \w+/g)].map((m) => m[1]));
+  const bad = [];
+  for (const st of STAGES) {
+    if (!st.stations || st.stations.length < 4) bad.push(`${st.id} 站点太少`);
+    if (!st.finale || !st.finale.finale) bad.push(`${st.id} 缺少终点解压物`);
+    for (const d of [...st.stations, st.finale]) {
+      if (!types.has(d.type)) bad.push(`${st.id}/${d.label} 未知类型 ${d.type}`);
+      if (!d.sound || !d.sound.step) bad.push(`${st.id}/${d.label} 没有声音`);
+      if (!d.label) bad.push(`${st.id} 有站点没有名字`);
     }
+    if (!st.voteKeys || !st.voteKeys.length) bad.push(`${st.id} 没有投票关键字`);
   }
-  ok(missingMeta.length === 0, '所有场景物件都有声音与互动定义', missingMeta.join(','));
-  ok(bad === 0, `${levels} 个随机关卡全部可解（钥匙可达、门确实挡路、星星可达）`, bad + ' 个不可解');
-  ok(stuck === 0, `AI 在 ${levels} 个关卡中全部自主通关、从不卡死`, stuck + ' 个卡住');
-  ok(stars / levels > 2.7, `AI 平均收集星星 ${(stars / levels).toFixed(2)}/3`);
+  ok(bad.length === 0, `${STAGES.length} 个解压世界、${STAGES.reduce((n, s) => n + s.stations.length + 1, 0)} 个解压站定义完整`, bad.slice(0, 4).join('; '));
+  // 导演：每个站的玩法计划
+  const d = new Director(new Rng(7), { stageSeconds: 210 });
+  let planBad = 0, total = 0, specials = 0;
+  for (const st of STAGES) {
+    const fake = st.stations.map((def, i) => ({ def, length: def.length || 2.4, width: def.width || 1.3, specials: def.specials || [] }));
+    d.beginStage(st, fake);
+    fake.forEach((s, i) => {
+      const p = d.planStation(s, i);
+      const odd = p.lanes.length % 2 === 1;
+      const inTray = p.lanes.every((z) => Math.abs(z) <= s.width / 2 - 0.25);
+      if (!odd || !inTray || !(p.stepDur > 0.3 && p.stepDur < 1.6) || !['normal', 'stomp', 'tiptoe'].includes(p.gait)) planBad++;
+      if (p.special && !(s.def.specials || []).includes(p.special)) planBad++;
+      if (p.special) specials++;
+      total += p.lanes.length * (s.length / p.stride) * p.stepDur;
+      d.tick(25);
+    });
+  }
+  ok(planBad === 0, '每个解压站的玩法计划合理（奇数趟、在托盘内、步速与动作有效）', planBad + ' 个问题');
+  const perStage = total / STAGES.length;
+  ok(perStage > 60 && perStage < 200, `平均每关踩踏时长 ${perStage.toFixed(0)} 秒（加上特别动作约 2~4 分钟一关）`);
+  ok(specials >= STAGES.length * 3, `特别动作（坐下/踩奶/切/蹦/按）出现 ${specials} 次`);
+  // 弹幕
+  const c1 = d.onChat('踩奶踩奶', STAGES), c2 = d.onChat('下一关想去雪地', STAGES), c3 = d.onChat('哈哈哈', STAGES);
+  ok(c1 && c1.act === 'knead' && c2 && c2.kind === 'vote' && c2.stage.id === 'snow' && c3 === null, '弹幕指令与投票识别');
+  d.onChat('沙滩', STAGES); d.onChat('沙滩！', STAGES);
+  const nx = d.nextStage(STAGES, 'snow', []);
+  ok(nx.id === 'beach' && nx.votes === 2, '下一关按弹幕投票决定', JSON.stringify(nx));
+  const q = [], seen = [];
+  let last = null;
+  for (let i = 0; i < 18; i++) { const n = d.nextStage(STAGES, last, q); seen.push(n.id); if (n.id === last) { last = 'REPEAT'; break; } last = n.id; }
+  ok(last !== 'REPEAT' && new Set(seen).size === STAGES.length, '没人投票时轮流去所有世界、不连续重复', seen.join(','));
 }
 
 section('礼物答谢调度');
@@ -172,29 +192,44 @@ section('礼物答谢调度');
   ok(DANCES.length >= 16 && new Set(DANCES.map((d) => d.id)).size === DANCES.length, `舞蹈动作库 ${DANCES.length} 支`);
 }
 
-section('ASMR 声音质量');
+section('ASMR 声音（全部是真实录音）');
 {
-  const RANGE = { step: [0.03, 0.4], soft: [0.12, 0.8], item: [0.06, 1.3], pop: [0.02, 0.3], chime: [0.3, 3.5], music: [0.05, 3.5], voice: [0.1, 1.3], fx: [0.2, 2.5], ambEvt: [0.05, 2.7] };
-  const ids = [...Object.keys(RECIPES), ...Object.keys(AMB_EVENTS)];
-  let n = 0;
+  const SND = path.join(ROOT, 'web/sounds');
+  const man = JSON.parse(fs.readFileSync(path.join(SND, 'manifest.json'), 'utf8'));
+  const sounds = man.sounds || {};
+  const need = new Set(['land_soft', 'path_step', 'purr', 'music_dance']);
+  for (const st of STAGES) { need.add(st.ambience); need.add(st.pathSound); for (const dd of [...st.stations, st.finale]) for (const k of ['step', 'heavy', 'special', 'pull']) if (dd.sound[k]) need.add(dd.sound[k]); }
+  const missing = [...need].filter((id) => !sounds[id] || !sounds[id].files || !sounds[id].files.length);
+  ok(missing.length === 0, `游戏用到的 ${need.size} 种声音都有真实录音`, missing.join(','));
+  const RANGE = { trigger: [0.1, 2.6], sustain: [0.8, 4.0], soft: [3, 12], step: [0.1, 0.8], ambience: [15, 120], music: [20, 90] };
   const probs = [];
-  for (const id of ids) {
-    const { buffers, cat } = renderRecipe(id, 48000, 1);
-    for (const b of buffers) {
-      n++;
-      const a = analyze(b, 48000);
-      const [lo, hi] = RANGE[cat];
-      if (a.nan) probs.push(id + ' NaN');
-      if (a.peakDb > -2.5) probs.push(`${id} 峰值 ${a.peakDb.toFixed(1)}`);
-      if (a.duration < lo || a.duration > hi) probs.push(`${id} 时长 ${a.duration.toFixed(2)}`);
-      if (Math.abs(b[0]) > 0.01 || Math.abs(b[b.length - 1]) > 0.002) probs.push(`${id} 首尾爆音`);
+  let files = 0;
+  for (const [id, def] of Object.entries(sounds)) {
+    const [lo, hi] = RANGE[def.cat] || [0.05, 120];
+    if (def.cat === 'trigger' && def.files.length < 3) probs.push(`${id} 只有 ${def.files.length} 个变体`);
+    for (const f of def.files) {
+      files++;
+      const p = path.join(SND, f.src);
+      if (!fs.existsSync(p)) { probs.push(`${f.src} 文件缺失`); continue; }
+      const head = Buffer.alloc(4);
+      const fd = fs.openSync(p, 'r'); fs.readSync(fd, head, 0, 4, 0); fs.closeSync(fd);
+      if (head.toString('latin1') !== 'OggS') probs.push(`${f.src} 不是 OGG`);
+      if (!(f.dur >= lo && f.dur <= hi)) probs.push(`${id} 时长 ${f.dur}s`);
+      if (!(f.gain >= 0 && f.gain <= 6)) probs.push(`${id} 增益 ${f.gain}`);
     }
   }
-  const soundIds = new Set(ids);
-  const missing = Object.values(ITEM_META).map((m) => m.sound).filter((s) => !soundIds.has(s));
-  for (const th of THEMES) for (const s of th.surfaces) if (!soundIds.has(s.step)) missing.push(s.step);
-  ok(missing.length === 0, '每个物件/地面都有对应的声音', missing.join(','));
-  ok(probs.length === 0, `${ids.length} 种声音 / ${n} 个变体：无削波、无爆音、时长合理`, probs.slice(0, 5).join('; '));
+  ok(probs.length === 0, `${Object.keys(sounds).length} 种声音 / ${files} 个录音变体：文件完整、时长合理、变体充足`, probs.slice(0, 5).join('; '));
+  const credits = fs.readFileSync(path.join(SND, 'CREDITS.md'), 'utf8');
+  const spec = JSON.parse(fs.readFileSync(path.join(ROOT, 'tools/sound_spec.json'), 'utf8'));
+  const lic = new Set();
+  const noCredit = [];
+  for (const sd of spec.sounds) for (const src of sd.sources) { lic.add(src.license); if (!credits.includes(src.title || '')) noCredit.push(src.title); }
+  const badLic = [...lic].filter((l) => /NC|ND|non-?commercial/i.test(l) || !/(CC0|CC BY|Public Domain|Pixabay|MIT)/i.test(l));
+  ok(badLic.length === 0, `素材授权全部允许商用（${[...lic].join(' / ')}）`, badLic.join(','));
+  ok(noCredit.length === 0, '每个素材都在 CREDITS.md 里署名', noCredit.slice(0, 3).join(','));
+  const synth = ['dsp.js', 'recipes.js', 'synthWorker.js', 'audioEngine.js'].filter((f) => fs.existsSync(path.join(ROOT, 'web/js/audio', f)));
+  ok(synth.length === 0, '游戏里没有任何程序合成的声音', synth.join(','));
+  ok(sounds.music_dance && sounds.music_dance.files.every((f) => f.bpm >= 80 && f.bpm <= 170), '舞曲都有节拍信息（舞步踩在拍子上）');
 }
 
 console.log(`\n结果：${pass} 项通过，${fail} 项失败`);
