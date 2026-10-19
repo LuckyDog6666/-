@@ -11,7 +11,7 @@ import { Rng, TAU, clamp } from '../core/util.js';
 
 export const PATH_Y = 0.035; // 小路（软垫）的表面高度
 const GAP = 0.85;            // 站与站之间的软垫长度
-const PATH_W = 1.7;
+const PATH_W = 2.0;
 
 const SKY_VERT = `
 varying vec3 vDir;

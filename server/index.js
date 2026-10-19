@@ -39,15 +39,20 @@ export function log(msg) {
   console.log(line);
   try { fs.appendFileSync(logFile(), line + '\n'); } catch {}
 }
-try {
-  const files = fs.readdirSync(LOG_DIR).filter((f) => f.endsWith('.log')).sort();
-  for (const f of files.slice(0, Math.max(0, files.length - 7))) fs.unlinkSync(path.join(LOG_DIR, f));
-} catch {}
+// 只保留最近 7 天的日志（启动时清理一次，之后每 6 小时清理一次）
+function cleanLogs() {
+  try {
+    const files = fs.readdirSync(LOG_DIR).filter((f) => f.endsWith('.log')).sort();
+    for (const f of files.slice(0, Math.max(0, files.length - 7))) fs.unlinkSync(path.join(LOG_DIR, f));
+  } catch {}
+}
+cleanLogs();
+setInterval(cleanLogs, 6 * 3600 * 1000).unref();
 
 // ---------------- 事件总线（带编号的环形缓冲，SSE 断线补发） ----------------
 const clients = new Set();
 const ring = [];
-let seq = Date.now() % 1e9 | 0; // 每次启动从一个新的大数开始，避免与页面里记住的旧编号冲突
+let seq = Date.now(); // 每次启动都从当前时间开始，编号永远只增不减（页面记住的旧编号不会比它大）
 const recent = { gift: [], status: {} };
 function broadcast(ev, { store = true } = {}) {
   ev.ts = ev.ts || Date.now();
@@ -70,6 +75,8 @@ function onLiveEvent(ev) {
   }
   if (ev.type === 'follow') log(`[关注] ${ev.user?.name}`);
   if (ev.type === 'online') { recent.online = ev.count; return; }
+  // 点赞、进房、分享不进补发缓冲（量大、没必要补发），把位置留给礼物和关注
+  if (ev.type === 'like' || ev.type === 'enter' || ev.type === 'share') { broadcast(ev, { store: false }); return; }
   if (ev.type === 'chat') {
     // 弹幕默认转发给游戏（观众可以用弹幕指挥糯糯、投票下一关）；限流，防止大房间刷屏
     recent.lastChat = ev;
@@ -213,8 +220,8 @@ function listCustomSounds() {
 }
 
 const server = http.createServer(async (req, res) => {
-  const url = new URL(req.url, 'http://x');
-  const p = decodeURIComponent(url.pathname);
+  let url, p;
+  try { url = new URL(req.url, 'http://x'); p = decodeURIComponent(url.pathname); } catch { res.writeHead(400); res.end(); return; }
   try {
     if (p === '/api/events') {
       res.writeHead(200, { 'Content-Type': 'text/event-stream; charset=utf-8', 'Cache-Control': 'no-store', Connection: 'keep-alive', 'X-Accel-Buffering': 'no' });

@@ -8,7 +8,7 @@ export class Station {
     this.def = def;           // 定义（类型、颜色、声音、名字等）
     this.group = new THREE.Group();
     this.length = def.length || 2.4;
-    this.width = def.width || 1.3;
+    this.width = def.width || 1.6;
     this.t = 0;
     this.stepsTaken = 0;
     this.label = def.label || '';

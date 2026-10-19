@@ -250,9 +250,40 @@
      "src": "sand_step/sand_step_03.ogg",
      "dur": 0.28,
      "gain": 0.0
+    },
+    {
+     "src": "sand_step/sand_step_04.ogg",
+     "dur": 0.542,
+     "gain": 0.0
+    },
+    {
+     "src": "sand_step/sand_step_05.ogg",
+     "dur": 0.571,
+     "gain": 0.0
+    },
+    {
+     "src": "sand_step/sand_step_06.ogg",
+     "dur": 0.518,
+     "gain": 0.0
+    },
+    {
+     "src": "sand_step/sand_step_07.ogg",
+     "dur": 0.6,
+     "gain": 0.0
+    },
+    {
+     "src": "sand_step/sand_step_08.ogg",
+     "dur": 0.566,
+     "gain": 0.0
+    },
+    {
+     "src": "sand_step/sand_step_09.ogg",
+     "dur": 0.566,
+     "gain": 0.0
     }
    ],
    "credits": [
+    "Nox_Sound",
     "worthahep88"
    ]
   },
@@ -1021,7 +1052,8 @@
      "gain": 0.0,
      "bpm": 122.0,
      "beat0": 0.005,
-     "title": "Fluffing a Duck"
+     "title": "Fluffing a Duck",
+     "credit": "Kevin MacLeod (incompetech.com) · CC BY 4.0"
     },
     {
      "src": "music_dance/music_dance_02.ogg",
@@ -1029,7 +1061,8 @@
      "gain": 0.0,
      "bpm": 144.0,
      "beat0": 0.043,
-     "title": "Monkeys Spinning Monkeys"
+     "title": "Monkeys Spinning Monkeys",
+     "credit": "Kevin MacLeod (incompetech.com) · CC BY 4.0"
     },
     {
      "src": "music_dance/music_dance_03.ogg",
@@ -1037,7 +1070,8 @@
      "gain": 0.0,
      "bpm": 87.0,
      "beat0": 0.048,
-     "title": "Sneaky Snitch"
+     "title": "Sneaky Snitch",
+     "credit": "Kevin MacLeod (incompetech.com) · CC BY 4.0"
     },
     {
      "src": "music_dance/music_dance_04.ogg",
@@ -1045,7 +1079,8 @@
      "gain": 0.0,
      "bpm": 100.0,
      "beat0": 0.011,
-     "title": "Hyperfun"
+     "title": "Hyperfun",
+     "credit": "Kevin MacLeod (incompetech.com) · CC BY 4.0"
     },
     {
      "src": "music_dance/music_dance_05.ogg",
@@ -1053,7 +1088,8 @@
      "gain": 0.0,
      "bpm": 127.0,
      "beat0": 0.325,
-     "title": "If I Had a Chicken"
+     "title": "If I Had a Chicken",
+     "credit": "Kevin MacLeod (incompetech.com) · CC BY 4.0"
     },
     {
      "src": "music_dance/music_dance_06.ogg",
@@ -1061,7 +1097,8 @@
      "gain": 0.0,
      "bpm": 97.0,
      "beat0": 0.016,
-     "title": "Plucky Daisy"
+     "title": "Plucky Daisy",
+     "credit": "Kevin MacLeod (incompetech.com) · CC BY 4.0"
     }
    ],
    "credits": [
@@ -1080,7 +1117,7 @@
     }
    ],
    "credits": [
-    "jorickhoofd（+ Ali_6868, lolamadeus, fthrll, Hankof 的 CC0 素材）"
+    "jorickhoofd"
    ]
   },
   "leaves_crunch": {
@@ -1200,5 +1237,13 @@
     "alexo400（EmoGarbage404 切分）"
    ]
   }
- }
+ },
+ "attribution": [
+  "jorickhoofd",
+  "AGFX",
+  "InspectorJ",
+  "dheming",
+  "Angel_Perez_Grandi",
+  "Luftrum"
+ ]
 }

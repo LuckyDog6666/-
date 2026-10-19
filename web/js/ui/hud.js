@@ -34,6 +34,8 @@ export class Hud {
     this.elVotes = h('div', 'votes', this.cmds);
     // 当前解压站的小标签
     this.elStation = h('div', 'station-pill', root, '');
+    // 舞曲署名（CC BY 要求注明作者）
+    this.elMusic = h('div', 'music-credit', root, '');
     // 感谢榜
     const board = h('div', 'board', root);
     h('h3', null, board, cfg.boardTitle || '💖 今日感谢榜 💖');
@@ -74,6 +76,7 @@ export class Hud {
 
   // 根据画面尺寸设置缩放单位（1080p 为基准）
   layout() {
+    this._bubbleSize = null;
     const w = window.innerWidth, hh = window.innerHeight;
     const portrait = hh > w;
     const s = portrait ? w / 720 : Math.min(w / 1920, hh / 1080) * 1.0;
@@ -116,6 +119,13 @@ export class Hud {
     clearTimeout(this._stT);
     this._stT = setTimeout(() => this.elStation.classList.remove('show'), 3200);
   }
+  showMusic(text) { this.elMusic.textContent = text || ''; this.elMusic.classList.toggle('show', !!text); }
+  // 声音素材致谢（CC BY 作者）加入底部轮播
+  setAttribution(names) {
+    if (!names || !names.length || this._attrAdded) return;
+    this._attrAdded = true;
+    this.tipList.push(`🎧 声音素材致谢：${names.slice(0, 6).join('、')} 等（CC BY），音乐 Kevin MacLeod（CC BY 4.0）`);
+  }
   setVotes(votes, stages) {
     this.elVotes.textContent = '';
     if (!votes || !votes.size) { this.elVotes.style.display = 'none'; return; }
@@ -155,9 +165,17 @@ export class Hud {
   updateThanksSub(line2) { this.bT2.textContent = line2; this.bT2.style.display = line2 ? '' : 'none'; }
   hideThanks() { this.banner.classList.remove('show'); }
 
-  say(text) { this.bubble.textContent = text; this.bubble.classList.add('show'); }
+  say(text) { this.bubble.textContent = text; this.bubble.classList.add('show'); this._bubbleSize = null; }
   unsay() { this.bubble.classList.remove('show'); }
-  placeBubble(x, y) { this.bubble.style.left = `${x}px`; this.bubble.style.top = `${y}px`; }
+  // 气泡跟着糯糯的头；近景镜头里头顶出了画面时，气泡贴着画面边缘，不会被切掉
+  placeBubble(x, y) {
+    if (!this._bubbleSize) this._bubbleSize = [this.bubble.offsetWidth / 2 + 8, this.bubble.offsetHeight + 16];
+    const [bw, bh] = this._bubbleSize;
+    const W = this.root.clientWidth || innerWidth, H = this.root.clientHeight || innerHeight;
+    x = Math.min(Math.max(x, bw), Math.max(bw, W - bw));
+    y = Math.min(Math.max(y, bh), Math.max(bh, H - 12));
+    this.bubble.style.left = `${x}px`; this.bubble.style.top = `${y}px`;
+  }
 
   floatLabel(text, x, y) {
     if (this.cfg.showSoundLabels === false) return;

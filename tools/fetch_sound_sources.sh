@@ -43,6 +43,7 @@ for n in 1 2 3 4; do curl -fsSL -o "$RAW/extra/space-station-14__slime$n.ogg" "$
 curl -fsSL -o "$RAW/extra/space-station-14__diona_rustle1.ogg" "$SS14/Voice/Diona/diona_rustle1.ogg"
 for n in 01 02; do curl -fsSL -o "$RAW/extra/mod-sounds__sounds_leaves_$n.flac" "https://raw.githubusercontent.com/AntumMT/mod-sounds/b5b9f68389a264d39733331e0a1d89ddc8ce77f8/sounds_src/sounds_leaves_$n.flac"; done
 curl -fsSL -o "$RAW/extra/tgstation__soil_plop.ogg" "https://raw.githubusercontent.com/tgstation/tgstation/fc8891311753f3314248908ba944cd4b1f198449/sound/effects/soil_plop.ogg"
+i=1; for h in 2ca22ae1 b5adcbc1 a580ffcf 5bd2035e e2b30149 3851a202; do curl -fsSL -o "$RAW/extra/conquest__step-sand-$i.mp3" "https://raw.githubusercontent.com/hoffspot/conquest/17afdba4484b457128189249cd443bd81900ce2a/client/sounds/step-sand-$i.$h.mp3"; i=$((i+1)); done
 # Button Sounds（MIT，Josh Comeau）：真实的指尖泡泡（Pop-it）与机械键盘录音
 curl -fsSL -o "$TMP/bs.tgz" https://registry.npmjs.org/button-sounds/-/button-sounds-0.0.0.tgz
 tar -xzf "$TMP/bs.tgz" -C "$TMP"

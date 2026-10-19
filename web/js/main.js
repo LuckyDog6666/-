@@ -113,6 +113,12 @@ async function main() {
     onStatus: (s) => { if (s.type === 'error') report('error', s.message); },
   });
   window.__game = game; // 方便调试/自检
+  // 刷新前没来得及答谢的礼物：刷新后接着谢（见 GiftManager.snapshot）
+  try {
+    const q = sessionStorage.getItem('nuonuo.giftQueue');
+    if (q) { sessionStorage.removeItem('nuonuo.giftQueue'); game.gifts.restore(q); }
+  } catch {}
+  addEventListener('pagehide', () => { try { sessionStorage.setItem('nuonuo.giftQueue', game.gifts.snapshot()); } catch {} });
   setLoading('糯糯正在出门…');
   await game.init();
 
@@ -156,7 +162,7 @@ async function main() {
         cheapShadows = true; lowSince = 0;
         renderer.shadowMap.type = THREE.PCFShadowMap;
         game.cfg.shadowSize = 1024;
-        const sun = game.world && game.world.sun;
+        const sun = game.course && game.course.sun;
         if (sun) { if (sun.shadow.map) { sun.shadow.map.dispose(); sun.shadow.map = null; } sun.shadow.mapSize.set(1024, 1024); }
         console.log('[quality] cheaper shadows');
       }

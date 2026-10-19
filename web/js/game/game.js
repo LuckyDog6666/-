@@ -57,6 +57,7 @@ export class Game {
       if (ev.fx) this.particles.burst(ev.fx, p.x, p.y + 0.9, p.z, { colors: ['#ff8fb3', '#ffd166', '#7fd6ff', '#ffffff'] });
     };
     this.hud.setSteps(this.totalSteps);
+    this.hud.setAttribution(this.audio.attribution);
     await this.audio.ensure(COMMON_SOUNDS.filter((id) => id !== 'music_dance'));
     this.loop();
   }
@@ -76,7 +77,13 @@ export class Game {
       }
       this.stagesPlayed++;
       const hours = (performance.now() - this.startedAt) / 3.6e6;
-      if (this.cfg.reloadHours > 0 && hours > this.cfg.reloadHours) { location.reload(); await sleepReal(10000); }
+      if (this.cfg.reloadHours > 0 && hours > this.cfg.reloadHours) {
+        // 刷新前先把已经收到、还没答谢的礼物谢完（刷新后服务器不会重发它们）。
+        // 通关时画面已经合上，先打开，让观众看到答谢
+        if (this.gifts.queued > 0) await this.hud.irisTo(false, 600);
+        for (let k = 0; k < 90 && this.gifts.queued > 0; k++) { await this.serviceInterrupts(null); await this.wait(1); }
+        location.reload(); await sleepReal(10000);
+      }
     }
   }
 
@@ -95,6 +102,7 @@ export class Game {
     this.pet.cancelAction();
     this.pet.root.scale.setScalar(1);
     this.giantUntil = 0;
+    this.skipRequested = false;
     if (this.course) { this.course.dispose(); this.course = null; }
     this.particles.clear();
     this.stageNo++;
@@ -177,7 +185,9 @@ export class Game {
     const n = this.course.stations.length;
     for (let i = 0; i < n; i++) {
       const s = this.course.stations[i];
-      await this.serviceInterrupts(s);
+      // 在两站之间的软垫上处理礼物（传入刚完成的那一站，不会提前"用掉"下一站）
+      await this.serviceInterrupts(i > 0 ? this.course.stations[i - 1] : null);
+      if (this.skipRequested) break;
       this.hud.setStation(i, s.def.label);
       this.focus = s;
       try {
@@ -191,7 +201,13 @@ export class Game {
       this.hud.setMeter(this.course.progress());
       this.lastProgressT = this.time;
     }
+    await this.serviceInterrupts(null);
     this.focus = null;
+  }
+
+  // 这个站还值得继续玩吗（被跳过、被礼物连锁清空、泡泡全按完了、名字刚印上去）
+  stationOver(s) {
+    return this.skipRequested || s.exhausted || s.nameStamped || (s.remaining && s.remaining().length === 0);
   }
 
   async runStation(s, idx) {
@@ -210,7 +226,9 @@ export class Game {
     this.hud.floatStation(s.def.label);
     const pad = 0.24;
     for (let k = 0; k < plan.lanes.length; k++) {
-      const z = plan.lanes[k];
+      // 车道按糯糯当前的大小收窄（巨人模式下两只脚也都踩在托盘里）
+      const zMax = s.width / 2 - 0.19 * pet.root.scale.x - 0.08;
+      const z = clamp(plan.lanes[k], -zMax, zMax);
       const fwd = k % 2 === 0;
       const xa = fwd ? s.x0 + pad : s.x1 - pad, xb = fwd ? s.x1 - pad : s.x0 + pad;
       // 换到这一趟的起点（第一趟是迈进站点，之后是在一头横着挪到下一条车道）
@@ -221,6 +239,7 @@ export class Game {
       const req = d.takeRequest();
       if (req) await this.doRequest(s, req);
       await this.serviceInterrupts(s);
+      if (this.stationOver(s)) break;
       if (this.time - this.lastProgressT > 120) break; // 保险：一个站最多玩两分钟
     }
     if (plan.lookback) {
@@ -270,6 +289,7 @@ export class Game {
       const req = this.director.takeRequest();
       if (req) await this.doRequest(s, req);
       await this.serviceInterrupts(s);
+      if (this.stationOver(s)) break;
     }
     this.celebrateStation(s);
     this.camMode = 'follow';
@@ -288,8 +308,11 @@ export class Game {
     this.camMode = 'finale';
     pet.expr('wide', 'open', 1.5);
     this.hud.say(`哇！是${s.def.label}！`);
+    if (this.cfg.chatCommands !== false) this.hud.toast('这关快结束啦～弹幕打「雪 / 落叶 / 史莱姆 / 水洼 / 沙滩 / 键盘」投票下一关', 'enter', 7000);
     await pet.idleAction('peek', 1.0);
     this.hud.unsay();
+    await this.serviceInterrupts(s);
+    if (this.skipRequested) return;
     const cx = s.length / 2;
     const type = s.def.type;
     if (type === 'soft' || type === 'squishy') {
@@ -302,22 +325,26 @@ export class Game {
         this.onFootLanded(s, 1);
         await this.wait(0.25);
       }
+      await this.serviceInterrupts(s);
       await this.doSpecial(s, 'sit', { bliss: true });
       await this.hopLocal(s, s.length - 0.25, 0, { height: 0.5, dur: 0.6 });
     } else if (type === 'crunch') {
       await this.walkTo(this.course.world(s, s.length * 0.35, 0), { gait: 'stomp', stepDur: 0.62, stride: 0.3, power: 0.9, station: s });
       await this.doSpecial(s, 'stomp', {});
+      await this.serviceInterrupts(s);
       await this.doSpecial(s, 'sit', { bliss: true });
       await this.walkTo(this.course.world(s, s.length - 0.25, 0.2), { gait: 'stomp', stepDur: 0.62, stride: 0.3, power: 0.9, station: s });
     } else if (type === 'water') {
       for (const z of [-0.45, 0.45]) {
         await this.walkTo(this.course.world(s, 0.3, z), { gait: 'stomp', stepDur: 0.75, stride: 0.3, power: 0.9, station: s });
         await this.walkTo(this.course.world(s, s.length - 0.3, z), { gait: 'stomp', stepDur: 0.75, stride: 0.3, power: 0.9, station: s });
+        await this.serviceInterrupts(s);
       }
       await this.doSpecial(s, 'stomp', {});
     } else if (type === 'popit' || type === 'bubblewrap') {
       await this.walkTo(this.course.world(s, 0.3, 0), { gait: 'tiptoe', stepDur: 0.5, stride: 0.22, power: 0.4, station: s });
       await this.doSpecial(s, 'tapdance', {});
+      await this.serviceInterrupts(s);
       // 连锁反应：剩下的泡泡一波全按下去
       this.hud.say('最后来个连环啵啵啵～');
       if (s.chain) await s.chain(this.stationApi(s));
@@ -371,14 +398,19 @@ export class Game {
     }
     const lx = clamp(wp.x - s.x0, 0.02, s.length - 0.02), lz = clamp(wp.z, -s.width / 2 + 0.02, s.width / 2 - 0.02);
     const power = clamp((o.power ?? 0.5) + rand(-0.08, 0.08), 0, 1);
-    const fb = s.footstep(lx, lz, side, power) || {};
+    const rot = this.pet.root.rotation.y;
+    const fb = s.footstep(lx, lz, side, power, [Math.sin(rot), Math.cos(rot)]) || {};
     this.feedback(s, fb, wp, { gain: o.gait === 'stomp' ? 1.5 : o.gait === 'tiptoe' ? -2 : 0 });
   }
 
   feedback(s, fb, wp, o = {}) {
     if (fb.sound) {
       // 音量起伏控制在小范围内：有轻重变化，但不会忽然很响
-      this.sfx(fb.sound, wp, { gain: clamp((fb.gain || 0) + (o.gain || 0), -5, 2), maxDur: fb.maxDur, rate: fb.rate });
+      const gain = clamp((fb.gain || 0) + (o.gain || 0), -5, 2);
+      this.sfx(fb.sound, wp, { gain, maxDur: fb.maxDur, rate: fb.rate });
+      // 一脚踩破好几个泡泡/踩出好几道裂纹：紧接着再响 1~2 声，像真的"噼里啪啦"一串
+      const extra = Math.min(2, Math.max(0, (fb.cluster || 1) - 1));
+      for (let k = 0; k < extra; k++) this.sfx(fb.sound, wp, { gain: gain - 3 - k * 2, maxDur: fb.maxDur, main: false, delay: 0.05 + k * 0.07 + Math.random() * 0.04 });
       this.countStep();
     }
     for (const f of fb.fx || []) {
@@ -419,12 +451,22 @@ export class Game {
       wait: (t) => self.wait(t),
       hopLocal: (x, z, o) => self.hopLocal(s, x, z, o),
       tapAt: (x, z) => {
-        // 让抬起的那只脚正好落在目标上（脚在身体前方 0.14、侧面 0.19）
-        const side = pet._nextFoot || 1;
-        const tx = s.x0 + x - 0.14, tz = z + 0.19 * side;
-        return pet.walk(V(tx, self.course.yAt(tx, tz), tz), { steps: 1, stepDur: 0.36, lift: 0.06, gait: 'tiptoe', keepFacing: true, yAt: (a, b) => self.course.yAt(a, b) });
+        // 让最后落下的那只脚正好踩在目标上：按糯糯当前的朝向和大小算脚的位置；离得远就多走几小步
+        const sc = pet.root.scale.x, rot = pet.root.rotation.y, first = pet._nextFoot || 1;
+        const foot = (side) => new THREE.Vector3(0.19 * side * sc, 0, 0.14 * sc).applyAxisAngle(new THREE.Vector3(0, 1, 0), rot);
+        let steps = 1, off = foot(first);
+        for (let it = 0; it < 2; it++) {
+          const dist = Math.hypot(s.x0 + x - off.x - pet.root.position.x, z - off.z - pet.root.position.z);
+          steps = Math.max(1, Math.round(dist / 0.2));
+          off = foot(((steps - 1) % 2 === 0 ? 1 : -1) * first);
+        }
+        const tx = s.x0 + x - off.x, tz = z - off.z;
+        return pet.walk(V(tx, self.course.yAt(tx, tz), tz), { steps, stepDur: steps > 1 ? 0.3 : 0.36, lift: 0.06, gait: 'tiptoe', keepFacing: true, yAt: (a, b) => self.course.yAt(a, b) });
       },
       say: (t) => self.hud.say(t),
+      // 糯糯面朝 +x 还是 -x；turn 让它转过身
+      dir: () => (Math.sin(pet.facing) >= 0 ? 1 : -1),
+      turn: (d) => { pet.face(d > 0 ? Math.PI / 2 : -Math.PI / 2); },
     };
   }
 
@@ -460,7 +502,8 @@ export class Game {
       count, pressDur: 0.8,
       onPress: (side, wp) => {
         const lx = clamp(wp.x - s.x0, 0.05, s.length - 0.05), lz = clamp(wp.z, -s.width / 2 + 0.05, s.width / 2 - 0.05);
-        const fb = (s.knead ? s.knead(lx, lz, 0.5) : s.footstep(lx, lz, side, 0.4)) || {};
+        const rot = pet.root.rotation.y, hd = [Math.sin(rot), Math.cos(rot)];
+        const fb = (s.knead ? s.knead(lx, lz, 0.5, hd) : s.footstep(lx, lz, side, 0.4, hd)) || {};
         this.feedback(s, fb, wp, { gain: -1 });
       },
     });
@@ -494,7 +537,12 @@ export class Game {
         for (let k = 0; k < 2; k++) { await this.hopLocal(s, clamp(lp.x + 0.15 * (k + 1), 0.25, s.length - 0.25), lp.z, { height: 0.4, dur: 0.5 }); this.onFootLanded(s, 0.9); await this.wait(0.2); }
         break;
       }
-      case 'stomp': await this.doSpecial(s, (s.def.specials || []).find((x) => x === 'stomp' || x === 'tapdance' || x === 'bounce') || 'stomp', {}); break;
+      case 'stomp': {
+        const sp = (s.def.specials || []).find((x) => x === 'stomp' || x === 'tapdance' || x === 'bounce');
+        if (sp || s.hf || s.pieces) await this.doSpecial(s, sp || 'stomp', {});
+        else { const lp = this.stationApi(s).localPos(); await this.hopLocal(s, clamp(lp.x, 0.3, s.length - 0.3), lp.z, { height: 0.42, dur: 0.55 }); this.onFootLanded(s, 1); await this.wait(0.6); }
+        break;
+      }
       case 'spin': pet.expr('happy', 'open', 1.5); await pet.dance(DANCES.find((x) => x.id === 'spin') || DANCES[0], 2.2, 112); break;
       case 'love': this.camMode = 'face'; pet.face(0.1); pet.expr('happy', 'open', 2); this.particles.burst('hearts', pet.root.position.x, pet.root.position.y + 1, pet.root.position.z, { colors: ['#ff6fa3', '#ff8fb3'], count: 5 }); await pet.idleAction('wiggle', 1.4); break;
       default: break;
@@ -544,6 +592,7 @@ export class Game {
         if (!r) break;
         const name = escapeText(ev.user?.name, 10);
         if (r.kind === 'vote') { this.hud.setVotes(this.director.votes, STAGES); if (this.time - (this._lastVoteToast || -1e9) > 4) { this._lastVoteToast = this.time; this.hud.toast(`${name} 投票：下一关去「${r.stage.name}」`, 'enter', 3500); } }
+        else if (r.kind === 'here') { if (this.time - (this._lastVoteToast || -1e9) > 4) { this._lastVoteToast = this.time; this.hud.toast(`${name}：现在就在「${r.stage.name}」啦～`, 'enter', 3000); } }
         else if (r.kind === 'action') this.hud.toast(`${name}：${ev.text.slice(0, 12)} → 糯糯收到！`, 'enter', 3500);
         else if (r.kind === 'pace') this.hud.toast(`${name}：${r.say}`, 'enter', 3000);
         break;
@@ -571,7 +620,6 @@ export class Game {
       this.pet.face(Math.PI / 2);
       this.camMode = prev;
     }
-    if (this.giantUntil && this.time > this.giantUntil) await this.endGiant();
   }
 
   _pickDance(big) {
@@ -589,12 +637,15 @@ export class Game {
     const tier = TIERS[ev.tier] || TIERS[0];
     const pet = this.pet;
     this.dancing = true;
+    this.gifts.current = ev;
     this.gifts.danceStarted();
     const prevMode = this.camMode;
     this.camMode = 'dance';
     pet.face(0);
     pet.sinkTarget = 0;
-    const names = ev.users.length > 1 ? `${ev.users.slice(0, 3).join('、')}${ev.users.length > 3 ? ` 等${ev.users.length}位` : ''}` : ev.user;
+    // 集体答谢最多写 2 个名字（每个最多 6 个字），横幅不会超出屏幕
+    const short = (n) => (Array.from(n).length > 6 ? Array.from(n).slice(0, 6).join('') + '…' : n);
+    const names = ev.users.length > 1 ? `${ev.users.slice(0, 2).map(short).join('、')}${ev.users.length > 2 ? ` 等${ev.users.length}位` : ''}` : ev.user;
     const boss = (n) => (/老板$/.test(n) ? n : `${n} 老板`);
     const line1 = ev.users.length > 1 ? `谢谢 ${names} 老板们！` : `谢谢 ${boss(names)}！`;
     const giftLine = ev.group ? `${ev.users.length} 位老板的礼物` : `${ev.gift} ×${ev.count}`;
@@ -611,25 +662,34 @@ export class Game {
     this.audio.duckAmbience(true);
     const music = await this.audio.startMusic('music_dance', total + 0.4);
     const bpm = music ? music.bpm : 112;
+    if (music && music.title) this.hud.showMusic(`♪ ${music.title} — ${music.credit || 'Kevin MacLeod (incompetech.com) · CC BY 4.0'}`);
     for (let k = 0; k < tier.dances; k++) {
       const d = this._pickDance(ev.tier >= 2);
       this.hud.updateThanksSub(`${giftLine} · 糯糯跳「${d.name}」`);
-      await pet.dance(d, tier.secs, bpm);
+      // 当前音乐位置 → 舞步相位；每支舞的时长取整到整拍，连跳几支也不会错拍
+      const spb = 60 / bpm;
+      const secs = Math.max(spb * 4, Math.round(tier.secs / spb) * spb);
+      const off = music ? this.audio.musicTime() - (music.beat0 || 0) : 0;
+      await pet.dance(d, secs, bpm, off);
       if (tier.confetti && k === tier.dances - 1) this.particles.burst('confetti', p.x, p.y + 1.2, p.z, { colors: ['#ff8fb3', '#ffd166', '#7fd6ff'], count: 30, floor: pet.groundY });
     }
     this.audio.stopMusic(0.6);
     this.audio.duckAmbience(false);
+    this.hud.showMusic('');
     this.hud.say(ev.tier >= 2 ? '老板最棒啦！♥' : pick(THANK_LINES));
     await pet.idleAction('wave', 1.0);
     this.hud.hideThanks();
     this.hud.unsay();
     // 礼物特效（越大的礼物越壮观）
     try {
-      if (ev.tier >= 3 && s) await this.giftChain(s, names);
+      const on = s && this.course.stationAt(pet.root.position.x, pet.root.position.z) === s ? s : null;
+      if (ev.tier >= 3 && on) await this.giftChain(on, names);
+      else if (ev.tier >= 3) await this.startGiant(names);
       else if (ev.tier >= 2) await this.startGiant(names);
       else if (ev.tier >= 1 && s) await this.giftName(s, ev.users.length > 1 ? '老板们' : ev.user);
     } catch (e) { console.error('[gift fx]', e); }
     this.gifts.danceEnded();
+    this.gifts.current = null;
     this.dancing = false;
     pet.face(Math.PI / 2);
     this.camMode = prevMode === 'dance' ? 'macro' : prevMode;
@@ -638,8 +698,11 @@ export class Game {
 
   // 中礼物：把老板的名字压进软软的材质里（这一关一直留着）
   async giftName(s, name) {
-    const target = (s && s.stampText && !s.done) ? s : this.course.stations.find((q) => q.stampText && !q.done && q.index >= (s ? s.index : 0));
-    if (!target) return;
+    // 优先印在刚踩完的软材料上（在身后，不会再被踩乱）；没有的话就印在脚下这一块，印完就离开这一站
+    const done = this.course.stations.filter((q) => q.stampText && q.done && !q.nameStamped);
+    const here = s && s.stampText && !s.done && this.course.stationAt(this.pet.root.position.x, this.pet.root.position.z) === s ? s : null;
+    const target = done.length ? done[done.length - 1] : here;
+    if (!target) { await this.startGiantMini(name); return; }
     const text = escapeText(name, 6);
     const pts = textPoints(text, target.length - 0.4, Math.min(0.7, target.width - 0.3));
     if (!pts.length) return;
@@ -653,15 +716,26 @@ export class Game {
       if (i % (chunk * 4) === 0) this.sfx(target.def.sound.step, this.course.world(target, pts[i][0] + 0.2, pts[i][1]), { gain: -6, maxDur: 0.6, main: false });
       await this.wait(0.06);
     }
+    target.nameStamped = true;
     await this.wait(1.4);
     this.hud.unsay();
     this.focus = s;
     this.camMode = prev;
   }
 
+  // 没有可以印名字的软材料时：头顶冒一圈爱心 + 念出名字（不让中礼物的特效落空）
+  async startGiantMini(name) {
+    const p = this.pet.root.position;
+    this.hud.say(`${escapeText(name, 8)} 老板，糯糯爱你～`);
+    this.particles.burst('hearts', p.x, p.y + 1.1, p.z, { colors: ['#ff6fa3', '#ff8fb3', '#ffd166'], count: 14 });
+    await this.pet.idleAction('celebrate', 1.2);
+    this.hud.unsay();
+  }
+
   // 大礼物：巨人模式——糯糯变大 1.8 倍，接下来 30 秒每一脚都超级重
   async startGiant(names) {
     const pet = this.pet, p = pet.root.position;
+    if (pet.root.scale.x > 1.1) { this.giantUntil = this.time + 30; return; } // 已经是巨人：延长时间
     this.hud.say('巨人糯糯出动！');
     this.particles.burst('poof', p.x, p.y + 0.4, p.z, { colors: ['#ffffff', '#ffe3f1'], count: 30 });
     for (let i = 0; i <= 20; i++) { pet.root.scale.setScalar(1 + 0.8 * (i / 20) ** 2); await this.wait(0.03); }
@@ -712,8 +786,19 @@ export class Game {
     this.timers.update(dt);
     this.gifts.update(dt);
     if (this.state === 'play' && !this.dancing) this.director.tick(dt);
-    if (this.pet) this.pet.update(dt);
+    if (this.pet) {
+      this.pet.update(dt);
+      // 站着不动（踩奶、坐下、享受、跳舞）时，身体跟着脚下的材质一起沉下去、慢慢鼓回来
+      const k = this.pet.action ? this.pet.action.kind : null;
+      if (this.course && (!k || k === 'idle' || k === 'knead' || k === 'dance')) {
+        const p = this.pet.root.position;
+        const gy = this.course.yAt(p.x, p.z);
+        p.y = damp(p.y, gy, 8, dt);
+        this.pet.setGround(gy);
+      }
+    }
     if (this.crownUntil && this.time > this.crownUntil && !this.dancing) { this.pet.setCrown(false); this.crownUntil = 0; }
+    if (this.giantUntil && this.time > this.giantUntil && !this.dancing && !this._shrinking) { this._shrinking = true; this.endGiant().finally(() => { this._shrinking = false; }); }
     this.updateCamera(dt);
     if (this.course) this.course.update(dt, this.pet.root.position, this.camera.position);
     if (this.stage) {
@@ -756,8 +841,8 @@ export class Game {
         break;
       }
       case 'macro': // 低机位侧前方特写：小脚踩进材质、身后一串脚印都在画面里（ASMR 的核心镜头）
-        look = V(p.x - 0.35 * dir * sc, g + 0.16 * sc, p.z * 0.6);
-        off = (portrait ? V(1.05 * dir, 1.65, 3.3) : V(1.3 * dir, 1.25, 2.85)).multiplyScalar(sc > 1.1 ? 1.75 : 1);
+        look = V(p.x - 0.32 * dir * sc, g + 0.3 * sc, p.z * 0.6);
+        off = (portrait ? V(1.05 * dir, 1.3, 3.5) : V(1.4 * dir, 1.0, 3.15)).multiplyScalar(sc > 1.1 ? 1.75 : 1);
         off.applyAxisAngle(V(0, 1, 0), Math.sin(t * 0.07) * 0.1);
         lambda = 1.5;
         break;
@@ -821,7 +906,7 @@ export class Game {
 
   // 控制台指令
   command(c) {
-    if (c.cmd === 'skip' && this.course) for (const s of this.course.stations) s.done = true;
+    if (c.cmd === 'skip') this.skipRequested = true;
     if (c.cmd === 'reload') location.reload();
     if (c.cmd === 'volume') this.audio.setVolumes(c.volumes || {});
     if (c.cmd === 'dance') this.gifts.ready.push({ users: ['测试老板'], user: '测试老板', gift: '小心心', count: 1, value: 1, tier: Number(c.tier) || 0, at: this.gifts.now });

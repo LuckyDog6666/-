@@ -411,9 +411,10 @@ export class Pet {
   }
 
   // 舞蹈：dance = {fn(pose, t, beat, pet), beats}
-  dance(dance, seconds, bpm = 112) {
+  // beatOffset：开始这支舞时音乐已经走到第几秒（减去第一拍的位置），让每个动作踩在拍子上
+  dance(dance, seconds, bpm = 112, beatOffset = 0) {
     this.face(0);
-    return new Promise((resolve) => { this._start({ kind: 'dance', t: 0, dance, seconds, bps: bpm / 60, resolve, events: dance.events ? dance.events.map((e) => ({ ...e, done: false })) : [] }); });
+    return new Promise((resolve) => { this._start({ kind: 'dance', t: 0, dance, seconds, bps: bpm / 60, off: beatOffset, resolve, events: dance.events ? dance.events.map((e) => ({ ...e, done: false })) : [] }); });
   }
 
   // 停顿/姿态（看看四周、闻一闻、坐下）
@@ -497,7 +498,10 @@ export class Pet {
       const prog = (i + ease.inOutSine(stepU)) / a.steps;
       pos.x = lerp(a.from.x, a.to.x, prog);
       pos.z = lerp(a.from.z, a.to.z, prog);
-      const ground = a.yAt ? a.yAt(pos.x, pos.z) : lerp(a.from.y, a.to.y, prog);
+      // 地面高度做一点平滑：走过高低不平的落叶堆、雪球堆时身体不会抖
+      const rawGround = a.yAt ? a.yAt(pos.x, pos.z) : lerp(a.from.y, a.to.y, prog);
+      a.gy = a.gy == null ? rawGround : damp(a.gy, rawGround, 14, dt);
+      const ground = a.gy;
       const side = (i % 2 === 0 ? 1 : -1) * a.side;
       // 步态：普通（正弦抬脚）/ 重踩 stomp（快速抬高、空中停一下、再"啪"地踩下去）/ 踮脚 tiptoe（小碎步）
       const lift = a.gait === 'stomp' ? smoothstep(0, 0.3, ph) * (1 - smoothstep(0.58, 0.7, ph)) : Math.sin(Math.min(1, ph / 0.7) * Math.PI);
@@ -560,7 +564,8 @@ export class Pet {
       if (u >= 1) { this.action = null; pos.copy(a.to); a.resolve(); }
     } else if (a && a.kind === 'dance') {
       a.t += dt;
-      const beat = a.t * a.bps;
+      // 拍点相位：从音乐的拍子算起（不足一拍时从 0 开始，避免动作一开场就跳一截）
+      const beat = Math.max(0, a.t + (a.off || 0)) * a.bps;
       a.dance.fn(P, a.t, beat, this, a);
       if (a.events) for (const ev of a.events) if (!ev.done && beat >= ev.beat) { ev.done = true; this.onDanceEvent && this.onDanceEvent(ev, this); }
       if (a.t >= a.seconds) { this.action = null; a.resolve(); }

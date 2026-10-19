@@ -11,7 +11,13 @@ CC-BY 类素材需要署名，已在此列出。我们对原始录音做了切�
 | Sand footsteps | worthahep88 | https://freesound.org/people/worthahep88/sounds/319224/（经由 Minetest Game） | CC0 1.0 | sand_step |
 | Sand footsteps | worthahep88 | https://freesound.org/people/worthahep88/sounds/319224/（经由 Minetest Game） | CC0 1.0 | sand_step |
 | Sand footsteps | worthahep88 | https://freesound.org/people/worthahep88/sounds/319224/（经由 Minetest Game） | CC0 1.0 | sand_step |
-| soil_plop | jorickhoofd（+ Ali_6868, lolamadeus, fthrll, Hankof 的 CC0 素材） | https://freesound.org/people/jorickhoofd/sounds/169551/（经由 tgstation/tgstation） | CC BY 4.0 | sand_press |
+| Footsteps on sand | Nox_Sound | https://freesound.org/people/Nox_Sound/（经由 hoffspot/conquest） | CC0 1.0 | sand_step |
+| Footsteps on sand | Nox_Sound | https://freesound.org/people/Nox_Sound/（经由 hoffspot/conquest） | CC0 1.0 | sand_step |
+| Footsteps on sand | Nox_Sound | https://freesound.org/people/Nox_Sound/（经由 hoffspot/conquest） | CC0 1.0 | sand_step |
+| Footsteps on sand | Nox_Sound | https://freesound.org/people/Nox_Sound/（经由 hoffspot/conquest） | CC0 1.0 | sand_step |
+| Footsteps on sand | Nox_Sound | https://freesound.org/people/Nox_Sound/（经由 hoffspot/conquest） | CC0 1.0 | sand_step |
+| Footsteps on sand | Nox_Sound | https://freesound.org/people/Nox_Sound/（经由 hoffspot/conquest） | CC0 1.0 | sand_step |
+| soil_plop（含 Ali_6868、lolamadeus、fthrll、Hankof 的 CC0 素材） | jorickhoofd | https://freesound.org/people/jorickhoofd/sounds/169551/（经由 tgstation/tgstation） | CC BY 4.0 | sand_press |
 | Leaves | DSOADigital | https://freesound.org/s/362253/（经由 AntumMT/mod-sounds） | CC0 1.0 | leaves_crunch |
 | Leaves | DSOADigital | https://freesound.org/s/362253/（经由 AntumMT/mod-sounds） | CC0 1.0 | leaves_crunch |
 | Leaves rustle | nicoproson（Space Station 14 裁剪） | https://freesound.org/people/nicoproson/sounds/631406/（经由 space-wizards/space-station-14） | CC0 1.0 | leaves_crunch |

@@ -19,6 +19,27 @@ function tray(st, color, h = 0.08, inset = 0.06) {
   return m;
 }
 
+// 特别动作的落点：在身体前方，而且一定落在托盘里（走到尽头时就转过身，朝回走的方向做）
+function ahead(st, api, dist = 0.3, margin = 0.35) {
+  const p = api.localPos();
+  let dir = api.dir ? api.dir() : 1;
+  let x = p.x + dir * dist;
+  if (x < margin || x > st.length - margin) { dir = -dir; x = p.x + dir * dist; if (api.turn) api.turn(dir); }
+  return { x: clamp(x, margin, st.length - margin), z: clamp(p.z, -st.width / 2 + 0.3, st.width / 2 - 0.3), dir };
+}
+// 按"最近邻"排顺序：小碎步一颗挨着一颗按，不会满场乱跑
+function nearestOrder(list, x0, z0, n) {
+  const rest = list.slice(), out = [];
+  let x = x0, z = z0;
+  while (rest.length && out.length < n) {
+    let bi = 0, bd = Infinity;
+    rest.forEach((c, i) => { const d = Math.hypot(c.x - x, c.z - z); if (d < bd) { bd = d; bi = i; } });
+    const c = rest.splice(bi, 1)[0];
+    out.push(c); x = c.x; z = c.z;
+  }
+  return out;
+}
+
 // ================= 1. 软软的可塑表面：太空沙 / 雪 / 奶油 / 花泥 / 面粉 / 记忆海绵 =================
 export class SoftSlab extends Station {
   build() {
@@ -71,10 +92,10 @@ export class SoftSlab extends Station {
     this.glitterPos.forEach(([x, z], i) => { m4.makeTranslation(x, this.hf.heightAt(x, z) + 0.004, z); this.glitter.setMatrixAt(i, m4); });
     this.glitter.instanceMatrix.needsUpdate = true;
   }
-  footstep(x, z, side, power = 0.5) {
+  footstep(x, z, side, power = 0.5, heading) {
     this.stepsTaken++;
     const d = this.def;
-    this.hf.stamp(x, z, { rx: 0.1, rz: 0.075, depth: (d.depth ?? 0.06) * (0.75 + power * 0.6), shape: 'paw' });
+    this.hf.stamp(x, z, { rx: 0.1, rz: 0.075, depth: (d.depth ?? 0.06) * (0.75 + power * 0.6), shape: 'paw', dir: heading });
     this._refreshGlitter();
     const fx = [];
     if (d.fx) fx.push({ preset: d.fx, x, y: this.hf.heightAt(x, z), z, colors: d.fxColors || [d.color], count: d.fxCount || 10, scale: 0.7 });
@@ -83,8 +104,8 @@ export class SoftSlab extends Station {
   get specials() { return this.def.specials || ['sit', 'press']; }
   progress() { return Math.min(1, coverage(this.hf) / 0.32); }
   // 踩奶时的小脚印（比走路的浅一点、圆一点）
-  knead(x, z, power = 0.5) {
-    this.hf.stamp(x, z, { rx: 0.085, rz: 0.07, depth: (this.def.depth ?? 0.06) * (0.6 + power * 0.5), shape: 'paw' });
+  knead(x, z, power = 0.5, heading) {
+    this.hf.stamp(x, z, { rx: 0.085, rz: 0.07, depth: (this.def.depth ?? 0.06) * (0.6 + power * 0.5), shape: 'paw', dir: heading });
     this._refreshGlitter();
     return { sound: this.sound.step, gain: -3 + power * 2, maxDur: 1.6 };
   }
@@ -109,13 +130,13 @@ export class SoftSlab extends Station {
       await pose;
       api.sink(0);
     } else if (name === 'press') {
-      // 俯身用小手按一按：两个小手印
-      const p = api.localPos();
-      const x = clamp(p.x + 0.35, 0.3, this.length - 0.3);
+      // 俯身用小手按一按：两个小手印（在身体前方）
+      const t = ahead(this, api, 0.42);
+      const x = t.x, p = t;
       const pose = api.pose('reach', 2.2);
       await api.wait(0.45);
       for (const zz of [-0.12, 0.12]) {
-        this.hf.stamp(x, clamp(p.z + zz, -this.width / 2 + 0.1, this.width / 2 - 0.1), { rx: 0.07, rz: 0.06, depth: (d.depth ?? 0.06) * 1.1, shape: 'paw' });
+        this.hf.stamp(x, clamp(p.z + zz, -this.width / 2 + 0.1, this.width / 2 - 0.1), { rx: 0.07, rz: 0.06, depth: (d.depth ?? 0.06) * 1.1, shape: 'paw', dir: [t.dir, 0] });
         this._refreshGlitter();
         api.sfx(this.sound.special || this.sound.step, { gain: 0, maxDur: 2 });
         await api.wait(0.7);
@@ -123,8 +144,7 @@ export class SoftSlab extends Station {
       await pose;
     } else if (name === 'cut') {
       // 用小手划出一道沟（太空沙最经典的"切一刀"画面）
-      const p = api.localPos();
-      const x = clamp(p.x + 0.4, 0.3, this.length - 0.3);
+      const x = ahead(this, api, 0.45).x;
       const pose = api.pose('reach', 2.3);
       await api.wait(0.35);
       api.sfx(this.sound.special || this.sound.step, { gain: 1, maxDur: 3 });
@@ -136,6 +156,17 @@ export class SoftSlab extends Station {
       if (d.fx) api.burst(d.fx, x, this.hf.heightAt(x, 0), 0, { colors: d.fxColors || [d.color], count: 16 });
       this._refreshGlitter();
       await pose;
+    } else if (name === 'stomp') {
+      // 跳起来，两只脚一起重重踩下去：一对深深的脚印
+      const t = ahead(this, api, 0.28);
+      await api.hopLocal(t.x, t.z, { height: 0.42, dur: 0.55 });
+      for (const zz of [-0.1, 0.1]) this.hf.stamp(t.x + 0.06 * t.dir, clamp(t.z + zz, -this.width / 2 + 0.1, this.width / 2 - 0.1), { rx: 0.1, rz: 0.075, depth: (d.depth ?? 0.06) * 1.5, shape: 'paw', dir: [t.dir, 0] });
+      this._refreshGlitter();
+      api.sfx(this.sound.heavy || this.sound.special || this.sound.step, { gain: 2, maxDur: 2.4 });
+      if (d.fx) api.burst(d.fx, t.x, this.hf.heightAt(t.x, t.z), t.z, { colors: d.fxColors || [d.color], count: 22 });
+      api.sink(0.04);
+      await api.wait(0.9);
+      api.sink(0);
     }
   }
   update(dt) { super.update(dt); this.hf.update(dt); }
@@ -187,6 +218,10 @@ export class SlimeStation extends Station {
   }
   get specials() { return this.def.specials || ['sit', 'press']; }
   progress() { return Math.min(1, this.stepsTaken / 9); }
+  // 把老板的名字压进史莱姆（会慢慢流平，正好一关的时间）
+  stampText(points) {
+    for (const [x, z] of points) this.hf.stamp(x, z, { rx: 0.035, rz: 0.035, depth: 0.05, shape: 'round', rim: 0.4 });
+  }
   knead(x, z, power = 0.5) {
     this.hf.stamp(x, z, { rx: 0.1, rz: 0.08, depth: 0.06 + power * 0.02, shape: 'round', rim: 0.7 });
     return { sound: this.sound.step, gain: -2, maxDur: 2.0, sink: 0.04 };
@@ -194,6 +229,7 @@ export class SlimeStation extends Station {
   async perform(name, api) {
     const x = clamp(api.localPos().x, 0.4, this.length - 0.4);
     const z0 = clamp(api.localPos().z, -this.width / 2 + 0.3, this.width / 2 - 0.3);
+    const front = name === 'sit' ? null : ahead(this, api, 0.4);
     if (name === 'sit') {
       // 坐进史莱姆：慢慢陷下去，起身时拉出好多丝
       const pose = api.pose('sit', 2.6);
@@ -213,7 +249,7 @@ export class SlimeStation extends Station {
       await api.wait(0.4);
       for (let k = 0; k < 3; k++) {
         const zz = clamp(z0 + (k - 1) * 0.15, -this.width / 2 + 0.1, this.width / 2 - 0.1);
-        this.hf.stamp(x + 0.35, zz, { rx: 0.09, rz: 0.08, depth: 0.09, shape: 'round', rim: 0.8 });
+        this.hf.stamp(front.x, zz, { rx: 0.09, rz: 0.08, depth: 0.09, shape: 'round', rim: 0.8 });
         api.sfx(k === 2 && this.sound.special ? this.sound.special : this.sound.step, { gain: 0, maxDur: 2.2 });
         await api.wait(0.85);
       }
@@ -343,7 +379,7 @@ export class PopItStation extends Station {
     if (!near.length) return { sound: null };
     for (const [k] of near) { const c = this.cells[k]; c.popped = true; c.anim = 1; }
     this.im.instanceMatrix.needsUpdate = true;
-    return { sound: this.sound.step, gain: 0, maxDur: 1.2, repeat: near.length };
+    return { sound: this.sound.step, gain: 0, maxDur: 1.2, cluster: near.length };
   }
   get specials() { return ['tapdance']; }
   progress() { return Math.min(1, this.cells.filter((c) => c.popped).length / this.cells.length / 0.55); }
@@ -360,8 +396,8 @@ export class PopItStation extends Station {
   }
   async perform(name, api) {
     // 小碎步把附近的泡泡一颗一颗按掉
-    const x0 = api.localPos().x;
-    const targets = this.cells.filter((c) => !c.popped && Math.abs(c.x - x0) < 0.5).sort((a, b) => a.x - b.x || a.z - b.z).slice(0, 8);
+    const lp = api.localPos();
+    const targets = nearestOrder(this.cells.filter((c) => !c.popped && Math.abs(c.x - lp.x) < 0.6), lp.x, lp.z, 8);
     for (const c of targets) {
       await api.tapAt(c.x, c.z);
       c.popped = true; c.anim = 1;
@@ -423,10 +459,11 @@ export class BubbleWrapStation extends Station {
     this.im.instanceMatrix.needsUpdate = true;
     if (!n) return { sound: null };
     const fx = this.soap ? [{ preset: 'bubbles', x, y: 0.12, z, colors: ['#ffffff', '#e3f6ff', '#ffe3f6'], count: 4 + n * 2, scale: 0.6 }] : [];
-    return { sound: this.sound.step, gain: Math.min(2, (n - 2) * 0.6), maxDur: 1.4, fx };
+    return { sound: this.sound.step, gain: Math.min(1, (n - 2) * 0.5), maxDur: 1.4, fx, cluster: n };
   }
   get specials() { return ['tapdance']; }
   progress() { return Math.min(1, this.cells.filter((c) => c.popped).length / this.cells.length / 0.5); }
+  remaining() { return this.cells.filter((c) => !c.popped); }
   async chain(api) {
     const rest = this.cells.map((c, k) => [c, k]).filter(([c]) => !c.popped).sort((a, b) => a[0].x - b[0].x);
     for (let i = 0; i < rest.length; i++) {
@@ -436,8 +473,8 @@ export class BubbleWrapStation extends Station {
     this.im.instanceMatrix.needsUpdate = true;
   }
   async perform(name, api) {
-    const x0 = api.localPos().x;
-    const targets = this.cells.filter((c) => !c.popped && Math.abs(c.x - x0) < 0.45).sort(() => Math.random() - 0.5).slice(0, 9);
+    const lp = api.localPos();
+    const targets = nearestOrder(this.cells.filter((c) => !c.popped && Math.abs(c.x - lp.x) < 0.55), lp.x, lp.z, 9);
     for (const c of targets) {
       await api.tapAt(c.x, c.z);
       this.cells.forEach((q, k) => { if (!q.popped && Math.hypot(q.x - c.x, q.z - c.z) < 0.06) { q.popped = true; this._mat(k); } });
@@ -519,13 +556,11 @@ export class CrunchStation extends Station {
   progress() { return Math.min(1, this.pieces.filter((p) => p.crushed > 0.5).length / this.pieces.length / 0.45); }
   async perform(name, api) {
     // 跳起来重重一踩！
-    const p = api.localPos();
-    await api.hopLocal(p.x + 0.25, 0, { height: 0.45, dur: 0.55 });
-    const fb = this.footstep(p.x + 0.25, 0, 1, 1);
-    this.footstep(p.x + 0.25, 0.12, -1, 1); this.footstep(p.x + 0.25, -0.12, 1, 1);
-    api.sfx(this.sound.special || this.sound.step, { gain: 3, maxDur: 2.5 });
-    api.burst('crumbs', p.x + 0.25, 0.1, 0, { colors: this.def.colors || [this.def.color], count: 26 });
-    void fb;
+    const t = ahead(this, api, 0.28);
+    await api.hopLocal(t.x, t.z, { height: 0.45, dur: 0.55 });
+    this.footstep(t.x, t.z, 1, 1); this.footstep(t.x, clamp(t.z + 0.12, -this.width / 2, this.width / 2), -1, 1); this.footstep(t.x, clamp(t.z - 0.12, -this.width / 2, this.width / 2), 1, 1);
+    api.sfx(this.sound.heavy || this.sound.special || this.sound.step, { gain: 2, maxDur: 2.5 });
+    api.burst('crumbs', t.x, 0.1, t.z, { colors: this.def.colors || [this.def.color], count: 26 });
     await api.wait(0.8);
   }
 }
@@ -572,15 +607,15 @@ export class IceStation extends Station {
   footstep(x, z, side, power = 0.5) {
     this.stepsTaken++;
     this._crack(x, z, power);
-    return { sound: this.sound.step, gain: (power - 0.5) * 3, maxDur: 2, fx: [{ preset: 'sparkles', x, y: 0.1, z, colors: ['#e6f6ff', '#ffffff'], count: 6, scale: 0.5 }] };
+    return { sound: this.sound.step, gain: (power - 0.5) * 3, maxDur: 2, cluster: power > 0.7 ? 2 : 1, fx: [{ preset: 'sparkles', x, y: 0.1, z, colors: ['#e6f6ff', '#ffffff'], count: 6, scale: 0.5 }] };
   }
   get specials() { return ['stomp']; }
   async perform(name, api) {
-    const p = api.localPos();
-    await api.hopLocal(p.x + 0.2, 0, { height: 0.4, dur: 0.5 });
-    for (let k = 0; k < 3; k++) this._crack(p.x + 0.2 + (Math.random() - 0.5) * 0.2, (Math.random() - 0.5) * 0.3, 1);
-    api.sfx(this.sound.special || this.sound.step, { gain: 3, maxDur: 2.5 });
-    api.burst('sparkles', p.x + 0.2, 0.1, 0, { colors: ['#e6f6ff', '#ffffff'], count: 16 });
+    const t = ahead(this, api, 0.25);
+    await api.hopLocal(t.x, t.z, { height: 0.4, dur: 0.5 });
+    for (let k = 0; k < 3; k++) this._crack(t.x + (Math.random() - 0.5) * 0.2, t.z + (Math.random() - 0.5) * 0.3, 1);
+    api.sfx(this.sound.special || this.sound.step, { gain: 2, maxDur: 2.5 });
+    api.burst('sparkles', t.x, 0.1, t.z, { colors: ['#e6f6ff', '#ffffff'], count: 16 });
     await api.wait(0.8);
   }
 }
@@ -632,10 +667,10 @@ export class SoapStation extends Station {
   }
   get specials() { return ['stomp']; }
   async perform(name, api) {
-    const p = api.localPos();
-    await api.hopLocal(p.x + 0.25, 0, { height: 0.45, dur: 0.55 });
-    this.footstep(p.x + 0.25, 0, 1, 1); this.footstep(p.x + 0.25, 0.13, 1, 1); this.footstep(p.x + 0.25, -0.13, 1, 1);
-    api.sfx(this.sound.special || this.sound.step, { gain: 3, maxDur: 2.6 });
+    const t = ahead(this, api, 0.28);
+    await api.hopLocal(t.x, t.z, { height: 0.45, dur: 0.55 });
+    this.footstep(t.x, t.z, 1, 1); this.footstep(t.x, clamp(t.z + 0.13, -this.width / 2, this.width / 2), 1, 1); this.footstep(t.x, clamp(t.z - 0.13, -this.width / 2, this.width / 2), 1, 1);
+    api.sfx(this.sound.special || this.sound.step, { gain: 2, maxDur: 2.6 });
     await api.wait(0.9);
   }
   update(dt) {
@@ -703,11 +738,11 @@ export class WaterStation extends Station {
   }
   get specials() { return ['stomp']; }
   async perform(name, api) {
-    const p = api.localPos();
-    await api.hopLocal(p.x + 0.25, 0, { height: 0.4, dur: 0.5 });
-    this.footstep(p.x + 0.25, 0, 1, 1);
-    api.sfx(this.sound.special || this.sound.step, { gain: 2, maxDur: 2.4 });
-    api.burst('water', p.x + 0.25, 0.08, 0, { colors: ['#d8f5ff', '#ffffff'], count: 24 });
+    const t = ahead(this, api, 0.28);
+    await api.hopLocal(t.x, t.z, { height: 0.4, dur: 0.5 });
+    this.footstep(t.x, t.z, 1, 1);
+    api.sfx(this.sound.special || this.sound.step, { gain: 1.5, maxDur: 2.4 });
+    api.burst('water', t.x, 0.08, t.z, { colors: ['#d8f5ff', '#ffffff'], count: 24 });
     await api.wait(0.8);
   }
   update(dt) { super.update(dt); this.u.uTime.value = this.t; }
@@ -742,7 +777,8 @@ export class KeysStation extends Station {
   }
   get specials() { return ['tapdance']; }
   async perform(name, api) {
-    const order = this.keys.slice().sort(() => Math.random() - 0.5).slice(0, 7);
+    const lp = api.localPos();
+    const order = nearestOrder(this.keys.filter((k) => Math.abs(k.x - lp.x) < 0.75), lp.x, lp.z, 7);
     for (const k of order) {
       await api.tapAt(k.x, k.z);
       k.sp.x = -0.035; k.hit = true;

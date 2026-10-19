@@ -189,6 +189,18 @@ section('礼物答谢调度');
   step(3);
   const x = g.ready[0] || g.next();
   ok(x && Array.from(x.user).length <= 13, '超长昵称会被截断', x && x.user);
+  // 页面刷新时没谢完的礼物（正在跳的、排队的、还在连击合并的）都要保存下来，刷新后接着谢
+  {
+    const a = new GiftManager({});
+    a.current = { users: ['正在谢'], user: '正在谢', gift: '小心心', count: 1, value: 1, tier: 0, at: 0 };
+    a.ready.push({ users: ['排队中'], user: '排队中', gift: '加油鸭', count: 2, value: 30, tier: 1, at: 0 });
+    a.add({ user: { id: 'z', name: '连击中' }, gift: { name: '嘉年华', count: 1, diamond: 3000 } });
+    const b = new GiftManager({});
+    const n = b.restore(a.snapshot());
+    b.restore('not json'); b.restore('[{"users":"x"},null]');
+    const names = b.ready.map((e) => e.user);
+    ok(n === 3 && names.join() === '正在谢,排队中,连击中' && b.ready[2].tier === 3, '页面刷新后礼物队列不丢（坏数据自动忽略）', names.join());
+  }
   ok(DANCES.length >= 16 && new Set(DANCES.map((d) => d.id)).size === DANCES.length, `舞蹈动作库 ${DANCES.length} 支`);
 }
 

@@ -89,29 +89,31 @@ export class Heightfield {
     const W = this.o.width;
     const k = this.dpx;
     const [ir, ig, ib] = this.inkRGB;
-    for (const [x, z, ax, az, dp] of prints) {
+    for (const [x, z, ax, az, dp, ux = 1, uz = 0] of prints) {
       const cx = x * k, cy = (z + W / 2) * k, rx = Math.max(1.5, ax * k), ry = Math.max(1.5, az * k);
+      const ang = Math.atan2(uz, ux);
       const depth = Math.min(1, dp / 0.08);
       // 边缘隆起（亮）
       if (rimK > 0) {
         const g1 = this.bg.createRadialGradient(0, 0, 0.8, 0, 0, 1.45);
         g1.addColorStop(0, `rgba(170,170,170,${0.55 * rimK})`); g1.addColorStop(1, 'rgba(170,170,170,0)');
-        this._ellipse(this.bg, cx, cy, rx, ry, g1, 1.45);
+        this._ellipse(this.bg, cx, cy, rx, ry, g1, 1.45, ang);
       }
       // 坑（暗），中心最深，边缘陡（脚印的轮廓很清楚）
       const g2 = this.bg.createRadialGradient(0, 0, 0, 0, 0, 1);
       const v = Math.round(128 - 96 * depth);
       g2.addColorStop(0, `rgba(${v},${v},${v},1)`); g2.addColorStop(0.72, `rgba(${v + 10},${v + 10},${v + 10},0.95)`); g2.addColorStop(1, 'rgba(128,128,128,0)');
-      this._ellipse(this.bg, cx, cy, rx, ry, g2, 1);
+      this._ellipse(this.bg, cx, cy, rx, ry, g2, 1, ang);
       const g3 = this.sg.createRadialGradient(0, 0, 0, 0, 0, 1);
       g3.addColorStop(0, `rgba(${ir},${ig},${ib},${0.75 * depth + 0.2})`); g3.addColorStop(0.8, `rgba(${ir},${ig},${ib},${0.55 * depth + 0.1})`); g3.addColorStop(1, `rgba(${ir},${ig},${ib},0)`);
-      this._ellipse(this.sg, cx, cy, rx, ry, g3, 1);
+      this._ellipse(this.sg, cx, cy, rx, ry, g3, 1, ang);
     }
     this.bumpTex.needsUpdate = true;
     this.shadeTex.needsUpdate = true;
+    this.healTicks = 40; // 有新印子：接下来一段时间慢慢"愈合"
   }
-  _ellipse(g, cx, cy, rx, ry, fill, r) {
-    g.save(); g.translate(cx, cy); g.scale(rx, ry);
+  _ellipse(g, cx, cy, rx, ry, fill, r, ang = 0) {
+    g.save(); g.translate(cx, cy); if (ang) g.rotate(ang); g.scale(rx, ry);
     g.fillStyle = fill; g.beginPath(); g.arc(0, 0, r, 0, Math.PI * 2); g.fill();
     g.restore();
   }
@@ -139,13 +141,16 @@ export class Heightfield {
    * 压出脚印：椭圆形（脚掌），depth 下陷深度，rim 边缘隆起
    * shape: 'paw' 带三个小脚趾印 | 'round'
    */
-  stamp(x, z, { rx = 0.1, rz = 0.08, depth = 0.05, rim = this.o.rim, shape = 'paw', strength = 1 } = {}) {
+  stamp(x, z, { rx = 0.1, rz = 0.08, depth = 0.05, rim = this.o.rim, shape = 'paw', strength = 1, dir = null } = {}) {
     const pos = this.geo.attributes.position;
     const pr = Math.max(rx, rz) * 1.9;
-    const prints = [[x, z, rx, rz, depth]];
+    // 脚掌朝向（前进方向），默认 +x
+    let hx = 1, hz = 0;
+    if (dir) { const l = Math.hypot(dir[0], dir[1]) || 1; hx = dir[0] / l; hz = dir[1] / l; }
+    const prints = [[x, z, rx, rz, depth, hx, hz]];
     if (shape === 'paw') {
-      // 三个小脚趾（在前进方向 +x 的前方）
-      for (const dz of [-0.55, 0, 0.55]) prints.push([x + rx * 1.15, z + dz * rz * 1.1, rx * 0.32, rz * 0.32, depth * 0.85]);
+      // 三个小脚趾（在前进方向的前方）
+      for (const dz of [-0.55, 0, 0.55]) prints.push([x + hx * rx * 1.15 - hz * dz * rz * 1.1, z + hz * rx * 1.15 + hx * dz * rz * 1.1, rx * 0.32, rz * 0.32, depth * 0.85, hx, hz]);
     }
     this._detailPrint(prints, rim);
     for (let i = 0; i < this.count; i++) {
@@ -153,8 +158,9 @@ export class Heightfield {
       if (Math.abs(vx - x) > pr + 0.1 || Math.abs(vz - z) > pr + 0.1) continue;
       let target = this.h[i];
       let pressed = 0;
-      for (const [px, pz, ax, az, dp] of prints) {
-        const d = Math.sqrt(((vx - px) / ax) ** 2 + ((vz - pz) / az) ** 2);
+      for (const [px, pz, ax, az, dp, ux, uz] of prints) {
+        const dx = vx - px, dz = vz - pz;
+        const d = Math.sqrt(((dx * ux + dz * uz) / ax) ** 2 + ((-dx * uz + dz * ux) / az) ** 2);
         if (d < 1) {
           const prof = Math.pow(1 - d * d, 1.2);
           target = Math.min(target, this.rest[i] - dp * strength * prof);
@@ -179,6 +185,7 @@ export class Heightfield {
         g.beginPath(); g.moveTo(x0 * k, (z0 + W / 2) * k); g.lineTo(x1 * k, (z1 + W / 2) * k); g.stroke(); g.restore();
       }
       this.bumpTex.needsUpdate = true; this.shadeTex.needsUpdate = true;
+      this.healTicks = 40;
     }
     const pos = this.geo.attributes.position;
     const dx = x1 - x0, dz = z1 - z0, len2 = dx * dx + dz * dz || 1;
@@ -200,9 +207,10 @@ export class Heightfield {
     const k = this.o.recover;
     if (!k) return;
     // 细节层也慢慢"愈合"（史莱姆、泥巴会慢慢流平）
-    if (this.bg) {
+    if (this.bg && this.healTicks > 0) {
       this.recoverAcc += dt;
       if (this.recoverAcc > 0.25) {
+        this.healTicks--; // 愈合够久就停（没有新印子时不再每秒重传贴图）
         const a = Math.min(0.5, (1 - Math.exp(-k * this.recoverAcc)) * 0.9);
         this.recoverAcc = 0;
         this.bg.globalAlpha = a; this.bg.fillStyle = 'rgb(128,128,128)'; this.bg.fillRect(0, 0, this.bumpCv.width, this.bumpCv.height); this.bg.globalAlpha = 1;

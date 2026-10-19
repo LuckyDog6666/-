@@ -25,7 +25,7 @@ export const STAGES = [
       { type: 'soft', label: '草莓雪酪', sound: { step: 'snow_step', heavy: 'snow_crunch', special: 'snow_press' }, color: '#ffe4ef', colorPressed: '#eaa3c2', colorSide: '#ffd3e4', trayColor: '#ffd0e2', thickness: 0.16, depth: 0.08, rim: 0.45, glitter: '#ffffff', fx: 'snow', fxColors: ['#ffffff', '#ffe4ef'], gait: 'normal', stepDur: 0.66, kneadable: true, specials: ['knead', 'sit'], length: 2.6 },
       { type: 'crunch', label: '冰糖雪粒', piece: 'crystal', count: 240, colors: ['#e9f6ff', '#d7efff', '#ffffff'], rough: 0.25, sound: { step: 'snow_step', heavy: 'snow_crunch' }, trayColor: '#d2e6f9', gait: 'stomp', stepDur: 0.62, specials: ['stomp'], length: 2.4 },
     ],
-    finale: { type: 'soft', label: '超大雪蛋糕', sound: { step: 'snow_step', heavy: 'snow_crunch', special: 'snow_press' }, color: SNOW, colorPressed: SNOW_P, colorSide: '#f4f8ff', trayColor: '#bcd3ee', thickness: 0.34, depth: 0.14, rim: 0.5, glitter: '#ffffff', fx: 'snow', fxColors: ['#ffffff'], length: 3.0, width: 1.9, kneadable: true, finale: true },
+    finale: { type: 'soft', label: '超大雪蛋糕', sound: { step: 'snow_step', heavy: 'snow_crunch', special: 'snow_press' }, color: SNOW, colorPressed: SNOW_P, colorSide: '#f4f8ff', trayColor: '#bcd3ee', thickness: 0.34, depth: 0.14, rim: 0.5, glitter: '#ffffff', fx: 'snow', fxColors: ['#ffffff'], length: 3.0, width: 2.2, kneadable: true, finale: true },
   },
   {
     id: 'forest', voteKeys: ['落叶', '叶子', '秋天', '树叶'], name: '秋日落叶林', subtitle: '沙沙脆脆的落叶，软软的小泥坑',
@@ -43,7 +43,7 @@ export const STAGES = [
       { type: 'crunch', label: '彩色小石子', piece: 'pebble', count: 280, colors: ['#e9dccb', '#cfc2b0', '#f2e4d2', '#d7e3e8', '#f0cdb8'], rough: 0.7, sound: { step: 'gravel_step' }, trayColor: '#b48f66', gait: 'normal', stepDur: 0.6, specials: ['stomp'], length: 2.6 },
       { type: 'crunch', label: '金黄银杏叶', piece: 'leaf', count: 380, colors: ['#ffd34d', '#f7c548', '#ffe27a', '#efb93a'], sound: { step: 'leaves_step', heavy: 'leaves_crunch' }, trayColor: '#c7944f', gait: 'tiptoe', stepDur: 0.58, specials: ['stomp'], length: 2.6 },
     ],
-    finale: { type: 'crunch', label: '超大落叶山', piece: 'leaf', count: 600, pile: true, colors: ['#f29b4b', '#e9603b', '#f7c548', '#d77a3a', '#ffd34d'], sound: { step: 'leaves_step', heavy: 'leaves_crunch' }, trayColor: '#b07a45', length: 3.0, width: 1.9, finale: true },
+    finale: { type: 'crunch', label: '超大落叶山', piece: 'leaf', count: 600, pile: true, colors: ['#f29b4b', '#e9603b', '#f7c548', '#d77a3a', '#ffd34d'], sound: { step: 'leaves_step', heavy: 'leaves_crunch' }, trayColor: '#b07a45', length: 3.0, width: 2.2, finale: true },
   },
   {
     id: 'slime', voteKeys: ['史莱姆', '果冻', '捏捏', '起泡胶'], name: '史莱姆果冻工坊', subtitle: '黏黏的、Q 弹的、慢慢回弹的',
@@ -61,7 +61,7 @@ export const STAGES = [
       { type: 'popit', label: '彩虹按压泡泡', sound: { step: 'plop_pop' }, gait: 'tiptoe', stepDur: 0.5, specials: ['tapdance'], length: 2.4 },
       { type: 'slime', label: '草莓奶昔史莱姆', color: '#ffb3cf', colorPressed: '#ff96bb', glitter: '#fff6a8', sound: { step: 'slime_step', special: 'slime_squish', pull: 'slime_pull' }, trayColor: '#ffffff', gait: 'normal', stepDur: 1.15, kneadable: true, specials: ['sit', 'knead'], length: 2.4 },
     ],
-    finale: { type: 'squishy', label: '超大捏捏', count: 1, shape: 'blob', colors: ['#ffc6dd'], sound: { step: 'squishy_press', special: 'slime_squish' }, length: 2.6, width: 1.9, kneadable: true, finale: true },
+    finale: { type: 'squishy', label: '超大捏捏', count: 1, shape: 'blob', colors: ['#ffc6dd'], sound: { step: 'squishy_press', special: 'slime_squish' }, length: 2.6, width: 2.2, kneadable: true, finale: true },
   },
   {
     id: 'rain', voteKeys: ['水洼', '下雨', '泥巴', '雨天'], name: '雨天水洼花园', subtitle: '滴答滴答，踩水花、戳泡泡',
@@ -79,7 +79,7 @@ export const STAGES = [
       { type: 'crunch', label: '雨后小石子', piece: 'pebble', count: 280, colors: ['#dfe7ea', '#c7d3d8', '#eef3f4', '#d8d0c4'], rough: 0.5, sound: { step: 'gravel_step' }, trayColor: '#9fbf96', gait: 'normal', stepDur: 0.6, specials: ['stomp'], length: 2.4 },
       { type: 'water', label: '荷叶小池塘', color: '#8fd0c9', sound: { step: 'water_splash' }, trayColor: '#86ad7d', gait: 'normal', stepDur: 0.85, specials: ['stomp'], length: 2.4 },
     ],
-    finale: { type: 'water', label: '超大水坑', color: '#7fc4e6', sound: { step: 'water_splash' }, trayColor: '#86ad7d', length: 3.0, width: 1.9, finale: true },
+    finale: { type: 'water', label: '超大水坑', color: '#7fc4e6', sound: { step: 'water_splash' }, trayColor: '#86ad7d', length: 3.0, width: 2.2, finale: true },
   },
   {
     id: 'beach', voteKeys: ['沙', '海边', '贝壳', '沙滩'], name: '彩虹沙滩', subtitle: '软软的沙子，圆圆的贝壳，咕噜咕噜的泡泡',
@@ -97,7 +97,7 @@ export const STAGES = [
       { type: 'soft', label: '薄荷太空沙', sound: { step: 'sand_step', special: 'sand_press' }, color: '#bff0dc', colorPressed: '#7dcfae', colorSide: '#a8e6cd', trayColor: '#ffffff', thickness: 0.16, depth: 0.07, rim: 0.5, glitter: '#ffffff', grain: true, fx: 'crumbs', fxColors: ['#bff0dc', '#e2fff2'], gait: 'normal', stepDur: 0.6, kneadable: true, specials: ['cut', 'press'], length: 2.6 },
       { type: 'water', label: '浅浅的海水', color: '#6fd0e0', sound: { step: 'water_splash' }, trayColor: '#f2d7a8', gait: 'stomp', stepDur: 0.8, specials: ['stomp'], length: 2.4 },
     ],
-    finale: { type: 'soft', label: '超大沙堡', sound: { step: 'sand_step', special: 'sand_press' }, color: '#ffd9a8', colorPressed: '#e9a865', colorSide: '#f7cb95', trayColor: '#e9c48c', thickness: 0.32, depth: 0.12, rim: 0.55, grain: true, fx: 'crumbs', fxColors: ['#ffd9a8'], length: 3.0, width: 1.9, kneadable: true, finale: true },
+    finale: { type: 'soft', label: '超大沙堡', sound: { step: 'sand_step', special: 'sand_press' }, color: '#ffd9a8', colorPressed: '#e9a865', colorSide: '#f7cb95', trayColor: '#e9c48c', thickness: 0.32, depth: 0.12, rim: 0.55, grain: true, fx: 'crumbs', fxColors: ['#ffd9a8'], length: 3.0, width: 2.2, kneadable: true, finale: true },
   },
   {
     id: 'toy', voteKeys: ['键盘', '糖纸', '玩具', '按压'], name: '软糖键盘小屋', subtitle: '咔哒咔哒的大键帽，沙沙的糖纸',
@@ -115,7 +115,7 @@ export const STAGES = [
       { type: 'jelly', label: '果冻软糖', count: 3, colors: ['#c9a0ff', '#7fd6ff', '#ff8fb3'], fruit: '#fff6a8', sound: { step: 'jelly_bounce' }, gait: 'normal', stepDur: 0.7, specials: ['bounce'], length: 2.6 },
       { type: 'squishy', label: '奶油小蛋糕捏捏', count: 2, shape: 'bread', colors: ['#fff0f5', '#ffe9c7'], sound: { step: 'squishy_press' }, gait: 'normal', stepDur: 1.1, kneadable: true, specials: ['sit', 'knead'], length: 2.4 },
     ],
-    finale: { type: 'popit', label: '超大按压泡泡', big: true, sound: { step: 'plop_pop' }, length: 3.0, width: 1.9, finale: true },
+    finale: { type: 'popit', label: '超大按压泡泡', big: true, sound: { step: 'plop_pop' }, length: 3.0, width: 2.2, finale: true },
   },
 ];
 

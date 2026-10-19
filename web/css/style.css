@@ -183,3 +183,8 @@ body.hide-tips .tips { display: none; }
 body.portrait .cmds { left: calc(var(--s) * 12); bottom: calc(var(--s) * 70); width: calc(var(--s) * 210); }
 body.portrait .cmds .cv { display: none; }
 body.hide-tips .cmds { display: none; }
+.music-credit { position: absolute; right: calc(var(--s) * 26); bottom: calc(var(--s) * 56); font-size: calc(var(--s) * 14); color: #9a6a84; background: rgba(255,255,255,0.72); border-radius: calc(var(--s) * 12); padding: calc(var(--s) * 3) calc(var(--s) * 10); opacity: 0; transition: opacity 0.6s; white-space: nowrap; max-width: 60%; overflow: hidden; text-overflow: ellipsis; }
+.music-credit.show { opacity: 1; }
+/* 横幅不超出屏幕：名字很长时自动换行 */
+.banner { max-width: 94%; }
+.banner .t1, .banner .t2 { white-space: normal; overflow-wrap: anywhere; }

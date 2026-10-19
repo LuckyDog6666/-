@@ -34,6 +34,7 @@ export class Director {
 
   beginStage(stage, stations) {
     this.stage = stage;
+    this.requests = []; // 上一关没来得及做的点播不带到新世界
     this.stageT = 0;
     this.stationCount = stations.length;
     this.stationIdx = 0;
@@ -111,16 +112,25 @@ export class Director {
   }
 
   // 走完一趟后检查点播
-  takeRequest() { return this.requests.shift() || null; }
+  takeRequest() {
+    // 太久以前的点播（超过 40 秒）就不做了，免得观众早就忘了
+    while (this.requests.length && this.t - this.requests[0].at > 40) this.requests.shift();
+    return this.requests.shift() || null;
+  }
 
   // ---------------- 弹幕 ----------------
   onChat(text, stages) {
     const t = String(text || '').trim();
     if (!t) return null;
-    // 投票下一关：弹幕里出现世界的关键字
-    for (const st of stages) {
-      const keys = st.voteKeys || [];
-      if (keys.some((k) => t.includes(k))) {
+    // 投票下一关：弹幕里出现世界的关键字。"踩雪""坐沙子"这种是在点动作，不算投票；
+    // 明确说"去/想看/下一关"的才优先算投票
+    const intent = /去|投|想看|下一关|换|下关/.test(t);
+    const action = CHAT_ACTIONS.find((c) => c.re.test(t));
+    if (intent || !action) {
+      for (const st of stages) {
+        const keys = st.voteKeys || [];
+        if (!keys.some((k) => t.includes(k))) continue;
+        if (this.stage && st.id === this.stage.id) return { kind: 'here', stage: st };
         this.votes.set(st.id, (this.votes.get(st.id) || 0) + 1);
         return { kind: 'vote', stage: st };
       }

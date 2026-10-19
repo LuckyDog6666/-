@@ -17,6 +17,7 @@ export class AsmrAudio {
     this.ready = false;
     this.ambience = null;
     this.music = null;
+    this.failed = new Map(); // src -> 失败时间（坏文件不会每一步都重新下载/解码）
   }
 
   async init() {
@@ -84,7 +85,7 @@ export class AsmrAudio {
   async _loadManifest() {
     try {
       const r = await fetch('sounds/manifest.json', { cache: 'no-store' });
-      if (r.ok) { const m = await r.json(); this.defs = m.sounds || {}; this.manifest = m; }
+      if (r.ok) { const m = await r.json(); this.defs = m.sounds || {}; this.manifest = m; this.attribution = m.attribution || []; }
     } catch (e) { console.warn('[audio] 没有找到声音清单', e); }
     // 用户自定义录音（assets/sounds/<id>/）覆盖内置
     try {
@@ -93,7 +94,8 @@ export class AsmrAudio {
         const custom = await r.json();
         for (const [id, files] of Object.entries(custom)) {
           const base = this.defs[id] || { cat: 'trigger', gain: 0 };
-          this.defs[id] = { ...base, custom: true, files: files.map((src) => ({ src, dur: 0, gain: 0, autoGain: true })) };
+          // 保留内置录音作为备用：自定义文件全都无法解码时自动换回内置的
+          this.defs[id] = { ...base, custom: true, fallback: base.files || null, files: files.map((src) => ({ src, dur: 0, gain: 0, autoGain: true })) };
           console.log(`[audio] 使用自定义录音 ${id}（${files.length} 个）`);
         }
       }
@@ -105,11 +107,13 @@ export class AsmrAudio {
   async _buffer(src) {
     if (this.buffers.has(src)) return this.buffers.get(src);
     if (this.loading.has(src)) return this.loading.get(src);
+    const f = this.failed.get(src);
+    if (f && performance.now() - f < 60000) return null;
     const url = src.startsWith('/') ? src : `sounds/${src}`;
     const p = fetch(url).then((r) => { if (!r.ok) throw new Error(r.status + ' ' + url); return r.arrayBuffer(); })
       .then((ab) => this.ctx.decodeAudioData(ab))
       .then((buf) => { this.buffers.set(src, buf); this.loading.delete(src); return buf; })
-      .catch((e) => { this.loading.delete(src); console.warn('[audio] 加载失败', src, e.message); return null; });
+      .catch((e) => { this.loading.delete(src); this.failed.set(src, performance.now()); console.warn('[audio] 加载失败', src, e.message); return null; });
     this.loading.set(src, p);
     return p;
   }
@@ -124,6 +128,15 @@ export class AsmrAudio {
       for (const f of d.files) jobs.push(this._buffer(f.src).then((buf) => { if (buf && f.autoGain && f._g == null) f._g = autoGain(buf, d.cat); }));
     }
     await Promise.all(jobs);
+    // 自定义录音一个都用不了：换回内置录音
+    for (const id of new Set(ids)) {
+      const d = this.defs[id];
+      if (d && d.custom && d.fallback && d.fallback.length && !d.files.some((f) => this.buffers.get(f.src))) {
+        console.warn(`[audio] 自定义录音 ${id} 无法使用，改用内置录音`);
+        d.files = d.fallback; d.custom = false; d.fallback = null;
+        await this.ensure([id]);
+      }
+    }
   }
 
   // 只保留需要的声音，释放其它（换场景时调用，长时间运行内存稳定）
@@ -149,7 +162,8 @@ export class AsmrAudio {
    * o: { pan(-1..1), gain(dB), rate, main(主触发音，默认 true), maxDur(秒，超出部分淡出), fadeIn, bus }
    */
   play(id, o = {}) {
-    if (!this.ready) return null;
+    // 声音还没被允许播放（页面没有被点过）时不要堆积声音，恢复后也不会"一下子全响"
+    if (!this.ready || this.ctx.state !== 'running') return null;
     const pk = this._pick(id);
     if (!pk) return null;
     const ctx = this.ctx;
@@ -248,7 +262,7 @@ export class AsmrAudio {
     src.buffer = pk.buf; src.loop = true;
     const g = ctx.createGain();
     g.gain.value = 0;
-    const lin = Math.pow(10, ((pk.def.gain || 0) + gainDb) / 20) * (pk.file._g ?? 1);
+    const lin = Math.pow(10, ((pk.def.gain || 0) + gainDb) / 20) * (pk.file._g ?? Math.pow(10, (pk.file.gain || 0) / 20));
     g.gain.setTargetAtTime(lin, ctx.currentTime, 1.5);
     const pan = ctx.createStereoPanner();
     src.connect(g); g.connect(pan); pan.connect(this.ambBus);
@@ -258,7 +272,7 @@ export class AsmrAudio {
 
   // 答谢舞蹈音乐（Kevin MacLeod 等 CC-BY 可爱小曲），按时长淡入淡出。返回曲目信息（含 BPM，舞步对齐拍子）
   async startMusic(id, seconds) {
-    if (!this.ready || !this.has(id)) return null;
+    if (!this.ready || !this.has(id) || this.ctx.state !== 'running') return null;
     this.stopMusic(0.2);
     await this.ensure([id]);
     const pk = this._pick(id);
@@ -270,16 +284,18 @@ export class AsmrAudio {
     const lin = Math.pow(10, (pk.def.gain || 0) / 20) * (pk.file._g ?? Math.pow(10, (pk.file.gain || 0) / 20));
     g.gain.setValueAtTime(0, now);
     g.gain.linearRampToValueAtTime(lin, now + 0.4);
-    g.gain.setValueAtTime(lin, now + Math.max(0.5, seconds - 0.8));
-    g.gain.linearRampToValueAtTime(0, now + seconds);
     const pan = ctx.createStereoPanner();
     src.connect(g); g.connect(pan); pan.connect(this.musicBus);
     src.start(now, 0);
-    src.stop(now + seconds + 0.1);
-    this.music = { src, g, pan, end: now + seconds, id };
+    // 音乐由舞蹈结束时 stopMusic() 淡出（跟着画面走，不会舞还没跳完音乐先停）；这里只放一个保险的最晚停止时间
+    src.stop(now + seconds + 30);
+    this.music = { src, g, pan, end: now + seconds, id, startAt: now };
     src.onended = () => { if (this.music && this.music.src === src) this.music = null; try { src.disconnect(); g.disconnect(); pan.disconnect(); } catch {} };
-    return { bpm: pk.file.bpm || 112, beat0: pk.file.beat0 || 0, title: pk.file.title || '' };
+    return { bpm: pk.file.bpm || 112, beat0: pk.file.beat0 || 0, title: pk.file.title || '', credit: pk.file.credit || '' };
   }
+
+  // 舞曲已经播放了多少秒（舞步对齐拍子用）
+  musicTime() { return this.music && this.ctx ? this.ctx.currentTime - this.music.startAt : 0; }
 
   stopMusic(fade = 0.4) { if (this.music) { const m = this.music; this.music = null; this._fade(m, fade); } }
 
@@ -305,18 +321,25 @@ export class AsmrAudio {
   update() {}
 }
 
-// 自定义录音的自动音量：按 400ms 窗口的最大 RMS 对齐到同类声音
-const TARGET = { trigger: -24, sustain: -25, soft: -27, step: -30, ambience: -30, music: -22 };
+// 自定义录音的自动音量：与打包工具 build_sounds.py 相同的度量——
+// 各声道平均、近似 K 计权（1.5 kHz 以上 +4 dB）、400ms 窗口的最大均方，对齐到同类声音的目标响度
+const TARGET = { trigger: -23, sustain: -24, soft: -27, step: -29, ambience: -29, music: -21 };
 function autoGain(buf, cat) {
-  const d = buf.getChannelData(0), sr = buf.sampleRate;
-  const win = Math.floor(0.4 * sr);
-  let best = 0, acc = 0;
-  for (let i = 0; i < d.length; i++) {
-    acc += d[i] * d[i];
-    if (i >= win) acc -= d[i - win] * d[i - win];
+  const sr = buf.sampleRate, n = buf.length, chs = buf.numberOfChannels;
+  const mono = new Float32Array(n);
+  for (let c = 0; c < chs; c++) { const d = buf.getChannelData(c); for (let i = 0; i < n; i++) mono[i] += d[i] / chs; }
+  const rc = 1 / (2 * Math.PI * 1500), a = rc / (rc + 1 / sr);
+  const win = Math.max(1, Math.floor(0.4 * sr));
+  let hp = 0, prev = 0, acc = 0, best = 0;
+  const e = new Float32Array(n);
+  for (let i = 0; i < n; i++) {
+    hp = a * (hp + mono[i] - prev); prev = mono[i];
+    e[i] = mono[i] * mono[i] + 1.51 * hp * hp;
+    acc += e[i];
+    if (i >= win) acc -= e[i - win];
     if (i >= win - 1) best = Math.max(best, acc / win);
   }
-  if (d.length < win) best = acc / Math.max(1, d.length);
+  if (n < win) best = acc / Math.max(1, n);
   const db = 10 * Math.log10(Math.max(1e-12, best));
-  return Math.min(6, Math.pow(10, ((TARGET[cat] ?? -20) - db) / 20));
+  return Math.min(6, Math.pow(10, ((TARGET[cat] ?? -23) - db) / 20));
 }

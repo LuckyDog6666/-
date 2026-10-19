@@ -38,6 +38,7 @@ export class GiftManager {
     this.lastSmallDance = -1e9;
     this.lastDanceEnd = -1e9;
     this.now = 0;
+    this.current = null;      // 正在答谢的礼物（刷新时也要保存）
   }
 
   // 收到一条礼物（来自服务器的标准化事件）
@@ -72,12 +73,12 @@ export class GiftManager {
     }
     // 队列太长：把小礼物合并成集体答谢
     if (this.ready.length > 3) {
-      const small = this.ready.filter((e) => e.tier <= 1);
+      const small = this.ready.filter((e) => e.group || e.tier <= 1);
       if (small.length >= 2) {
-        const big = this.ready.filter((e) => e.tier > 1);
+        const big = this.ready.filter((e) => !small.includes(e));
         const users = [...new Set(small.flatMap((e) => e.users))];
         const value = small.reduce((a, e) => a + e.value, 0);
-        const group = { users, user: users[0], gift: small[0].gift, count: small.reduce((a, e) => a + e.count, 0), value, tier: Math.min(2, tierOf(value, this.cfg)), group: true, at: small[0].at };
+        const group = { users, user: users[0], gift: small[0].gift, count: small.reduce((a, e) => a + e.count, 0), value, tier: Math.min(1, tierOf(value, this.cfg)), group: true, at: small[0].at };
         this.ready = [...big, group];
       }
     }
@@ -127,4 +128,33 @@ export class GiftManager {
   danceEnded() { this.danceLog.push([this._ds ?? this.now, this.now]); this.lastDanceEnd = this.now; }
 
   get queued() { return this.ready.length + this.pending.size; }
+
+  // 页面刷新（控制台保存设置、出错自恢复、显卡重置）前把还没答谢的礼物存起来，刷新后接着谢。
+  // 服务器不会重发已经推送过的礼物，所以必须由页面自己保存。
+  snapshot() {
+    const pend = [...this.pending.values()].map((p) => {
+      const value = p.diamond * p.count;
+      return { users: [p.user], user: p.user, gift: p.gift, count: p.count, value, tier: tierOf(value, this.cfg) };
+    });
+    return JSON.stringify([...(this.current ? [this.current] : []), ...this.ready, ...pend].slice(0, 20));
+  }
+
+  restore(json) {
+    try {
+      const list = JSON.parse(json);
+      if (!Array.isArray(list)) return 0;
+      let n = 0;
+      for (const e of list.slice(0, 20)) {
+        if (!e || !Array.isArray(e.users) || !e.users.length) continue;
+        const tier = Math.max(0, Math.min(3, Number(e.tier) || 0));
+        this.ready.push({
+          users: e.users.slice(0, 50).map((u) => escapeText(u, 12)), user: escapeText(e.user || e.users[0], 12),
+          gift: escapeText(e.gift || '礼物', 8), count: Math.max(1, Number(e.count) || 1), value: Math.max(0, Number(e.value) || 0),
+          tier, group: !!e.group, at: this.now,
+        });
+        n++;
+      }
+      return n;
+    } catch { return 0; }
+  }
 }

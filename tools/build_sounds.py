@@ -371,7 +371,8 @@ def process_id(sd, args, credits):
             for q in take:
                 seg = x[q['s']:q['e']].copy()
                 outs.append((seg, src, gain_extra, q))
-            print(f"  {os.path.basename(path)}: 底噪 {floor:.1f} dB，检测到 {len(evs)} 个事件，选用 {len(take)} 个（{', '.join(f'{q['dur']:.2f}s' for q in take)}）")
+            durs = ', '.join('%.2fs' % q['dur'] for q in take)
+            print(f"  {os.path.basename(path)}: 底噪 {floor:.1f} dB，检测到 {len(evs)} 个事件，选用 {len(take)} 个（{durs}）")
         elif mode == 'loop':
             seg = make_loop(x, {**sd, **src.get('opts', {})})
             outs.append((seg, src, gain_extra, None))
@@ -397,6 +398,10 @@ def process_id(sd, args, credits):
             credits.append({k: src.get(k) for k in ('file', 'title', 'author', 'url', 'license', 'via')})
     files = []
     odir = os.path.join(args.out, sid)
+    if not outs:
+        # 原始录音缺失：保留原来打包好的文件和清单，不要把这个声音清空
+        print(f'  ! {sid} 没有生成任何片段，保留原有文件', file=sys.stderr)
+        return None
     if os.path.isdir(odir):
         for f in os.listdir(odir):
             if f.endswith('.ogg'):
@@ -428,6 +433,8 @@ def process_id(sd, args, credits):
             entry['beat0'] = round(beat0, 3)
             if src.get('title'):
                 entry['title'] = src['title']
+            entry['credit'] = f"{src.get('author', '')} · {src.get('license', '')}"
+
             print(f"    {src.get('title')}: {bpm:.1f} BPM，第一拍 {beat0:.2f}s")
         files.append(entry)
         if args.sheet:
@@ -482,12 +489,23 @@ def main():
         if only and sd['id'] not in only:
             continue
         print(f"[{sd['id']}] {sd.get('label', '')}")
-        manifest['sounds'][sd['id']] = process_id(sd, args, credits)
+        r = process_id(sd, args, credits)
+        if r is not None:
+            manifest['sounds'][sd['id']] = r
     # 清理 spec 中已删除的声音
     ids = {sd['id'] for sd in spec['sounds']}
     for k in list(manifest['sounds'].keys()):
         if k not in ids:
             del manifest['sounds'][k]
+    # 需要署名（CC BY）的作者名单：游戏会在画面上滚动显示致谢
+    by = []
+    for sd in spec['sounds']:
+        if sd.get('cat') == 'music':
+            continue
+        for src in sd['sources']:
+            if 'BY' in (src.get('license') or '').upper() and src.get('author') and src['author'] not in by:
+                by.append(src['author'])
+    manifest['attribution'] = by
     os.makedirs(args.out, exist_ok=True)
     with open(man_path, 'w', encoding='utf8') as f:
         json.dump(manifest, f, ensure_ascii=False, indent=1)
