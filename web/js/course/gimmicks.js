@@ -366,16 +366,18 @@ export class SlideGimmick extends Gimmick {
   build() {
     const d = this.def, { M, G } = this.ctx;
     const H = this.H = d.height || 1.05;
-    this.length = 4.9;
-    const steps = 5, run = 0.17;
-    this.stairEnd = steps * run; // 0.85
+    // 楼梯坡度约 38°（6 级、每级 0.22）：比镜头俯角缓，正前方偏高的机位能越过台阶看到往上爬的糯糯
+    const steps = 6, run = 0.22;
+    this.run = run;
+    this.stairEnd = steps * run; // 1.32
     this.topEnd = this.stairEnd + 0.38;
+    this.length = this.topEnd + 3.67; // 滑道 + 落地堆（半径 0.72）
     const colA = d.color || '#7fd6ff', colB = d.color2 || '#ff8fb3';
     // 楼梯 + 扶手
     this.stairs = [];
     for (let i = 0; i < steps; i++) {
       const h = H * (i + 1) / steps;
-      const m = new THREE.Mesh(G.get(`stair|${h.toFixed(2)}`, () => roundedBox(run + 0.005, h, 0.62, 0.03, 2).translate(0, h / 2, 0)), M.soft(i % 2 ? colA : '#ffffff', { rough: 0.55, rim: 0.3 }));
+      const m = new THREE.Mesh(G.get(`stair|${h.toFixed(2)}|${run}`, () => roundedBox(run + 0.005, h, 0.62, 0.03, 2).translate(0, h / 2, 0)), M.soft(i % 2 ? colA : '#ffffff', { rough: 0.55, rim: 0.3 }));
       m.position.set(run * (i + 0.5), 0, 0);
       m.castShadow = true; m.receiveShadow = true;
       this.group.add(m);
@@ -517,14 +519,14 @@ export class SlideGimmick extends Gimmick {
     const pet = G.pet, d = this.def;
     const H = this.H;
     G.label(this.label);
-    // 爬楼梯：正前方偏一点、较高的机位往下看（视线越过平台和滑道起点，不会被挡住），糯糯迎着镜头往上爬
-    G.cam('follow', { off: V(2.4, 2.0, 1.2), lookY: 0.5, lookFromPet: true, lambda: 1.3 });
+    // 爬楼梯：正前方偏一点、较高的机位往下看（俯角比楼梯坡度大，视线越过台阶和平台），糯糯迎着镜头往上爬
+    G.cam('follow', { off: V(2.4, 2.25, 1.2), lookY: 0.5, lookFromPet: true, lambda: 1.3 });
     pet.expr('wide', 'open', 1.2, 'up');
     G.say(d.say || '哇，滑滑梯！');
     await pet.idleAction('peek', 0.6);
     G.unsay();
     const topPos = this.W(this.stairEnd + 0.18, H, 0);
-    await G.walkTo(topPos, { stepDur: 0.4, stride: 0.17, sound: d.stepSound || 'wood_step', gain: -3 });
+    await G.walkTo(topPos, { stepDur: 0.4, stride: this.run, sound: d.stepSound || 'wood_step', gain: -3 });
     // 在顶上转身对镜头挥挥手
     G.cam('point', { pos: () => this.W(this.stairEnd + 2.1, H + 0.75, 2.1), look: () => V(pet.root.position.x, pet.root.position.y + 0.5, pet.root.position.z), lambda: 1.6 });
     pet.faceTowards(this.x0 + this.stairEnd + 2.1, 2.1);
