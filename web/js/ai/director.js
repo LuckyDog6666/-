@@ -64,8 +64,8 @@ export class Director {
   }
 
   /**
-   * 为一个站点制定玩法。返回：
-   * { lanes:[z...], gait, stepDur, stride, special, specialAfter, knead, bliss, peek, lookback, power }
+   * 为一个解压站制定玩法。返回：
+   * { path:[{x,z}...]（局部坐标的 S 形路线，一直朝 +x 前进 = 迎着镜头走）, gait, stepDur, stride, special, specialAt, knead, kneadAt, bliss, peek, lookback, power }
    */
   planStation(s, idx) {
     this.stationIdx = idx;
@@ -73,40 +73,43 @@ export class Director {
     const r = this.rng;
     const slack = this.slack();
     const e = this.mood.energy, j = this.mood.joy;
-    const W = s.width;
-    const laneSpan = Math.max(0, W / 2 - 0.3);
+    const W = s.width, L = s.length;
     // 步态：站点推荐 + 情绪（很有精神时更爱重踩，累了就踮脚轻踩）
     let gait = d.gait || 'normal';
     if (gait === 'normal' && e > 0.8 && /crunch|ice|water/.test(d.type) && r.next() < 0.4) gait = 'stomp';
     if (gait === 'stomp' && e < 0.4 && r.next() < 0.5) gait = 'normal';
     const stepDur = (d.stepDur || 0.65) * (gait === 'stomp' ? 1.05 : 1) / this.pace * (slack < 0.75 ? 0.92 : 1);
     const stride = gait === 'tiptoe' ? 0.21 : gait === 'stomp' ? 0.3 : 0.26;
-    // 来回几趟：按本站的时间预算算（每趟从一头走到另一头）。总是奇数趟，最后正好从出口离开；
-    // 车道从还没被踩过的地方开始（两侧 → 中间，或反过来）
-    const passDur = (s.length / stride) * stepDur;
-    const budget = (this.stageTarget / Math.max(1, this.stationCount)) * 0.6 * slack;
-    let passes = clamp(Math.round(budget / passDur), 1, 3);
-    if (passes === 2) passes = slack > 1 ? 3 : 1;
-    const cand = passes === 1 ? [r.range(-0.08, 0.08)] : [-laneSpan, 0, laneSpan];
-    const lanes = r.next() < 0.5 ? cand : cand.slice().reverse();
+    // 一趟走完整块材料：轻轻的 S 形，身后留下一串弯弯的脚印；始终朝着镜头前进，小脸一直看得到
+    const pad = 0.24;
+    const n = L > 2.5 ? 4 : 3;
+    // 每一段最多偏离前进方向约 25°：脚印弯弯的，但镜头里始终是 3/4 正面（不会走成侧面）
+    const span = Math.max(0, Math.min(0.3, W / 2 - 0.34, ((L - 2 * pad) / n) * 0.23));
+    const sgn = r.sign();
+    const path = [];
+    for (let i = 0; i <= n; i++) {
+      const x = pad + (L - 2 * pad) * (i / n);
+      const z = i === n ? 0 : (i % 2 ? sgn : -sgn) * span * (i === 0 ? 0.5 : r.range(0.75, 1));
+      path.push({ x, z });
+    }
     // 特别动作：从站点支持的里面挑一个最近没做过的
     const specials = (d.specials || s.specials || []).slice();
     let special = null;
-    if (specials.length && (slack > 0.6 || r.next() < 0.5)) {
+    if (specials.length && (slack > 0.55 || r.next() < 0.5)) {
       const fresh = specials.filter((x) => !this.recentSpecials.includes(x));
       special = r.pick(fresh.length ? fresh : specials);
       if (special === 'knead' && !d.kneadable) special = specials.find((x) => x !== 'knead') || null;
     }
     if (special) { this.recentSpecials.push(special); if (this.recentSpecials.length > 3) this.recentSpecials.shift(); }
     // 踩奶：可踩奶的材质 + 心情好 + 时间够
-    const knead = special !== 'knead' && d.kneadable && j > 0.5 && slack > 0.9 && r.next() < 0.45;
+    const knead = special !== 'knead' && d.kneadable && j > 0.5 && slack > 0.85 && r.next() < 0.5;
+    const specialAt = r.int(1, n - 1);
     return {
-      lanes, gait, stepDur, stride, special,
-      specialAfter: Math.min(lanes.length - 1, r.int(0, lanes.length - 1)),
-      knead, kneadAfter: lanes.length - 1,
+      path, gait, stepDur, stride, special, specialAt,
+      knead, kneadAt: specialAt === n - 1 ? 1 : n - 1,
       bliss: (special === 'knead' || special === 'sit' || knead) && r.next() < 0.7,
       peek: idx === 0 || r.next() < 0.55,
-      lookback: s.length > 2.3 && r.next() < 0.35 && slack > 0.8,
+      lookback: L > 2.3 && r.next() < 0.4 && slack > 0.8,
       power: clamp(0.45 + e * 0.35 + (gait === 'stomp' ? 0.2 : 0) - (gait === 'tiptoe' ? 0.2 : 0), 0.2, 1),
     };
   }

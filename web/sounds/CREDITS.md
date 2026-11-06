@@ -40,7 +40,6 @@ CC-BY 类素材需要署名，已在此列出。我们对原始录音做了切�
 | Bottle Plops — Viscous | Ben Burnes | https://ben-burnes.gumroad.com/（经由 CC0-Public-Domain-Sounds） | CC0 1.0 | slime_pull |
 | Bottle Plops — Viscous | Ben Burnes | https://ben-burnes.gumroad.com/（经由 CC0-Public-Domain-Sounds） | CC0 1.0 | slime_pull |
 | Bottle Plops — Viscous | Ben Burnes | https://ben-burnes.gumroad.com/（经由 CC0-Public-Domain-Sounds） | CC0 1.0 | slime_pull |
-| Bottle Plops — Viscous | Ben Burnes | https://ben-burnes.gumroad.com/（经由 CC0-Public-Domain-Sounds） | CC0 1.0 | slime_pull |
 | Micro Pack: Melon — Slap | Ben Burnes | https://ben-burnes.gumroad.com/（经由 CC0-Public-Domain-Sounds） | CC0 1.0 | jelly_bounce |
 | Micro Pack: Melon — Slap | Ben Burnes | https://ben-burnes.gumroad.com/（经由 CC0-Public-Domain-Sounds） | CC0 1.0 | jelly_bounce |
 | Micro Pack: Melon — Slap | Ben Burnes | https://ben-burnes.gumroad.com/（经由 CC0-Public-Domain-Sounds） | CC0 1.0 | jelly_bounce |
@@ -68,7 +67,9 @@ CC-BY 类素材需要署名，已在此列出。我们对原始录音做了切�
 | Button Sounds (Zoom H4 recordings) | Josh Comeau | https://www.npmjs.com/package/button-sounds（经由 npm button-sounds） | MIT | key_thock |
 | Button Sounds (Zoom H4 recordings) | Josh Comeau | https://www.npmjs.com/package/button-sounds（经由 npm button-sounds） | MIT | key_thock |
 | Button Sounds (Zoom H4 recordings) | Josh Comeau | https://www.npmjs.com/package/button-sounds（经由 npm button-sounds） | MIT | key_thock |
-| Paper | Moodist 收录（Pixabay / Freesound） | https://github.com/remvze/moodist（经由 Moodist） | Pixabay Content License / CC0 | paper_crinkle |
+| Retail Therapy Sample Pack — Crinkle Plastic | Ben Burnes | https://ben-burnes.gumroad.com/（经由 CC0-Public-Domain-Sounds） | CC0 1.0 | paper_crinkle |
+| Retail Therapy Sample Pack — Crinkle Plastic | Ben Burnes | https://ben-burnes.gumroad.com/（经由 CC0-Public-Domain-Sounds） | CC0 1.0 | paper_crinkle |
+| Retail Therapy Sample Pack — Crinkle Plastic | Ben Burnes | https://ben-burnes.gumroad.com/（经由 CC0-Public-Domain-Sounds） | CC0 1.0 | paper_crinkle |
 | Ice footsteps | InspectorJ | https://freesound.org/people/InspectorJ/sounds/416967/（经由 Minetest Game） | CC BY 3.0 | ice_crack |
 | Ice footsteps | InspectorJ | https://freesound.org/people/InspectorJ/sounds/416967/（经由 Minetest Game） | CC BY 3.0 | ice_crack |
 | Ice footsteps | InspectorJ | https://freesound.org/people/InspectorJ/sounds/416967/（经由 Minetest Game） | CC BY 3.0 | ice_crack |
@@ -91,18 +92,57 @@ CC-BY 类素材需要署名，已在此列出。我们对原始录音做了切�
 | Impact Sounds | Kenney | https://kenney.nl/assets/impact-sounds（经由 CC0-Public-Domain-Sounds） | CC0 1.0 | land_soft |
 | Cat Purring | Moodist 收录（Pixabay / Freesound） | https://github.com/remvze/moodist（经由 Moodist） | Pixabay Content License / CC0 | purr |
 | Wind | Moodist 收录（Pixabay / Freesound） | https://github.com/remvze/moodist（经由 Moodist） | Pixabay Content License / CC0 | amb_wind |
-| Birds | kvgarlic | https://freesound.org/people/kvgarlic/sounds/156826/（经由 Blanket） | CC0 1.0 | amb_birds |
-| Stream | gluckose | https://freesound.org/people/gluckose/sounds/333987/（经由 Blanket） | CC0 1.0 | amb_stream |
-| Light Rain | Moodist 收录（Pixabay / Freesound） | https://github.com/remvze/moodist（经由 Moodist） | Pixabay Content License / CC0 | amb_rain |
-| Crickets Chirping At Night | Lisa Redfern | https://soundbible.com/2083-Crickets-Chirping-At-Night.html（经由 Blanket） | Public Domain | amb_night |
+| Light Rain | Moodist 收录（Pixabay / Freesound） | https://github.com/remvze/moodist（经由 Moodist） | Pixabay Content License / CC0 | amb_rain, sizzle |
 | Fireplace | ezwa | https://soundbible.com/1543-Fireplace.html（经由 Blanket） | Public Domain | amb_fire |
 | Waves | Luftrum | https://freesound.org/people/Luftrum/sounds/48412/（经由 Blanket） | CC BY | amb_waves |
-| Fluffing a Duck | Kevin MacLeod (incompetech.com) | https://incompetech.com（经由 mcmusic-kevin-macleod） | CC BY 4.0 | music_dance |
 | Monkeys Spinning Monkeys | Kevin MacLeod (incompetech.com) | https://incompetech.com（经由 mcmusic-kevin-macleod） | CC BY 4.0 | music_dance |
 | Sneaky Snitch | Kevin MacLeod (incompetech.com) | https://incompetech.com（经由 mcmusic-kevin-macleod） | CC BY 4.0 | music_dance |
 | Hyperfun | Kevin MacLeod (incompetech.com) | https://incompetech.com（经由 mcmusic-kevin-macleod） | CC BY 4.0 | music_dance |
 | If I Had a Chicken | Kevin MacLeod (incompetech.com) | https://incompetech.com（经由 mcmusic-kevin-macleod） | CC BY 4.0 | music_dance |
 | Plucky Daisy | Kevin MacLeod (incompetech.com) | https://incompetech.com（经由 mcmusic-kevin-macleod） | CC BY 4.0 | music_dance |
+| Micro Pack: Organic Wooshes | Ben Burnes | https://ben-burnes.gumroad.com/（经由 CC0-Public-Domain-Sounds） | CC0 1.0 | whoosh |
+| Micro Pack: Organic Wooshes | Ben Burnes | https://ben-burnes.gumroad.com/（经由 CC0-Public-Domain-Sounds） | CC0 1.0 | whoosh |
+| Micro Pack: Organic Wooshes | Ben Burnes | https://ben-burnes.gumroad.com/（经由 CC0-Public-Domain-Sounds） | CC0 1.0 | whoosh |
+| Micro Pack: Organic Wooshes | Ben Burnes | https://ben-burnes.gumroad.com/（经由 CC0-Public-Domain-Sounds） | CC0 1.0 | whoosh |
+| Micro Pack: Organic Wooshes | Ben Burnes | https://ben-burnes.gumroad.com/（经由 CC0-Public-Domain-Sounds） | CC0 1.0 | whoosh |
+| Micro Pack: Organic Wooshes | Ben Burnes | https://ben-burnes.gumroad.com/（经由 CC0-Public-Domain-Sounds） | CC0 1.0 | whoosh |
+| Micro Pack: Organic Wooshes | Ben Burnes | https://ben-burnes.gumroad.com/（经由 CC0-Public-Domain-Sounds） | CC0 1.0 | whoosh |
+| Retail Therapy Sample Pack — Muted Rolling | Ben Burnes | https://ben-burnes.gumroad.com/（经由 CC0-Public-Domain-Sounds） | CC0 1.0 | slide_roll |
+| Retail Therapy Sample Pack — Muted Rolling | Ben Burnes | https://ben-burnes.gumroad.com/（经由 CC0-Public-Domain-Sounds） | CC0 1.0 | slide_roll |
+| Retail Therapy Sample Pack — Bouncy Ball | Ben Burnes | https://ben-burnes.gumroad.com/（经由 CC0-Public-Domain-Sounds） | CC0 1.0 | bounce |
+| Retail Therapy Sample Pack — Bouncy Ball | Ben Burnes | https://ben-burnes.gumroad.com/（经由 CC0-Public-Domain-Sounds） | CC0 1.0 | bounce |
+| Retail Therapy Sample Pack — Bouncy Ball | Ben Burnes | https://ben-burnes.gumroad.com/（经由 CC0-Public-Domain-Sounds） | CC0 1.0 | bounce |
+| RPG Audio | Kenney | https://kenney.nl/assets/rpg-audio（经由 CC0-Public-Domain-Sounds） | CC0 1.0 | cloth |
+| RPG Audio | Kenney | https://kenney.nl/assets/rpg-audio（经由 CC0-Public-Domain-Sounds） | CC0 1.0 | cloth |
+| RPG Audio | Kenney | https://kenney.nl/assets/rpg-audio（经由 CC0-Public-Domain-Sounds） | CC0 1.0 | cloth |
+| RPG Audio | Kenney | https://kenney.nl/assets/rpg-audio（经由 CC0-Public-Domain-Sounds） | CC0 1.0 | cloth |
+| Retail Therapy Sample Pack — Course Fabric | Ben Burnes | https://ben-burnes.gumroad.com/（经由 CC0-Public-Domain-Sounds） | CC0 1.0 | cloth |
+| Retail Therapy Sample Pack — Course Fabric | Ben Burnes | https://ben-burnes.gumroad.com/（经由 CC0-Public-Domain-Sounds） | CC0 1.0 | fabric_swish |
+| Retail Therapy Sample Pack — Course Fabric | Ben Burnes | https://ben-burnes.gumroad.com/（经由 CC0-Public-Domain-Sounds） | CC0 1.0 | fabric_swish |
+| Retail Therapy Sample Pack — Course Fabric | Ben Burnes | https://ben-burnes.gumroad.com/（经由 CC0-Public-Domain-Sounds） | CC0 1.0 | fabric_swish |
+| Retail Therapy Sample Pack — Good Thunk | Ben Burnes | https://ben-burnes.gumroad.com/（经由 CC0-Public-Domain-Sounds） | CC0 1.0 | place |
+| Retail Therapy Sample Pack — Good Thunk | Ben Burnes | https://ben-burnes.gumroad.com/（经由 CC0-Public-Domain-Sounds） | CC0 1.0 | place |
+| Retail Therapy Sample Pack — Good Thunk | Ben Burnes | https://ben-burnes.gumroad.com/（经由 CC0-Public-Domain-Sounds） | CC0 1.0 | place |
+| RPG Audio | Kenney | https://kenney.nl/assets/rpg-audio（经由 CC0-Public-Domain-Sounds） | CC0 1.0 | place |
+| RPG Audio | Kenney | https://kenney.nl/assets/rpg-audio（经由 CC0-Public-Domain-Sounds） | CC0 1.0 | place |
+| RPG Audio | Kenney | https://kenney.nl/assets/rpg-audio（经由 CC0-Public-Domain-Sounds） | CC0 1.0 | place |
+| Retail Therapy Sample Pack — Plastic Thump | Ben Burnes | https://ben-burnes.gumroad.com/（经由 CC0-Public-Domain-Sounds） | CC0 1.0 | place |
+| Retail Therapy Sample Pack — Plastic Thump | Ben Burnes | https://ben-burnes.gumroad.com/（经由 CC0-Public-Domain-Sounds） | CC0 1.0 | place |
+| Impact Sounds | Kenney | https://kenney.nl/assets/impact-sounds（经由 CC0-Public-Domain-Sounds） | CC0 1.0 | wood_step |
+| Impact Sounds | Kenney | https://kenney.nl/assets/impact-sounds（经由 CC0-Public-Domain-Sounds） | CC0 1.0 | wood_step |
+| Impact Sounds | Kenney | https://kenney.nl/assets/impact-sounds（经由 CC0-Public-Domain-Sounds） | CC0 1.0 | wood_step |
+| Impact Sounds | Kenney | https://kenney.nl/assets/impact-sounds（经由 CC0-Public-Domain-Sounds） | CC0 1.0 | wood_step |
+| Impact Sounds | Kenney | https://kenney.nl/assets/impact-sounds（经由 CC0-Public-Domain-Sounds） | CC0 1.0 | wood_step |
+| RPG Audio | Kenney | https://kenney.nl/assets/rpg-audio（经由 CC0-Public-Domain-Sounds） | CC0 1.0 | chop |
+| 100 CC0 SFX | rubberduck | https://opengameart.org/content/100-cc0-sfx（经由 CC0-Public-Domain-Sounds） | CC0 1.0 | chop |
+| 100 CC0 SFX | rubberduck | https://opengameart.org/content/100-cc0-sfx（经由 CC0-Public-Domain-Sounds） | CC0 1.0 | chop |
+| 100 CC0 SFX | rubberduck | https://opengameart.org/content/100-cc0-sfx（经由 CC0-Public-Domain-Sounds） | CC0 1.0 | chop |
+| 100 CC0 SFX | rubberduck | https://opengameart.org/content/100-cc0-sfx（经由 CC0-Public-Domain-Sounds） | CC0 1.0 | plop |
+| 100 CC0 SFX | rubberduck | https://opengameart.org/content/100-cc0-sfx（经由 CC0-Public-Domain-Sounds） | CC0 1.0 | plop |
+| Retail Therapy Sample Pack — Plastic Thump | Ben Burnes | https://ben-burnes.gumroad.com/（经由 CC0-Public-Domain-Sounds） | CC0 1.0 | plop |
+| Boiling Water | Moodist 收录（Pixabay / Freesound） | https://github.com/remvze/moodist（经由 Moodist） | Pixabay Content License / CC0 | amb_kitchen |
+| Rain on Window | Moodist 收录（Pixabay / Freesound） | https://github.com/remvze/moodist（经由 Moodist） | Pixabay Content License / CC0 | amb_room |
+| Wind in Trees | Moodist 收录（Pixabay / Freesound） | https://github.com/remvze/moodist（经由 Moodist） | Pixabay Content License / CC0 | amb_forest |
 
 授权说明：
 - CC0 1.0：公共领域，可自由使用。https://creativecommons.org/publicdomain/zero/1.0/

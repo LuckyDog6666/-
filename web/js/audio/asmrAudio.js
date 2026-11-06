@@ -22,7 +22,8 @@ export class AsmrAudio {
 
   async init() {
     const AC = window.AudioContext || window.webkitAudioContext;
-    this.ctx = new AC({ sampleRate: 48000, latencyHint: 'playback' });
+    // 'interactive'：最低输出延迟。'playback' 在部分 Windows 声卡上会多出 100ms 以上的延迟，声音会比画面慢半拍
+    try { this.ctx = new AC({ sampleRate: 48000, latencyHint: 'interactive' }); } catch { this.ctx = new AC({ latencyHint: 'interactive' }); }
     const ctx = this.ctx;
     this.masterIn = ctx.createGain();
     const hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 35; hp.Q.value = 0.6;
@@ -43,9 +44,14 @@ export class AsmrAudio {
     this.masterIn.connect(hp); hp.connect(glue); glue.connect(makeup); makeup.connect(limiter); limiter.connect(this.masterGain);
     this.masterGain.connect(safety); safety.connect(ctx.destination); safety.connect(this.analyser);
 
-    this.sfxBus = ctx.createGain(); this.sfxBus.gain.value = this.opts.sfx; this.sfxBus.connect(this.masterIn);
-    this.ambBus = ctx.createGain(); this.ambBus.gain.value = this.opts.ambience; this.ambBus.connect(this.masterIn);
-    this.musicBus = ctx.createGain(); this.musicBus.gain.value = this.opts.music; this.musicBus.connect(this.masterIn);
+    const shelf = (type, f, g, q = 0.7) => { const b = ctx.createBiquadFilter(); b.type = type; b.frequency.value = f; b.gain.value = g; b.Q.value = q; return b; };
+    // 轻微的"去刺耳"：踩踏声压一点 8.5kHz 以上的嘶嘶声；舞曲压一点 3.2kHz 附近最扎耳朵的频段（不会闷）
+    const sfxAir = shelf('highshelf', 8500, -2.5);
+    const musicTame = shelf('peaking', 3200, -2, 1.0);
+    const ambAir = shelf('highshelf', 7000, -3);
+    this.sfxBus = ctx.createGain(); this.sfxBus.gain.value = this.opts.sfx; this.sfxBus.connect(sfxAir); sfxAir.connect(this.masterIn);
+    this.ambBus = ctx.createGain(); this.ambBus.gain.value = this.opts.ambience; this.ambBus.connect(ambAir); ambAir.connect(this.masterIn);
+    this.musicBus = ctx.createGain(); this.musicBus.gain.value = this.opts.music; this.musicBus.connect(musicTame); musicTame.connect(this.masterIn);
     // 很轻的空间感（小房间），让近距离录音不那么"干"
     this.room = ctx.createConvolver();
     this.room.buffer = this._roomIR(0.45);
@@ -184,25 +190,31 @@ export class AsmrAudio {
     const g = ctx.createGain();
     const fileGain = pk.file._g != null ? pk.file._g : Math.pow(10, (pk.file.gain || 0) / 20);
     const lin = fileGain * Math.pow(10, ((pk.def.gain || 0) + (o.gain || 0) + (Math.random() * 2 - 1) * 0.8) / 20);
+    // 声画同步：录音开头如果有一小段"还没响"的部分（manifest 里的 onset），直接从起音前几毫秒开始放，
+    // 让"咔嚓""啪"正好落在画面里脚着地 / 刀落到砧板的那一帧
+    const offset = Math.max(0, Math.min(0.5, (pk.file.onset || 0) - 0.006));
+    const t0 = now + (o.delay || 0);
     const fadeIn = o.fadeIn ?? 0.004;
-    g.gain.setValueAtTime(0, now);
-    g.gain.linearRampToValueAtTime(lin, now + fadeIn);
-    const dur = pk.buf.duration / src.playbackRate.value;
-    let end = now + dur;
+    g.gain.setValueAtTime(0, t0);
+    g.gain.linearRampToValueAtTime(lin, t0 + fadeIn);
+    const dur = (pk.buf.duration - offset) / src.playbackRate.value;
+    let end = t0 + dur;
     if (o.maxDur && o.maxDur < dur) {
-      end = now + o.maxDur;
+      end = t0 + o.maxDur;
       g.gain.setValueAtTime(lin, end - Math.min(0.35, o.maxDur * 0.4));
       g.gain.linearRampToValueAtTime(0, end);
     }
     const pan = this._panNode(o.pan || 0);
     src.connect(g); g.connect(pan);
     pan.connect(o.bus === 'amb' ? this.ambBus : o.bus === 'music' ? this.musicBus : this.sfxBus);
-    src.start(now + (o.delay || 0));
-    src.stop(end + (o.delay || 0) + 0.05);
+    src.start(t0, offset);
+    src.stop(end + 0.05);
     const v = { src, g, pan, end, id, lin, main };
     this.voices.push(v);
     if (main) this.mainVoice = v;
     src.onended = () => this._release(v);
+    // 声音被叫停前就已经结束的保险（个别浏览器在挂起/恢复时不触发 onended）
+    v.timer = setTimeout(() => this._release(v), (end - now + 1) * 1000);
     return v;
   }
 
@@ -235,6 +247,7 @@ export class AsmrAudio {
   stop(v, fade = 0.3) { this._fade(v, fade); }
 
   _release(v) {
+    if (v.timer) { clearTimeout(v.timer); v.timer = null; }
     const i = this.voices.indexOf(v);
     if (i >= 0) this.voices.splice(i, 1);
     if (this.mainVoice === v) this.mainVoice = null;
@@ -295,7 +308,11 @@ export class AsmrAudio {
   }
 
   // 舞曲已经播放了多少秒（舞步对齐拍子用）
-  musicTime() { return this.music && this.ctx ? this.ctx.currentTime - this.music.startAt : 0; }
+  musicTime() {
+    if (!this.music || !this.ctx) return 0;
+    const lat = (this.ctx.outputLatency || 0) + (this.ctx.baseLatency || 0);
+    return Math.max(0, this.ctx.currentTime - this.music.startAt - lat);
+  }
 
   stopMusic(fade = 0.4) { if (this.music) { const m = this.music; this.music = null; this._fade(m, fade); } }
 

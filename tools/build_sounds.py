@@ -172,6 +172,47 @@ def tempo(x):
     return float(bpm), beat0
 
 
+def _aweight(f):
+    f2 = f * f
+    ra = (12194 ** 2 * f2 ** 2) / ((f2 + 20.6 ** 2) * np.sqrt((f2 + 107.7 ** 2) * (f2 + 737.9 ** 2)) * (f2 + 12194 ** 2))
+    return ra / ra[np.argmin(np.abs(f - 1000))]
+
+
+def audit(x):
+    """声音体检（写进 manifest，自检和播放器都会用到）：
+    onset  —— 文件开头到第一下起音的秒数：播放器从这里开始放，声音和画面里"脚落地"的那一帧对齐
+    sharp  —— 感知锐度（A 计权 + Zwicker 特征响度近似，acum），数值越大越"尖、刺"
+    pierce —— 2~5 kHz（人耳最敏感的频段）里最突出的窄带尖音相对整体能量的 dB，越接近 0 越刺耳"""
+    mono = x.mean(axis=1).astype(np.float64)
+    n = 4096
+    if len(mono) < n:
+        mono = np.pad(mono, (0, n - len(mono)))
+    f = np.fft.rfftfreq(n, 1 / SR)
+    A = _aweight(np.maximum(f, 1)) ** 2
+    z = 13 * np.arctan(0.00076 * f) + 3.5 * np.arctan((f / 7500) ** 2)
+    band = (f >= 2000) & (f <= 5000)
+    hop = n // 4
+    w = np.hanning(n)
+    fr = np.array([mono[i:i + n] * w for i in range(0, len(mono) - n + 1, hop)])
+    S = (np.abs(np.fft.rfft(fr, axis=1)) ** 2) * A
+    tot = S.sum(1) + 1e-20
+    lv = 10 * np.log10(tot)
+    loud = lv > lv.max() - 18
+    P = S[loud].mean(0)
+    N = np.array([(P[(z >= b) & (z < b + 1)].sum() + 1e-20) ** 0.23 for b in range(25)])
+    zc = np.arange(25) + 0.5
+    g = np.where(zc < 15.8, 1.0, 0.066 * np.exp(0.171 * zc))
+    sharp = 0.11 * float((N * g * zc).sum() / (N.sum() + 1e-20))
+    b = S[loud][:, band]
+    k = b.argmax(1)
+    pk = np.array([b[i, max(0, j - 1):j + 2].sum() for i, j in enumerate(k)])
+    pierce = float((10 * np.log10(pk / tot[loud] + 1e-20)).max())
+    e = np.convolve(mono * mono, np.ones(120) / 120, mode='same')
+    db = 10 * np.log10(e + 1e-12)
+    onset = int(np.argmax(db > db.max() - 22)) / SR
+    return {'onset': round(onset, 3), 'sharp': round(sharp, 2), 'pierce': round(pierce, 1)}
+
+
 def detect_events(x, o):
     pad = int(0.06 * SR)
     x = np.concatenate([np.zeros((pad, x.shape[1]), dtype=x.dtype), x])
@@ -427,6 +468,10 @@ def process_id(sd, args, credits):
         name = f'{sid}_{k + 1:02d}.ogg'
         encode(seg, os.path.join(odir, name), sd.get('quality', 5))
         entry = {'src': f'{sid}/{name}', 'dur': round(len(seg) / SR, 3), 'gain': round(min(rest, 6), 2)}
+        if cat != 'music':
+            entry.update(audit(seg))
+        else:
+            entry.update({k: v for k, v in audit(seg).items() if k != 'onset'})
         if cat == 'music':
             bpm, beat0 = tempo(seg)
             entry['bpm'] = round(bpm, 1)
@@ -473,11 +518,14 @@ def sheet(sid, odir, names, outdir):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--spec', default='tools/sound_spec.json')
-    ap.add_argument('--raw', required=True)
+    ap.add_argument('--raw', default='')
     ap.add_argument('--out', default='web/sounds')
     ap.add_argument('--only', default='')
     ap.add_argument('--sheet', default='')
+    ap.add_argument('--audit', action='store_true', help='只给已打包好的声音补充体检数据（起音/锐度/尖音），不重新切分')
     args = ap.parse_args()
+    if args.audit:
+        return audit_existing(args.out)
     spec = json.load(open(args.spec, encoding='utf8'))
     man_path = os.path.join(args.out, 'manifest.json')
     manifest = {'version': 2, 'sounds': {}}
@@ -511,6 +559,22 @@ def main():
         json.dump(manifest, f, ensure_ascii=False, indent=1)
     write_credits(spec, args.out)
     print('完成：', man_path)
+
+
+def audit_existing(out):
+    man_path = os.path.join(out, 'manifest.json')
+    manifest = json.load(open(man_path, encoding='utf8'))
+    for sid, d in manifest['sounds'].items():
+        for f in d['files']:
+            x = decode(os.path.join(out, f['src']), 2, None)
+            r = audit(x)
+            if d.get('cat') == 'music':
+                r.pop('onset', None)
+            f.update(r)
+        print(f"  {sid}: " + ', '.join(f"{f.get('onset', 0):.3f}s/{f['sharp']:.2f}/{f['pierce']:.0f}dB" for f in d['files'][:4]))
+    with open(man_path, 'w', encoding='utf8') as fp:
+        json.dump(manifest, fp, ensure_ascii=False, indent=1)
+    print('体检完成：', man_path)
 
 
 def write_credits(spec, out):

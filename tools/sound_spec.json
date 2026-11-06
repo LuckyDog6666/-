@@ -245,8 +245,8 @@
    "label": "踩史莱姆",
    "mode": "whole",
    "hp": 70,
-   "lp": 13000,
-   "deharsh": 2,
+   "lp": 8500,
+   "deharsh": 4,
    "sources": [
     {
      "file": "extra/space-station-14__slime1.ogg",
@@ -428,19 +428,11 @@
    "mode": "whole",
    "maxDur": 3.6,
    "hp": 70,
-   "lp": 12000,
-   "deharsh": 2,
+   "lp": 7500,
+   "deharsh": 5,
    "sources": [
     {
      "file": "cc0col/bb - Bottle Plops (Apr 2021)/Plop - Viscous 1.wav",
-     "title": "Bottle Plops — Viscous",
-     "author": "Ben Burnes",
-     "url": "https://ben-burnes.gumroad.com/",
-     "license": "CC0 1.0",
-     "via": "CC0-Public-Domain-Sounds"
-    },
-    {
-     "file": "cc0col/bb - Bottle Plops (Apr 2021)/Plop - Viscous 2.wav",
      "title": "Bottle Plops — Viscous",
      "author": "Ben Burnes",
      "url": "https://ben-burnes.gumroad.com/",
@@ -843,24 +835,40 @@
   {
    "id": "paper_crinkle",
    "cat": "trigger",
-   "label": "踩包装纸",
+   "label": "踩糖纸",
    "mode": "humps",
-   "count": 8,
-   "minDur": 0.45,
-   "maxDur": 1.3,
+   "count": 3,
+   "minDur": 0.5,
+   "maxDur": 1.2,
    "ideal": 0.8,
-   "minGap": 0.45,
-   "hp": 80,
-   "lp": 12000,
-   "deharsh": 4,
+   "minGap": 0.4,
+   "hp": 120,
+   "lp": 7500,
+   "deharsh": 5,
    "sources": [
     {
-     "file": "moodist/things/paper.mp3",
-     "title": "Paper",
-     "author": "Moodist 收录（Pixabay / Freesound）",
-     "url": "https://github.com/remvze/moodist",
-     "license": "Pixabay Content License / CC0",
-     "via": "Moodist"
+     "file": "cc0col/BB_Retail Therapy Sample Pack/Crinkle Plastic 2.wav",
+     "title": "Retail Therapy Sample Pack — Crinkle Plastic",
+     "author": "Ben Burnes",
+     "url": "https://ben-burnes.gumroad.com/",
+     "license": "CC0 1.0",
+     "via": "CC0-Public-Domain-Sounds"
+    },
+    {
+     "file": "cc0col/BB_Retail Therapy Sample Pack/Crinkle Plastic 8.wav",
+     "title": "Retail Therapy Sample Pack — Crinkle Plastic",
+     "author": "Ben Burnes",
+     "url": "https://ben-burnes.gumroad.com/",
+     "license": "CC0 1.0",
+     "via": "CC0-Public-Domain-Sounds"
+    },
+    {
+     "file": "cc0col/BB_Retail Therapy Sample Pack/Crinkle Plastic 9.wav",
+     "title": "Retail Therapy Sample Pack — Crinkle Plastic",
+     "author": "Ben Burnes",
+     "url": "https://ben-burnes.gumroad.com/",
+     "license": "CC0 1.0",
+     "via": "CC0-Public-Domain-Sounds"
     }
    ]
   },
@@ -1122,51 +1130,6 @@
    ]
   },
   {
-   "id": "amb_birds",
-   "cat": "ambience",
-   "label": "林间鸟鸣",
-   "mode": "loop",
-   "loopLen": 45,
-   "start": 3,
-   "crossfade": 2.5,
-   "hp": 120,
-   "lp": 11000,
-   "deharsh": 2,
-   "quality": 3,
-   "sources": [
-    {
-     "file": "blanket/birds.ogg",
-     "title": "Birds",
-     "author": "kvgarlic",
-     "url": "https://freesound.org/people/kvgarlic/sounds/156826/",
-     "license": "CC0 1.0",
-     "via": "Blanket"
-    }
-   ]
-  },
-  {
-   "id": "amb_stream",
-   "cat": "ambience",
-   "label": "小溪",
-   "mode": "loop",
-   "loopLen": 45,
-   "start": 3,
-   "crossfade": 2.5,
-   "hp": 80,
-   "lp": 10000,
-   "quality": 3,
-   "sources": [
-    {
-     "file": "blanket/stream.ogg",
-     "title": "Stream",
-     "author": "gluckose",
-     "url": "https://freesound.org/people/gluckose/sounds/333987/",
-     "license": "CC0 1.0",
-     "via": "Blanket"
-    }
-   ]
-  },
-  {
    "id": "amb_rain",
    "cat": "ambience",
    "label": "小雨",
@@ -1185,29 +1148,6 @@
      "url": "https://github.com/remvze/moodist",
      "license": "Pixabay Content License / CC0",
      "via": "Moodist"
-    }
-   ]
-  },
-  {
-   "id": "amb_night",
-   "cat": "ambience",
-   "label": "夏夜虫鸣",
-   "mode": "loop",
-   "loopLen": 40,
-   "start": 2,
-   "crossfade": 2.5,
-   "hp": 150,
-   "lp": 9000,
-   "deharsh": 3,
-   "quality": 3,
-   "sources": [
-    {
-     "file": "blanket/summer-night.ogg",
-     "title": "Crickets Chirping At Night",
-     "author": "Lisa Redfern",
-     "url": "https://soundbible.com/2083-Crickets-Chirping-At-Night.html",
-     "license": "Public Domain",
-     "via": "Blanket"
     }
    ]
   },
@@ -1265,20 +1205,6 @@
    "hp": 30,
    "quality": 4,
    "sources": [
-    {
-     "file": "music/fluffing_a_duck.mp3",
-     "ranges": [
-      [
-       0,
-       40
-      ]
-     ],
-     "title": "Fluffing a Duck",
-     "author": "Kevin MacLeod (incompetech.com)",
-     "url": "https://incompetech.com",
-     "license": "CC BY 4.0",
-     "via": "mcmusic-kevin-macleod"
-    },
     {
      "file": "music/monkeys_spinning_monkeys.mp3",
      "ranges": [
@@ -1348,6 +1274,529 @@
      "url": "https://incompetech.com",
      "license": "CC BY 4.0",
      "via": "mcmusic-kevin-macleod"
+    }
+   ]
+  },
+  {
+   "id": "whoosh",
+   "cat": "trigger",
+   "label": "呼～（起跳/滑行/翻转）",
+   "mode": "whole",
+   "hp": 90,
+   "lp": 11000,
+   "deharsh": 2,
+   "sources": [
+    {
+     "file": "cc0col/Micro Pack - Organic Wooshes/Classic Swish 1.wav",
+     "title": "Micro Pack: Organic Wooshes",
+     "author": "Ben Burnes",
+     "url": "https://ben-burnes.gumroad.com/",
+     "license": "CC0 1.0",
+     "via": "CC0-Public-Domain-Sounds"
+    },
+    {
+     "file": "cc0col/Micro Pack - Organic Wooshes/Classic Swish 2.wav",
+     "title": "Micro Pack: Organic Wooshes",
+     "author": "Ben Burnes",
+     "url": "https://ben-burnes.gumroad.com/",
+     "license": "CC0 1.0",
+     "via": "CC0-Public-Domain-Sounds"
+    },
+    {
+     "file": "cc0col/Micro Pack - Organic Wooshes/Classic Swish 3.wav",
+     "title": "Micro Pack: Organic Wooshes",
+     "author": "Ben Burnes",
+     "url": "https://ben-burnes.gumroad.com/",
+     "license": "CC0 1.0",
+     "via": "CC0-Public-Domain-Sounds"
+    },
+    {
+     "file": "cc0col/Micro Pack - Organic Wooshes/Swish 1.wav",
+     "title": "Micro Pack: Organic Wooshes",
+     "author": "Ben Burnes",
+     "url": "https://ben-burnes.gumroad.com/",
+     "license": "CC0 1.0",
+     "via": "CC0-Public-Domain-Sounds"
+    },
+    {
+     "file": "cc0col/Micro Pack - Organic Wooshes/Swish 2.wav",
+     "title": "Micro Pack: Organic Wooshes",
+     "author": "Ben Burnes",
+     "url": "https://ben-burnes.gumroad.com/",
+     "license": "CC0 1.0",
+     "via": "CC0-Public-Domain-Sounds"
+    },
+    {
+     "file": "cc0col/Micro Pack - Organic Wooshes/Swish 3.wav",
+     "title": "Micro Pack: Organic Wooshes",
+     "author": "Ben Burnes",
+     "url": "https://ben-burnes.gumroad.com/",
+     "license": "CC0 1.0",
+     "via": "CC0-Public-Domain-Sounds"
+    },
+    {
+     "file": "cc0col/Micro Pack - Organic Wooshes/Swish 6.wav",
+     "title": "Micro Pack: Organic Wooshes",
+     "author": "Ben Burnes",
+     "url": "https://ben-burnes.gumroad.com/",
+     "license": "CC0 1.0",
+     "via": "CC0-Public-Domain-Sounds"
+    }
+   ]
+  },
+  {
+   "id": "slide_roll",
+   "cat": "sustain",
+   "label": "滑滑梯（摩擦声）",
+   "mode": "whole",
+   "hp": 60,
+   "lp": 8000,
+   "maxDur": 1.7,
+   "sources": [
+    {
+     "file": "cc0col/BB_Retail Therapy Sample Pack/Muted Rolling 1.wav",
+     "title": "Retail Therapy Sample Pack — Muted Rolling",
+     "author": "Ben Burnes",
+     "url": "https://ben-burnes.gumroad.com/",
+     "license": "CC0 1.0",
+     "via": "CC0-Public-Domain-Sounds"
+    },
+    {
+     "file": "cc0col/BB_Retail Therapy Sample Pack/Muted Rolling 2.wav",
+     "title": "Retail Therapy Sample Pack — Muted Rolling",
+     "author": "Ben Burnes",
+     "url": "https://ben-burnes.gumroad.com/",
+     "license": "CC0 1.0",
+     "via": "CC0-Public-Domain-Sounds"
+    }
+   ]
+  },
+  {
+   "id": "bounce",
+   "cat": "trigger",
+   "label": "蹦床 弹",
+   "mode": "events",
+   "count": 3,
+   "minDur": 0.14,
+   "maxDur": 0.7,
+   "minGap": 0.12,
+   "tailDb": 36,
+   "hp": 70,
+   "lp": 9000,
+   "deharsh": 3,
+   "sources": [
+    {
+     "file": "cc0col/BB_Retail Therapy Sample Pack/Bouncy Ball 1.wav",
+     "title": "Retail Therapy Sample Pack — Bouncy Ball",
+     "author": "Ben Burnes",
+     "url": "https://ben-burnes.gumroad.com/",
+     "license": "CC0 1.0",
+     "via": "CC0-Public-Domain-Sounds"
+    },
+    {
+     "file": "cc0col/BB_Retail Therapy Sample Pack/Bouncy Ball 2.wav",
+     "title": "Retail Therapy Sample Pack — Bouncy Ball",
+     "author": "Ben Burnes",
+     "url": "https://ben-burnes.gumroad.com/",
+     "license": "CC0 1.0",
+     "via": "CC0-Public-Domain-Sounds"
+    },
+    {
+     "file": "cc0col/BB_Retail Therapy Sample Pack/Bouncy Ball 3.wav",
+     "title": "Retail Therapy Sample Pack — Bouncy Ball",
+     "author": "Ben Burnes",
+     "url": "https://ben-burnes.gumroad.com/",
+     "license": "CC0 1.0",
+     "via": "CC0-Public-Domain-Sounds"
+    }
+   ]
+  },
+  {
+   "id": "cloth",
+   "cat": "trigger",
+   "label": "布料沙沙（叠衣服/擦拭）",
+   "mode": "whole",
+   "hp": 80,
+   "lp": 10000,
+   "deharsh": 2,
+   "sources": [
+    {
+     "file": "cc0col/kenney_rpgaudio/Audio/cloth1.ogg",
+     "title": "RPG Audio",
+     "author": "Kenney",
+     "url": "https://kenney.nl/assets/rpg-audio",
+     "license": "CC0 1.0",
+     "via": "CC0-Public-Domain-Sounds"
+    },
+    {
+     "file": "cc0col/kenney_rpgaudio/Audio/cloth2.ogg",
+     "title": "RPG Audio",
+     "author": "Kenney",
+     "url": "https://kenney.nl/assets/rpg-audio",
+     "license": "CC0 1.0",
+     "via": "CC0-Public-Domain-Sounds"
+    },
+    {
+     "file": "cc0col/kenney_rpgaudio/Audio/cloth3.ogg",
+     "title": "RPG Audio",
+     "author": "Kenney",
+     "url": "https://kenney.nl/assets/rpg-audio",
+     "license": "CC0 1.0",
+     "via": "CC0-Public-Domain-Sounds"
+    },
+    {
+     "file": "cc0col/kenney_rpgaudio/Audio/cloth4.ogg",
+     "title": "RPG Audio",
+     "author": "Kenney",
+     "url": "https://kenney.nl/assets/rpg-audio",
+     "license": "CC0 1.0",
+     "via": "CC0-Public-Domain-Sounds"
+    },
+    {
+     "file": "cc0col/BB_Retail Therapy Sample Pack/Course Fabric 2.wav",
+     "title": "Retail Therapy Sample Pack — Course Fabric",
+     "author": "Ben Burnes",
+     "url": "https://ben-burnes.gumroad.com/",
+     "license": "CC0 1.0",
+     "via": "CC0-Public-Domain-Sounds"
+    }
+   ]
+  },
+  {
+   "id": "fabric_swish",
+   "cat": "trigger",
+   "label": "扫一扫/拖一拖",
+   "mode": "humps",
+   "count": 3,
+   "minDur": 0.45,
+   "maxDur": 1.2,
+   "ideal": 0.75,
+   "minGap": 0.35,
+   "hp": 90,
+   "lp": 9000,
+   "deharsh": 3,
+   "sources": [
+    {
+     "file": "cc0col/BB_Retail Therapy Sample Pack/Course Fabric 1.wav",
+     "title": "Retail Therapy Sample Pack — Course Fabric",
+     "author": "Ben Burnes",
+     "url": "https://ben-burnes.gumroad.com/",
+     "license": "CC0 1.0",
+     "via": "CC0-Public-Domain-Sounds"
+    },
+    {
+     "file": "cc0col/BB_Retail Therapy Sample Pack/Course Fabric 3.wav",
+     "title": "Retail Therapy Sample Pack — Course Fabric",
+     "author": "Ben Burnes",
+     "url": "https://ben-burnes.gumroad.com/",
+     "license": "CC0 1.0",
+     "via": "CC0-Public-Domain-Sounds"
+    },
+    {
+     "file": "cc0col/BB_Retail Therapy Sample Pack/Course Fabric 4.wav",
+     "title": "Retail Therapy Sample Pack — Course Fabric",
+     "author": "Ben Burnes",
+     "url": "https://ben-burnes.gumroad.com/",
+     "license": "CC0 1.0",
+     "via": "CC0-Public-Domain-Sounds"
+    }
+   ]
+  },
+  {
+   "id": "place",
+   "cat": "trigger",
+   "label": "放好啦（咚）",
+   "mode": "whole",
+   "hp": 60,
+   "lp": 9000,
+   "maxDur": 0.7,
+   "sources": [
+    {
+     "file": "cc0col/BB_Retail Therapy Sample Pack/Good Thunk 1.wav",
+     "title": "Retail Therapy Sample Pack — Good Thunk",
+     "author": "Ben Burnes",
+     "url": "https://ben-burnes.gumroad.com/",
+     "license": "CC0 1.0",
+     "via": "CC0-Public-Domain-Sounds"
+    },
+    {
+     "file": "cc0col/BB_Retail Therapy Sample Pack/Good Thunk 2.wav",
+     "title": "Retail Therapy Sample Pack — Good Thunk",
+     "author": "Ben Burnes",
+     "url": "https://ben-burnes.gumroad.com/",
+     "license": "CC0 1.0",
+     "via": "CC0-Public-Domain-Sounds"
+    },
+    {
+     "file": "cc0col/BB_Retail Therapy Sample Pack/Good Thunk 3.wav",
+     "title": "Retail Therapy Sample Pack — Good Thunk",
+     "author": "Ben Burnes",
+     "url": "https://ben-burnes.gumroad.com/",
+     "license": "CC0 1.0",
+     "via": "CC0-Public-Domain-Sounds"
+    },
+    {
+     "file": "cc0col/kenney_rpgaudio/Audio/bookPlace1.ogg",
+     "title": "RPG Audio",
+     "author": "Kenney",
+     "url": "https://kenney.nl/assets/rpg-audio",
+     "license": "CC0 1.0",
+     "via": "CC0-Public-Domain-Sounds"
+    },
+    {
+     "file": "cc0col/kenney_rpgaudio/Audio/bookPlace2.ogg",
+     "title": "RPG Audio",
+     "author": "Kenney",
+     "url": "https://kenney.nl/assets/rpg-audio",
+     "license": "CC0 1.0",
+     "via": "CC0-Public-Domain-Sounds"
+    },
+    {
+     "file": "cc0col/kenney_rpgaudio/Audio/bookPlace3.ogg",
+     "title": "RPG Audio",
+     "author": "Kenney",
+     "url": "https://kenney.nl/assets/rpg-audio",
+     "license": "CC0 1.0",
+     "via": "CC0-Public-Domain-Sounds"
+    },
+    {
+     "file": "cc0col/BB_Retail Therapy Sample Pack/Plastic Thump 5.wav",
+     "title": "Retail Therapy Sample Pack — Plastic Thump",
+     "author": "Ben Burnes",
+     "url": "https://ben-burnes.gumroad.com/",
+     "license": "CC0 1.0",
+     "via": "CC0-Public-Domain-Sounds"
+    },
+    {
+     "file": "cc0col/BB_Retail Therapy Sample Pack/Plastic Thump 6.wav",
+     "title": "Retail Therapy Sample Pack — Plastic Thump",
+     "author": "Ben Burnes",
+     "url": "https://ben-burnes.gumroad.com/",
+     "license": "CC0 1.0",
+     "via": "CC0-Public-Domain-Sounds"
+    }
+   ]
+  },
+  {
+   "id": "wood_step",
+   "cat": "step",
+   "label": "木台面/木地板脚步",
+   "mode": "whole",
+   "hp": 60,
+   "lp": 9000,
+   "sources": [
+    {
+     "file": "cc0col/kenney_impactsounds/Audio/footstep_wood_000.ogg",
+     "title": "Impact Sounds",
+     "author": "Kenney",
+     "url": "https://kenney.nl/assets/impact-sounds",
+     "license": "CC0 1.0",
+     "via": "CC0-Public-Domain-Sounds"
+    },
+    {
+     "file": "cc0col/kenney_impactsounds/Audio/footstep_wood_001.ogg",
+     "title": "Impact Sounds",
+     "author": "Kenney",
+     "url": "https://kenney.nl/assets/impact-sounds",
+     "license": "CC0 1.0",
+     "via": "CC0-Public-Domain-Sounds"
+    },
+    {
+     "file": "cc0col/kenney_impactsounds/Audio/footstep_wood_002.ogg",
+     "title": "Impact Sounds",
+     "author": "Kenney",
+     "url": "https://kenney.nl/assets/impact-sounds",
+     "license": "CC0 1.0",
+     "via": "CC0-Public-Domain-Sounds"
+    },
+    {
+     "file": "cc0col/kenney_impactsounds/Audio/footstep_wood_003.ogg",
+     "title": "Impact Sounds",
+     "author": "Kenney",
+     "url": "https://kenney.nl/assets/impact-sounds",
+     "license": "CC0 1.0",
+     "via": "CC0-Public-Domain-Sounds"
+    },
+    {
+     "file": "cc0col/kenney_impactsounds/Audio/footstep_wood_004.ogg",
+     "title": "Impact Sounds",
+     "author": "Kenney",
+     "url": "https://kenney.nl/assets/impact-sounds",
+     "license": "CC0 1.0",
+     "via": "CC0-Public-Domain-Sounds"
+    }
+   ]
+  },
+  {
+   "id": "chop",
+   "cat": "trigger",
+   "label": "切菜（木砧板 咚）",
+   "mode": "whole",
+   "hp": 70,
+   "lp": 8000,
+   "maxDur": 0.5,
+   "sources": [
+    {
+     "file": "cc0col/kenney_rpgaudio/Audio/chop.ogg",
+     "title": "RPG Audio",
+     "author": "Kenney",
+     "url": "https://kenney.nl/assets/rpg-audio",
+     "license": "CC0 1.0",
+     "via": "CC0-Public-Domain-Sounds"
+    },
+    {
+     "file": "cc0col/100-CC0-SFX/wooden_01.ogg",
+     "title": "100 CC0 SFX",
+     "author": "rubberduck",
+     "url": "https://opengameart.org/content/100-cc0-sfx",
+     "license": "CC0 1.0",
+     "via": "CC0-Public-Domain-Sounds"
+    },
+    {
+     "file": "cc0col/100-CC0-SFX/wooden_02.ogg",
+     "title": "100 CC0 SFX",
+     "author": "rubberduck",
+     "url": "https://opengameart.org/content/100-cc0-sfx",
+     "license": "CC0 1.0",
+     "via": "CC0-Public-Domain-Sounds"
+    },
+    {
+     "file": "cc0col/100-CC0-SFX/wooden_03.ogg",
+     "title": "100 CC0 SFX",
+     "author": "rubberduck",
+     "url": "https://opengameart.org/content/100-cc0-sfx",
+     "license": "CC0 1.0",
+     "via": "CC0-Public-Domain-Sounds"
+    }
+   ]
+  },
+  {
+   "id": "plop",
+   "cat": "trigger",
+   "label": "啵（落进碗里/玩具归位）",
+   "mode": "whole",
+   "hp": 70,
+   "lp": 9000,
+   "maxDur": 0.6,
+   "sources": [
+    {
+     "file": "cc0col/100-CC0-SFX/plop_01.ogg",
+     "title": "100 CC0 SFX",
+     "author": "rubberduck",
+     "url": "https://opengameart.org/content/100-cc0-sfx",
+     "license": "CC0 1.0",
+     "via": "CC0-Public-Domain-Sounds"
+    },
+    {
+     "file": "cc0col/100-CC0-SFX/plop_02.ogg",
+     "title": "100 CC0 SFX",
+     "author": "rubberduck",
+     "url": "https://opengameart.org/content/100-cc0-sfx",
+     "license": "CC0 1.0",
+     "via": "CC0-Public-Domain-Sounds"
+    },
+    {
+     "file": "cc0col/BB_Retail Therapy Sample Pack/Plastic Thump 3.wav",
+     "title": "Retail Therapy Sample Pack — Plastic Thump",
+     "author": "Ben Burnes",
+     "url": "https://ben-burnes.gumroad.com/",
+     "license": "CC0 1.0",
+     "via": "CC0-Public-Domain-Sounds"
+    }
+   ]
+  },
+  {
+   "id": "sizzle",
+   "cat": "sustain",
+   "label": "煎锅滋滋（雨声拟音）",
+   "mode": "chunks",
+   "count": 4,
+   "minDur": 1.6,
+   "ideal": 2.4,
+   "maxDur": 3.2,
+   "hp": 500,
+   "lp": 7000,
+   "deharsh": 4,
+   "sources": [
+    {
+     "file": "moodist/rain/light-rain.mp3",
+     "title": "Light Rain",
+     "author": "Moodist 收录（Pixabay / Freesound）",
+     "url": "https://github.com/remvze/moodist",
+     "license": "Pixabay Content License / CC0",
+     "via": "Moodist",
+     "range": [
+      20,
+      80
+     ]
+    }
+   ]
+  },
+  {
+   "id": "amb_kitchen",
+   "cat": "ambience",
+   "label": "厨房：小锅咕嘟",
+   "mode": "loop",
+   "loopLen": 15.5,
+   "start": 0.5,
+   "crossfade": 2.0,
+   "hp": 80,
+   "lp": 6500,
+   "deharsh": 3,
+   "quality": 3,
+   "sources": [
+    {
+     "file": "moodist/things/boiling-water.mp3",
+     "title": "Boiling Water",
+     "author": "Moodist 收录（Pixabay / Freesound）",
+     "url": "https://github.com/remvze/moodist",
+     "license": "Pixabay Content License / CC0",
+     "via": "Moodist"
+    }
+   ]
+  },
+  {
+   "id": "amb_room",
+   "cat": "ambience",
+   "label": "房间：窗外小雨",
+   "mode": "loop",
+   "loopLen": 30,
+   "start": 1,
+   "crossfade": 2.5,
+   "hp": 80,
+   "lp": 8000,
+   "quality": 3,
+   "sources": [
+    {
+     "file": "moodist/rain/rain-on-window.mp3",
+     "title": "Rain on Window",
+     "author": "Moodist 收录（Pixabay / Freesound）",
+     "url": "https://github.com/remvze/moodist",
+     "license": "Pixabay Content License / CC0",
+     "via": "Moodist"
+    }
+   ]
+  },
+  {
+   "id": "amb_forest",
+   "cat": "ambience",
+   "label": "林间微风（树叶沙沙）",
+   "mode": "loop",
+   "loopLen": 45,
+   "start": 4,
+   "crossfade": 2.5,
+   "hp": 80,
+   "lp": 7500,
+   "deharsh": 3,
+   "quality": 3,
+   "sources": [
+    {
+     "file": "moodist/nature/wind-in-trees.mp3",
+     "title": "Wind in Trees",
+     "author": "Moodist 收录（Pixabay / Freesound）",
+     "url": "https://github.com/remvze/moodist",
+     "license": "Pixabay Content License / CC0",
+     "via": "Moodist"
     }
    ]
   }

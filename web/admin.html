@@ -104,6 +104,8 @@
       <button data-chat="转圈圈">「转圈」</button>
       <button data-chat="下一关去史莱姆">投票：史莱姆</button>
       <button data-chat="去沙滩">投票：沙滩</button>
+      <button data-chat="想看做饭，去厨房">投票：厨房</button>
+      <button data-chat="下一关去打扫房间">投票：打扫</button>
     </div>
     <label>自定义测试</label>
     <div class="btns">
@@ -199,8 +201,8 @@ async function refresh() {
   const g = s.game;
   if (g && s.lastBeatAgo != null && s.lastBeatAgo < 20) {
     $('sGame').innerHTML = `<span class="dot ok"></span>运行中（${s.lastBeatAgo} 秒前心跳）`;
-    const STN = { snow: '雪国棉花糖谷', forest: '秋日落叶林', slime: '史莱姆果冻工坊', rain: '雨天水洼花园', beach: '彩虹沙滩', toy: '软糖键盘小屋' };
-    $('sLevel').textContent = `第 ${g.game?.level} 关 · ${STN[g.game?.theme] || g.game?.theme || ''} · ${g.game?.dancing ? '正在跳舞答谢' : ({ play: '解压中', intro: '开场', outro: '通关', loading: '加载' }[g.game?.state] || g.game?.state)}${g.game?.station ? ' · ' + g.game.station : ''} · 进度 ${g.game?.progress ?? 0}% · 累计 ${g.game?.steps ?? 0} 脚`;
+    const STN = { snow: '雪国棉花糖谷', forest: '秋日落叶林', slime: '史莱姆果冻工坊', rain: '雨天水洼花园', beach: '彩虹沙滩', toy: '软糖键盘小屋', kitchen: '糯糯小厨房', clean: '糯糯大扫除' };
+    $('sLevel').textContent = `第 ${g.game?.level} 关 · ${STN[g.game?.theme] || g.game?.theme || ''} · ${g.game?.dancing ? '正在跳舞答谢' : ({ play: '闯关中', intro: '开场', outro: '通关', loading: '加载' }[g.game?.state] || g.game?.state)}${g.game?.station ? ' · ' + ({ gimmick: '挑战：', task: '任务：' }[g.game.segment] || '') + g.game.station : ''} · 进度 ${g.game?.progress ?? 0}% · 累计 ${g.game?.steps ?? 0} 脚`;
     $('sFps').textContent = `${g.fps} FPS · 声音 ${g.audio === 'running' ? '正常' : '未开启(' + g.audio + ')'}`;
   } else {
     $('sGame').innerHTML = `<span class="dot err"></span>${s.launchGame ? '等待游戏窗口…' : '游戏页面未打开'}`;

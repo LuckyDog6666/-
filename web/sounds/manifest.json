@@ -9,62 +9,98 @@
     {
      "src": "snow_step/snow_step_01.ogg",
      "dur": 0.82,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.013,
+     "sharp": 1.84,
+     "pierce": -14.8
     },
     {
      "src": "snow_step/snow_step_02.ogg",
      "dur": 0.565,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.034,
+     "sharp": 1.98,
+     "pierce": -16.7
     },
     {
      "src": "snow_step/snow_step_03.ogg",
      "dur": 0.505,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.028,
+     "sharp": 2.06,
+     "pierce": -14.6
     },
     {
      "src": "snow_step/snow_step_04.ogg",
      "dur": 0.76,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.003,
+     "sharp": 2.13,
+     "pierce": -14.6
     },
     {
      "src": "snow_step/snow_step_05.ogg",
      "dur": 0.585,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.06,
+     "sharp": 1.75,
+     "pierce": -14.4
     },
     {
      "src": "snow_step/snow_step_06.ogg",
      "dur": 0.49,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.066,
+     "sharp": 1.94,
+     "pierce": -16.2
     },
     {
      "src": "snow_step/snow_step_07.ogg",
      "dur": 0.635,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.027,
+     "sharp": 2.0,
+     "pierce": -15.2
     },
     {
      "src": "snow_step/snow_step_08.ogg",
      "dur": 0.615,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.072,
+     "sharp": 1.82,
+     "pierce": -14.0
     },
     {
      "src": "snow_step/snow_step_09.ogg",
      "dur": 0.765,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.021,
+     "sharp": 1.88,
+     "pierce": -20.0
     },
     {
      "src": "snow_step/snow_step_10.ogg",
      "dur": 0.44,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.001,
+     "sharp": 2.13,
+     "pierce": -17.9
     },
     {
      "src": "snow_step/snow_step_11.ogg",
      "dur": 0.695,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.002,
+     "sharp": 1.95,
+     "pierce": -16.7
     },
     {
      "src": "snow_step/snow_step_12.ogg",
      "dur": 0.675,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.063,
+     "sharp": 2.1,
+     "pierce": -17.7
     }
    ],
    "credits": [
@@ -79,32 +115,50 @@
     {
      "src": "snow_press/snow_press_01.ogg",
      "dur": 1.16,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.107,
+     "sharp": 2.02,
+     "pierce": -9.5
     },
     {
      "src": "snow_press/snow_press_02.ogg",
      "dur": 1.165,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.058,
+     "sharp": 2.05,
+     "pierce": -13.7
     },
     {
      "src": "snow_press/snow_press_03.ogg",
      "dur": 1.305,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.083,
+     "sharp": 1.94,
+     "pierce": -12.6
     },
     {
      "src": "snow_press/snow_press_04.ogg",
      "dur": 1.245,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.183,
+     "sharp": 2.06,
+     "pierce": -16.9
     },
     {
      "src": "snow_press/snow_press_05.ogg",
      "dur": 1.24,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.016,
+     "sharp": 1.97,
+     "pierce": -15.7
     },
     {
      "src": "snow_press/snow_press_06.ogg",
      "dur": 1.3,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.01,
+     "sharp": 1.93,
+     "pierce": -15.2
     }
    ],
    "credits": [
@@ -119,52 +173,82 @@
     {
      "src": "leaves_step/leaves_step_01.ogg",
      "dur": 0.77,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.002,
+     "sharp": 1.97,
+     "pierce": -12.6
     },
     {
      "src": "leaves_step/leaves_step_02.ogg",
      "dur": 0.75,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.004,
+     "sharp": 2.01,
+     "pierce": -14.2
     },
     {
      "src": "leaves_step/leaves_step_03.ogg",
      "dur": 0.755,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.009,
+     "sharp": 2.06,
+     "pierce": -10.9
     },
     {
      "src": "leaves_step/leaves_step_04.ogg",
      "dur": 0.605,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.003,
+     "sharp": 2.0,
+     "pierce": -11.8
     },
     {
      "src": "leaves_step/leaves_step_05.ogg",
      "dur": 0.81,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.007,
+     "sharp": 2.09,
+     "pierce": -9.8
     },
     {
      "src": "leaves_step/leaves_step_06.ogg",
      "dur": 0.715,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.006,
+     "sharp": 2.05,
+     "pierce": -14.0
     },
     {
      "src": "leaves_step/leaves_step_07.ogg",
      "dur": 0.645,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.003,
+     "sharp": 2.13,
+     "pierce": -11.5
     },
     {
      "src": "leaves_step/leaves_step_08.ogg",
      "dur": 0.735,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.006,
+     "sharp": 1.96,
+     "pierce": -12.9
     },
     {
      "src": "leaves_step/leaves_step_09.ogg",
      "dur": 0.705,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.002,
+     "sharp": 2.09,
+     "pierce": -12.1
     },
     {
      "src": "leaves_step/leaves_step_10.ogg",
      "dur": 0.865,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.005,
+     "sharp": 2.12,
+     "pierce": -13.1
     }
    ],
    "credits": [
@@ -179,52 +263,82 @@
     {
      "src": "gravel_step/gravel_step_01.ogg",
      "dur": 0.655,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.004,
+     "sharp": 2.22,
+     "pierce": -13.8
     },
     {
      "src": "gravel_step/gravel_step_02.ogg",
      "dur": 0.625,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.002,
+     "sharp": 2.27,
+     "pierce": -19.6
     },
     {
      "src": "gravel_step/gravel_step_03.ogg",
      "dur": 0.985,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.002,
+     "sharp": 2.45,
+     "pierce": -19.3
     },
     {
      "src": "gravel_step/gravel_step_04.ogg",
      "dur": 1.0,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.0,
+     "sharp": 2.63,
+     "pierce": -13.1
     },
     {
      "src": "gravel_step/gravel_step_05.ogg",
      "dur": 0.435,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.001,
+     "sharp": 2.43,
+     "pierce": -14.6
     },
     {
      "src": "gravel_step/gravel_step_06.ogg",
      "dur": 0.675,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.002,
+     "sharp": 2.26,
+     "pierce": -15.4
     },
     {
      "src": "gravel_step/gravel_step_07.ogg",
      "dur": 0.635,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.001,
+     "sharp": 2.09,
+     "pierce": -16.5
     },
     {
      "src": "gravel_step/gravel_step_08.ogg",
      "dur": 0.415,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.006,
+     "sharp": 2.21,
+     "pierce": -12.9
     },
     {
      "src": "gravel_step/gravel_step_09.ogg",
      "dur": 0.59,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.001,
+     "sharp": 2.32,
+     "pierce": -18.5
     },
     {
      "src": "gravel_step/gravel_step_10.ogg",
      "dur": 0.63,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.0,
+     "sharp": 2.61,
+     "pierce": -21.4
     }
    ],
    "credits": [
@@ -239,47 +353,74 @@
     {
      "src": "sand_step/sand_step_01.ogg",
      "dur": 0.28,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.002,
+     "sharp": 1.78,
+     "pierce": -14.9
     },
     {
      "src": "sand_step/sand_step_02.ogg",
      "dur": 0.29,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.003,
+     "sharp": 1.75,
+     "pierce": -17.6
     },
     {
      "src": "sand_step/sand_step_03.ogg",
      "dur": 0.28,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.001,
+     "sharp": 1.87,
+     "pierce": -16.6
     },
     {
      "src": "sand_step/sand_step_04.ogg",
      "dur": 0.542,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.023,
+     "sharp": 1.92,
+     "pierce": -11.9
     },
     {
      "src": "sand_step/sand_step_05.ogg",
      "dur": 0.571,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.026,
+     "sharp": 2.11,
+     "pierce": -15.0
     },
     {
      "src": "sand_step/sand_step_06.ogg",
      "dur": 0.518,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.021,
+     "sharp": 1.95,
+     "pierce": -13.3
     },
     {
      "src": "sand_step/sand_step_07.ogg",
      "dur": 0.6,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.037,
+     "sharp": 2.06,
+     "pierce": -12.6
     },
     {
      "src": "sand_step/sand_step_08.ogg",
      "dur": 0.566,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.02,
+     "sharp": 2.08,
+     "pierce": -14.4
     },
     {
      "src": "sand_step/sand_step_09.ogg",
      "dur": 0.566,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.021,
+     "sharp": 2.03,
+     "pierce": -16.2
     }
    ],
    "credits": [
@@ -295,57 +436,90 @@
     {
      "src": "slime_squish/slime_squish_01.ogg",
      "dur": 1.7,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.091,
+     "sharp": 2.88,
+     "pierce": -14.0
     },
     {
      "src": "slime_squish/slime_squish_02.ogg",
      "dur": 1.965,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.087,
+     "sharp": 2.38,
+     "pierce": -10.6
     },
     {
      "src": "slime_squish/slime_squish_03.ogg",
      "dur": 1.955,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.084,
+     "sharp": 2.44,
+     "pierce": -10.8
     },
     {
      "src": "slime_squish/slime_squish_04.ogg",
      "dur": 1.44,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.038,
+     "sharp": 2.69,
+     "pierce": -11.1
     },
     {
      "src": "slime_squish/slime_squish_05.ogg",
      "dur": 1.62,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.089,
+     "sharp": 2.41,
+     "pierce": -13.8
     },
     {
      "src": "slime_squish/slime_squish_06.ogg",
      "dur": 2.135,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.408,
+     "sharp": 2.88,
+     "pierce": -12.4
     },
     {
      "src": "slime_squish/slime_squish_07.ogg",
      "dur": 1.94,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.022,
+     "sharp": 2.22,
+     "pierce": -7.9
     },
     {
      "src": "slime_squish/slime_squish_08.ogg",
      "dur": 2.1,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.003,
+     "sharp": 2.28,
+     "pierce": -10.8
     },
     {
      "src": "slime_squish/slime_squish_09.ogg",
      "dur": 2.445,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.007,
+     "sharp": 2.36,
+     "pierce": -9.6
     },
     {
      "src": "slime_squish/slime_squish_10.ogg",
      "dur": 2.065,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.004,
+     "sharp": 2.23,
+     "pierce": -10.3
     },
     {
      "src": "slime_squish/slime_squish_11.ogg",
      "dur": 1.16,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.011,
+     "sharp": 2.4,
+     "pierce": -12.7
     }
    ],
    "credits": [
@@ -360,37 +534,58 @@
     {
      "src": "squishy_press/squishy_press_01.ogg",
      "dur": 2.175,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.087,
+     "sharp": 1.6,
+     "pierce": -11.7
     },
     {
      "src": "squishy_press/squishy_press_02.ogg",
      "dur": 1.75,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.002,
+     "sharp": 2.0,
+     "pierce": -9.5
     },
     {
      "src": "squishy_press/squishy_press_03.ogg",
      "dur": 1.52,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.2,
+     "sharp": 2.21,
+     "pierce": -13.0
     },
     {
      "src": "squishy_press/squishy_press_04.ogg",
      "dur": 1.56,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.011,
+     "sharp": 2.04,
+     "pierce": -10.9
     },
     {
      "src": "squishy_press/squishy_press_05.ogg",
      "dur": 1.435,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.006,
+     "sharp": 2.26,
+     "pierce": -10.7
     },
     {
      "src": "squishy_press/squishy_press_06.ogg",
      "dur": 1.6,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.023,
+     "sharp": 1.79,
+     "pierce": -12.6
     },
     {
      "src": "squishy_press/squishy_press_07.ogg",
      "dur": 1.215,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.001,
+     "sharp": 2.16,
+     "pierce": -9.2
     }
    ],
    "credits": [
@@ -405,22 +600,26 @@
     {
      "src": "slime_pull/slime_pull_01.ogg",
      "dur": 3.426,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.007,
+     "sharp": 2.89,
+     "pierce": -9.9
     },
     {
      "src": "slime_pull/slime_pull_02.ogg",
-     "dur": 3.6,
-     "gain": 0.0
+     "dur": 3.422,
+     "gain": 0.0,
+     "onset": 0.035,
+     "sharp": 2.88,
+     "pierce": -15.3
     },
     {
      "src": "slime_pull/slime_pull_03.ogg",
-     "dur": 3.422,
-     "gain": 0.0
-    },
-    {
-     "src": "slime_pull/slime_pull_04.ogg",
      "dur": 3.29,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.003,
+     "sharp": 2.83,
+     "pierce": -13.4
     }
    ],
    "credits": [
@@ -435,17 +634,26 @@
     {
      "src": "jelly_bounce/jelly_bounce_01.ogg",
      "dur": 0.269,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.0,
+     "sharp": 2.37,
+     "pierce": -12.5
     },
     {
      "src": "jelly_bounce/jelly_bounce_02.ogg",
      "dur": 0.573,
-     "gain": 1.56
+     "gain": 1.56,
+     "onset": 0.0,
+     "sharp": 2.69,
+     "pierce": -13.4
     },
     {
      "src": "jelly_bounce/jelly_bounce_03.ogg",
      "dur": 0.391,
-     "gain": 0.91
+     "gain": 0.91,
+     "onset": 0.001,
+     "sharp": 2.39,
+     "pierce": -10.7
     }
    ],
    "credits": [
@@ -460,42 +668,66 @@
     {
      "src": "mud_squelch/mud_squelch_01.ogg",
      "dur": 0.535,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.023,
+     "sharp": 2.2,
+     "pierce": -11.8
     },
     {
      "src": "mud_squelch/mud_squelch_02.ogg",
      "dur": 0.62,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.045,
+     "sharp": 1.87,
+     "pierce": -13.8
     },
     {
      "src": "mud_squelch/mud_squelch_03.ogg",
      "dur": 0.615,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.03,
+     "sharp": 1.87,
+     "pierce": -12.9
     },
     {
      "src": "mud_squelch/mud_squelch_04.ogg",
      "dur": 0.49,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.057,
+     "sharp": 1.88,
+     "pierce": -17.3
     },
     {
      "src": "mud_squelch/mud_squelch_05.ogg",
      "dur": 0.26,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.007,
+     "sharp": 2.16,
+     "pierce": -14.6
     },
     {
      "src": "mud_squelch/mud_squelch_06.ogg",
      "dur": 0.427,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.046,
+     "sharp": 2.0,
+     "pierce": -10.4
     },
     {
      "src": "mud_squelch/mud_squelch_07.ogg",
      "dur": 0.317,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.039,
+     "sharp": 1.96,
+     "pierce": -13.5
     },
     {
      "src": "mud_squelch/mud_squelch_08.ogg",
      "dur": 0.5,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.036,
+     "sharp": 1.4,
+     "pierce": -22.6
     }
    ],
    "credits": [
@@ -510,42 +742,66 @@
     {
      "src": "water_splash/water_splash_01.ogg",
      "dur": 1.01,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.066,
+     "sharp": 2.81,
+     "pierce": -15.2
     },
     {
      "src": "water_splash/water_splash_02.ogg",
      "dur": 0.93,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.013,
+     "sharp": 2.14,
+     "pierce": -11.2
     },
     {
      "src": "water_splash/water_splash_03.ogg",
      "dur": 1.085,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.027,
+     "sharp": 2.61,
+     "pierce": -7.0
     },
     {
      "src": "water_splash/water_splash_04.ogg",
      "dur": 1.205,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.022,
+     "sharp": 2.81,
+     "pierce": -9.4
     },
     {
      "src": "water_splash/water_splash_05.ogg",
      "dur": 1.127,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.016,
+     "sharp": 2.24,
+     "pierce": -11.2
     },
     {
      "src": "water_splash/water_splash_06.ogg",
      "dur": 2.2,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.278,
+     "sharp": 1.99,
+     "pierce": -9.8
     },
     {
      "src": "water_splash/water_splash_07.ogg",
      "dur": 2.08,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.071,
+     "sharp": 2.07,
+     "pierce": -9.0
     },
     {
      "src": "water_splash/water_splash_08.ogg",
      "dur": 2.2,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.094,
+     "sharp": 2.07,
+     "pierce": -10.7
     }
    ],
    "credits": [
@@ -561,52 +817,82 @@
     {
      "src": "bubble_pop/bubble_pop_01.ogg",
      "dur": 0.185,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.017,
+     "sharp": 1.55,
+     "pierce": -40.8
     },
     {
      "src": "bubble_pop/bubble_pop_02.ogg",
      "dur": 0.265,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.001,
+     "sharp": 1.61,
+     "pierce": -23.8
     },
     {
      "src": "bubble_pop/bubble_pop_03.ogg",
      "dur": 0.145,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.001,
+     "sharp": 1.96,
+     "pierce": -21.2
     },
     {
      "src": "bubble_pop/bubble_pop_04.ogg",
      "dur": 0.17,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.017,
+     "sharp": 1.69,
+     "pierce": -19.3
     },
     {
      "src": "bubble_pop/bubble_pop_05.ogg",
      "dur": 0.22,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.016,
+     "sharp": 1.54,
+     "pierce": -26.6
     },
     {
      "src": "bubble_pop/bubble_pop_06.ogg",
      "dur": 0.145,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.002,
+     "sharp": 1.62,
+     "pierce": -18.6
     },
     {
      "src": "bubble_pop/bubble_pop_07.ogg",
      "dur": 0.175,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.007,
+     "sharp": 1.77,
+     "pierce": -31.9
     },
     {
      "src": "bubble_pop/bubble_pop_08.ogg",
      "dur": 0.135,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.015,
+     "sharp": 1.44,
+     "pierce": -33.2
     },
     {
      "src": "bubble_pop/bubble_pop_09.ogg",
      "dur": 0.195,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.057,
+     "sharp": 1.2,
+     "pierce": -27.7
     },
     {
      "src": "bubble_pop/bubble_pop_10.ogg",
      "dur": 0.18,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.001,
+     "sharp": 1.92,
+     "pierce": -12.7
     }
    ],
    "credits": [
@@ -622,42 +908,66 @@
     {
      "src": "plop_pop/plop_pop_01.ogg",
      "dur": 0.52,
-     "gain": 0.7
+     "gain": 0.7,
+     "onset": 0.02,
+     "sharp": 2.14,
+     "pierce": -15.7
     },
     {
      "src": "plop_pop/plop_pop_02.ogg",
      "dur": 0.52,
-     "gain": 1.28
+     "gain": 1.28,
+     "onset": 0.019,
+     "sharp": 2.23,
+     "pierce": -14.7
     },
     {
      "src": "plop_pop/plop_pop_03.ogg",
      "dur": 0.52,
-     "gain": 1.94
+     "gain": 1.94,
+     "onset": 0.019,
+     "sharp": 2.23,
+     "pierce": -16.6
     },
     {
      "src": "plop_pop/plop_pop_04.ogg",
      "dur": 0.52,
-     "gain": 1.41
+     "gain": 1.41,
+     "onset": 0.019,
+     "sharp": 2.19,
+     "pierce": -15.5
     },
     {
      "src": "plop_pop/plop_pop_05.ogg",
      "dur": 0.52,
-     "gain": 1.08
+     "gain": 1.08,
+     "onset": 0.02,
+     "sharp": 2.04,
+     "pierce": -18.2
     },
     {
      "src": "plop_pop/plop_pop_06.ogg",
      "dur": 0.52,
-     "gain": 0.87
+     "gain": 0.87,
+     "onset": 0.019,
+     "sharp": 2.09,
+     "pierce": -14.9
     },
     {
      "src": "plop_pop/plop_pop_07.ogg",
      "dur": 0.52,
-     "gain": 1.93
+     "gain": 1.93,
+     "onset": 0.019,
+     "sharp": 2.1,
+     "pierce": -12.8
     },
     {
      "src": "plop_pop/plop_pop_08.ogg",
      "dur": 0.52,
-     "gain": 2.19
+     "gain": 2.19,
+     "onset": 0.019,
+     "sharp": 2.05,
+     "pierce": -15.8
     }
    ],
    "credits": [
@@ -672,52 +982,82 @@
     {
      "src": "key_thock/key_thock_01.ogg",
      "dur": 0.44,
-     "gain": 4.63
+     "gain": 4.63,
+     "onset": 0.019,
+     "sharp": 2.18,
+     "pierce": -14.2
     },
     {
      "src": "key_thock/key_thock_02.ogg",
      "dur": 0.44,
-     "gain": 5.15
+     "gain": 5.15,
+     "onset": 0.019,
+     "sharp": 2.2,
+     "pierce": -13.7
     },
     {
      "src": "key_thock/key_thock_03.ogg",
      "dur": 0.44,
-     "gain": 5.01
+     "gain": 5.01,
+     "onset": 0.019,
+     "sharp": 2.07,
+     "pierce": -14.2
     },
     {
      "src": "key_thock/key_thock_04.ogg",
      "dur": 0.44,
-     "gain": 6
+     "gain": 6,
+     "onset": 0.019,
+     "sharp": 2.09,
+     "pierce": -14.9
     },
     {
      "src": "key_thock/key_thock_05.ogg",
      "dur": 0.44,
-     "gain": 3.23
+     "gain": 3.23,
+     "onset": 0.021,
+     "sharp": 1.89,
+     "pierce": -17.3
     },
     {
      "src": "key_thock/key_thock_06.ogg",
      "dur": 0.44,
-     "gain": 1.61
+     "gain": 1.61,
+     "onset": 0.019,
+     "sharp": 1.97,
+     "pierce": -14.0
     },
     {
      "src": "key_thock/key_thock_07.ogg",
      "dur": 0.44,
-     "gain": 2.15
+     "gain": 2.15,
+     "onset": 0.02,
+     "sharp": 2.03,
+     "pierce": -11.9
     },
     {
      "src": "key_thock/key_thock_08.ogg",
      "dur": 0.44,
-     "gain": 4.08
+     "gain": 4.08,
+     "onset": 0.019,
+     "sharp": 1.98,
+     "pierce": -12.7
     },
     {
      "src": "key_thock/key_thock_09.ogg",
      "dur": 0.44,
-     "gain": 2.3
+     "gain": 2.3,
+     "onset": 0.019,
+     "sharp": 2.02,
+     "pierce": -10.5
     },
     {
      "src": "key_thock/key_thock_10.ogg",
      "dur": 0.44,
-     "gain": 6
+     "gain": 6,
+     "onset": 0.019,
+     "sharp": 1.82,
+     "pierce": -10.8
     }
    ],
    "credits": [
@@ -727,46 +1067,43 @@
   "paper_crinkle": {
    "cat": "trigger",
    "gain": 0,
-   "label": "踩包装纸",
+   "label": "踩糖纸",
    "files": [
     {
      "src": "paper_crinkle/paper_crinkle_01.ogg",
-     "dur": 1.06,
-     "gain": 0.0
+     "dur": 0.505,
+     "gain": 0.0,
+     "onset": 0.05,
+     "sharp": 2.4,
+     "pierce": -13.7
     },
     {
      "src": "paper_crinkle/paper_crinkle_02.ogg",
-     "dur": 1.3,
-     "gain": 0.0
+     "dur": 0.795,
+     "gain": 0.0,
+     "onset": 0.288,
+     "sharp": 2.28,
+     "pierce": -13.3
     },
     {
      "src": "paper_crinkle/paper_crinkle_03.ogg",
-     "dur": 1.3,
-     "gain": 0.0
+     "dur": 0.72,
+     "gain": 0.0,
+     "onset": 0.017,
+     "sharp": 2.09,
+     "pierce": -16.0
     },
     {
      "src": "paper_crinkle/paper_crinkle_04.ogg",
-     "dur": 1.3,
-     "gain": 0.0
-    },
-    {
-     "src": "paper_crinkle/paper_crinkle_05.ogg",
-     "dur": 1.3,
-     "gain": 0.0
-    },
-    {
-     "src": "paper_crinkle/paper_crinkle_06.ogg",
-     "dur": 1.3,
-     "gain": 0.0
-    },
-    {
-     "src": "paper_crinkle/paper_crinkle_07.ogg",
-     "dur": 1.3,
-     "gain": 0.0
+     "dur": 0.55,
+     "gain": 0.0,
+     "onset": 0.068,
+     "sharp": 1.87,
+     "pierce": -15.4
     }
    ],
    "credits": [
-    "Moodist 收录（Pixabay / Freesound）"
+    "Ben Burnes"
    ]
   },
   "ice_crack": {
@@ -777,32 +1114,50 @@
     {
      "src": "ice_crack/ice_crack_01.ogg",
      "dur": 0.227,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.01,
+     "sharp": 2.28,
+     "pierce": -16.6
     },
     {
      "src": "ice_crack/ice_crack_02.ogg",
      "dur": 0.227,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.001,
+     "sharp": 2.4,
+     "pierce": -14.3
     },
     {
      "src": "ice_crack/ice_crack_03.ogg",
      "dur": 0.227,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.002,
+     "sharp": 2.22,
+     "pierce": -15.6
     },
     {
      "src": "ice_crack/ice_crack_04.ogg",
      "dur": 0.344,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.001,
+     "sharp": 2.48,
+     "pierce": -17.0
     },
     {
      "src": "ice_crack/ice_crack_05.ogg",
      "dur": 0.344,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.002,
+     "sharp": 2.46,
+     "pierce": -14.4
     },
     {
      "src": "ice_crack/ice_crack_06.ogg",
      "dur": 0.435,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.0,
+     "sharp": 2.51,
+     "pierce": -14.2
     }
    ],
    "credits": [
@@ -819,27 +1174,42 @@
     {
      "src": "path_step/path_step_01.ogg",
      "dur": 0.167,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.002,
+     "sharp": 1.68,
+     "pierce": -21.9
     },
     {
      "src": "path_step/path_step_02.ogg",
      "dur": 0.142,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.0,
+     "sharp": 1.75,
+     "pierce": -19.7
     },
     {
      "src": "path_step/path_step_03.ogg",
      "dur": 0.142,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.0,
+     "sharp": 1.75,
+     "pierce": -19.7
     },
     {
      "src": "path_step/path_step_04.ogg",
      "dur": 0.142,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.001,
+     "sharp": 1.61,
+     "pierce": -21.0
     },
     {
      "src": "path_step/path_step_05.ogg",
      "dur": 0.142,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.001,
+     "sharp": 1.61,
+     "pierce": -21.0
     }
    ],
    "credits": [
@@ -854,27 +1224,42 @@
     {
      "src": "grass_step/grass_step_01.ogg",
      "dur": 0.205,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.0,
+     "sharp": 1.84,
+     "pierce": -16.8
     },
     {
      "src": "grass_step/grass_step_02.ogg",
      "dur": 0.22,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.0,
+     "sharp": 1.91,
+     "pierce": -18.0
     },
     {
      "src": "grass_step/grass_step_03.ogg",
      "dur": 0.225,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.0,
+     "sharp": 1.92,
+     "pierce": -17.0
     },
     {
      "src": "grass_step/grass_step_04.ogg",
      "dur": 0.195,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.0,
+     "sharp": 1.85,
+     "pierce": -16.7
     },
     {
      "src": "grass_step/grass_step_05.ogg",
      "dur": 0.19,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.0,
+     "sharp": 1.86,
+     "pierce": -16.7
     }
    ],
    "credits": [
@@ -889,22 +1274,34 @@
     {
      "src": "land_soft/land_soft_01.ogg",
      "dur": 0.527,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.0,
+     "sharp": 0.45,
+     "pierce": -66.9
     },
     {
      "src": "land_soft/land_soft_02.ogg",
      "dur": 0.569,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.0,
+     "sharp": 0.46,
+     "pierce": -66.6
     },
     {
      "src": "land_soft/land_soft_03.ogg",
      "dur": 0.569,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.0,
+     "sharp": 0.47,
+     "pierce": -66.7
     },
     {
      "src": "land_soft/land_soft_04.ogg",
      "dur": 0.541,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.0,
+     "sharp": 0.49,
+     "pierce": -64.7
     }
    ],
    "credits": [
@@ -919,17 +1316,26 @@
     {
      "src": "purr/purr_01.ogg",
      "dur": 8.0,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.25,
+     "sharp": 1.58,
+     "pierce": -16.6
     },
     {
      "src": "purr/purr_02.ogg",
      "dur": 8.0,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.18,
+     "sharp": 1.59,
+     "pierce": -17.3
     },
     {
      "src": "purr/purr_03.ogg",
      "dur": 8.0,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.213,
+     "sharp": 1.58,
+     "pierce": -15.8
     }
    ],
    "credits": [
@@ -944,41 +1350,14 @@
     {
      "src": "amb_wind/amb_wind_01.ogg",
      "dur": 45.0,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.027,
+     "sharp": 1.52,
+     "pierce": -19.2
     }
    ],
    "credits": [
     "Moodist 收录（Pixabay / Freesound）"
-   ]
-  },
-  "amb_birds": {
-   "cat": "ambience",
-   "gain": 0,
-   "label": "林间鸟鸣",
-   "files": [
-    {
-     "src": "amb_birds/amb_birds_01.ogg",
-     "dur": 45.0,
-     "gain": 0.0
-    }
-   ],
-   "credits": [
-    "kvgarlic"
-   ]
-  },
-  "amb_stream": {
-   "cat": "ambience",
-   "gain": 0,
-   "label": "小溪",
-   "files": [
-    {
-     "src": "amb_stream/amb_stream_01.ogg",
-     "dur": 45.0,
-     "gain": 0.0
-    }
-   ],
-   "credits": [
-    "gluckose"
    ]
   },
   "amb_rain": {
@@ -989,26 +1368,14 @@
     {
      "src": "amb_rain/amb_rain_01.ogg",
      "dur": 45.0,
-     "gain": 1.85
+     "gain": 1.85,
+     "onset": 0.017,
+     "sharp": 2.77,
+     "pierce": -11.2
     }
    ],
    "credits": [
     "Moodist 收录（Pixabay / Freesound）"
-   ]
-  },
-  "amb_night": {
-   "cat": "ambience",
-   "gain": 0,
-   "label": "夏夜虫鸣",
-   "files": [
-    {
-     "src": "amb_night/amb_night_01.ogg",
-     "dur": 40.0,
-     "gain": 0.0
-    }
-   ],
-   "credits": [
-    "Lisa Redfern"
    ]
   },
   "amb_fire": {
@@ -1019,7 +1386,10 @@
     {
      "src": "amb_fire/amb_fire_01.ogg",
      "dur": 20.038,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.001,
+     "sharp": 2.89,
+     "pierce": -12.8
     }
    ],
    "credits": [
@@ -1034,7 +1404,10 @@
     {
      "src": "amb_waves/amb_waves_01.ogg",
      "dur": 45.0,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.001,
+     "sharp": 2.06,
+     "pierce": -11.3
     }
    ],
    "credits": [
@@ -1050,51 +1423,52 @@
      "src": "music_dance/music_dance_01.ogg",
      "dur": 40.0,
      "gain": 0.0,
-     "bpm": 122.0,
-     "beat0": 0.005,
-     "title": "Fluffing a Duck",
-     "credit": "Kevin MacLeod (incompetech.com) · CC BY 4.0"
-    },
-    {
-     "src": "music_dance/music_dance_02.ogg",
-     "dur": 40.0,
-     "gain": 0.0,
+     "sharp": 1.32,
+     "pierce": -7.6,
      "bpm": 144.0,
      "beat0": 0.043,
      "title": "Monkeys Spinning Monkeys",
      "credit": "Kevin MacLeod (incompetech.com) · CC BY 4.0"
     },
     {
-     "src": "music_dance/music_dance_03.ogg",
+     "src": "music_dance/music_dance_02.ogg",
      "dur": 40.0,
      "gain": 0.0,
+     "sharp": 1.43,
+     "pierce": -7.8,
      "bpm": 87.0,
      "beat0": 0.048,
      "title": "Sneaky Snitch",
      "credit": "Kevin MacLeod (incompetech.com) · CC BY 4.0"
     },
     {
-     "src": "music_dance/music_dance_04.ogg",
+     "src": "music_dance/music_dance_03.ogg",
      "dur": 40.0,
      "gain": 0.0,
+     "sharp": 1.62,
+     "pierce": -15.0,
      "bpm": 100.0,
      "beat0": 0.011,
      "title": "Hyperfun",
      "credit": "Kevin MacLeod (incompetech.com) · CC BY 4.0"
     },
     {
-     "src": "music_dance/music_dance_05.ogg",
+     "src": "music_dance/music_dance_04.ogg",
      "dur": 40.0,
      "gain": 0.0,
+     "sharp": 1.28,
+     "pierce": -9.0,
      "bpm": 127.0,
      "beat0": 0.325,
      "title": "If I Had a Chicken",
      "credit": "Kevin MacLeod (incompetech.com) · CC BY 4.0"
     },
     {
-     "src": "music_dance/music_dance_06.ogg",
+     "src": "music_dance/music_dance_05.ogg",
      "dur": 40.0,
      "gain": 0.0,
+     "sharp": 1.12,
+     "pierce": -9.5,
      "bpm": 97.0,
      "beat0": 0.016,
      "title": "Plucky Daisy",
@@ -1113,7 +1487,10 @@
     {
      "src": "sand_press/sand_press_01.ogg",
      "dur": 1.08,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.037,
+     "sharp": 2.48,
+     "pierce": -11.1
     }
    ],
    "credits": [
@@ -1128,37 +1505,58 @@
     {
      "src": "leaves_crunch/leaves_crunch_01.ogg",
      "dur": 0.985,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.0,
+     "sharp": 2.68,
+     "pierce": -13.8
     },
     {
      "src": "leaves_crunch/leaves_crunch_02.ogg",
      "dur": 1.13,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.001,
+     "sharp": 2.65,
+     "pierce": -13.2
     },
     {
      "src": "leaves_crunch/leaves_crunch_03.ogg",
      "dur": 1.2,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.001,
+     "sharp": 2.62,
+     "pierce": -14.4
     },
     {
      "src": "leaves_crunch/leaves_crunch_04.ogg",
      "dur": 0.6,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.001,
+     "sharp": 2.7,
+     "pierce": -13.0
     },
     {
      "src": "leaves_crunch/leaves_crunch_05.ogg",
      "dur": 0.855,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.051,
+     "sharp": 2.92,
+     "pierce": -12.6
     },
     {
      "src": "leaves_crunch/leaves_crunch_06.ogg",
      "dur": 1.0,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.001,
+     "sharp": 2.9,
+     "pierce": -12.4
     },
     {
      "src": "leaves_crunch/leaves_crunch_07.ogg",
      "dur": 1.2,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.001,
+     "sharp": 2.88,
+     "pierce": -13.3
     }
    ],
    "credits": [
@@ -1173,33 +1571,51 @@
    "files": [
     {
      "src": "slime_step/slime_step_01.ogg",
-     "dur": 0.49,
-     "gain": 0.0
+     "dur": 0.495,
+     "gain": 0.0,
+     "onset": 0.004,
+     "sharp": 2.93,
+     "pierce": -12.1
     },
     {
      "src": "slime_step/slime_step_02.ogg",
      "dur": 0.893,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.071,
+     "sharp": 2.85,
+     "pierce": -18.1
     },
     {
      "src": "slime_step/slime_step_03.ogg",
      "dur": 0.39,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.0,
+     "sharp": 3.4,
+     "pierce": -13.6
     },
     {
      "src": "slime_step/slime_step_04.ogg",
-     "dur": 0.395,
-     "gain": 0.0
+     "dur": 0.4,
+     "gain": 0.0,
+     "onset": 0.002,
+     "sharp": 3.4,
+     "pierce": -14.2
     },
     {
      "src": "slime_step/slime_step_05.ogg",
      "dur": 0.38,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.017,
+     "sharp": 1.94,
+     "pierce": -15.4
     },
     {
      "src": "slime_step/slime_step_06.ogg",
      "dur": 0.44,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.019,
+     "sharp": 2.25,
+     "pierce": -14.6
     }
    ],
    "credits": [
@@ -1215,26 +1631,604 @@
     {
      "src": "snow_crunch/snow_crunch_01.ogg",
      "dur": 0.601,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.074,
+     "sharp": 2.81,
+     "pierce": -17.6
     },
     {
      "src": "snow_crunch/snow_crunch_02.ogg",
      "dur": 0.686,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.045,
+     "sharp": 2.32,
+     "pierce": -15.6
     },
     {
      "src": "snow_crunch/snow_crunch_03.ogg",
      "dur": 0.834,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.07,
+     "sharp": 2.37,
+     "pierce": -15.6
     },
     {
      "src": "snow_crunch/snow_crunch_04.ogg",
      "dur": 0.412,
-     "gain": 0.0
+     "gain": 0.0,
+     "onset": 0.022,
+     "sharp": 2.35,
+     "pierce": -15.8
     }
    ],
    "credits": [
     "alexo400（EmoGarbage404 切分）"
+   ]
+  },
+  "whoosh": {
+   "cat": "trigger",
+   "gain": 0,
+   "label": "呼～（起跳/滑行/翻转）",
+   "files": [
+    {
+     "src": "whoosh/whoosh_01.ogg",
+     "dur": 0.369,
+     "gain": 0.0,
+     "onset": 0.034,
+     "sharp": 1.8,
+     "pierce": -19.0
+    },
+    {
+     "src": "whoosh/whoosh_02.ogg",
+     "dur": 0.339,
+     "gain": 0.0,
+     "onset": 0.014,
+     "sharp": 1.96,
+     "pierce": -20.1
+    },
+    {
+     "src": "whoosh/whoosh_03.ogg",
+     "dur": 0.48,
+     "gain": 0.0,
+     "onset": 0.039,
+     "sharp": 1.89,
+     "pierce": -15.2
+    },
+    {
+     "src": "whoosh/whoosh_04.ogg",
+     "dur": 0.356,
+     "gain": 0.0,
+     "onset": 0.001,
+     "sharp": 1.91,
+     "pierce": -21.8
+    },
+    {
+     "src": "whoosh/whoosh_05.ogg",
+     "dur": 0.514,
+     "gain": 0.0,
+     "onset": 0.009,
+     "sharp": 1.8,
+     "pierce": -26.1
+    },
+    {
+     "src": "whoosh/whoosh_06.ogg",
+     "dur": 0.643,
+     "gain": 0.0,
+     "onset": 0.008,
+     "sharp": 1.8,
+     "pierce": -21.4
+    },
+    {
+     "src": "whoosh/whoosh_07.ogg",
+     "dur": 0.557,
+     "gain": 0.0,
+     "onset": 0.01,
+     "sharp": 1.97,
+     "pierce": -20.0
+    }
+   ],
+   "credits": [
+    "Ben Burnes"
+   ]
+  },
+  "slide_roll": {
+   "cat": "sustain",
+   "gain": 0,
+   "label": "滑滑梯（摩擦声）",
+   "files": [
+    {
+     "src": "slide_roll/slide_roll_01.ogg",
+     "dur": 1.46,
+     "gain": 0.0,
+     "onset": 0.008,
+     "sharp": 1.25,
+     "pierce": -12.4
+    },
+    {
+     "src": "slide_roll/slide_roll_02.ogg",
+     "dur": 1.679,
+     "gain": 0.0,
+     "onset": 0.019,
+     "sharp": 1.31,
+     "pierce": -22.0
+    }
+   ],
+   "credits": [
+    "Ben Burnes"
+   ]
+  },
+  "bounce": {
+   "cat": "trigger",
+   "gain": 0,
+   "label": "蹦床 弹",
+   "files": [
+    {
+     "src": "bounce/bounce_01.ogg",
+     "dur": 0.14,
+     "gain": 0.0,
+     "onset": 0.001,
+     "sharp": 1.49,
+     "pierce": -26.1
+    },
+    {
+     "src": "bounce/bounce_02.ogg",
+     "dur": 0.18,
+     "gain": 0.0,
+     "onset": 0.015,
+     "sharp": 1.62,
+     "pierce": -24.6
+    },
+    {
+     "src": "bounce/bounce_03.ogg",
+     "dur": 0.155,
+     "gain": 0.0,
+     "onset": 0.01,
+     "sharp": 1.52,
+     "pierce": -26.6
+    },
+    {
+     "src": "bounce/bounce_04.ogg",
+     "dur": 0.23,
+     "gain": 0.0,
+     "onset": 0.002,
+     "sharp": 1.79,
+     "pierce": -18.5
+    },
+    {
+     "src": "bounce/bounce_05.ogg",
+     "dur": 0.21,
+     "gain": 0.0,
+     "onset": 0.006,
+     "sharp": 1.96,
+     "pierce": -19.6
+    },
+    {
+     "src": "bounce/bounce_06.ogg",
+     "dur": 0.17,
+     "gain": 0.0,
+     "onset": 0.002,
+     "sharp": 1.87,
+     "pierce": -18.1
+    },
+    {
+     "src": "bounce/bounce_07.ogg",
+     "dur": 0.155,
+     "gain": 0.0,
+     "onset": 0.002,
+     "sharp": 1.67,
+     "pierce": -18.1
+    },
+    {
+     "src": "bounce/bounce_08.ogg",
+     "dur": 0.235,
+     "gain": 0.0,
+     "onset": 0.001,
+     "sharp": 1.95,
+     "pierce": -16.5
+    },
+    {
+     "src": "bounce/bounce_09.ogg",
+     "dur": 0.365,
+     "gain": 0.0,
+     "onset": 0.002,
+     "sharp": 1.72,
+     "pierce": -18.9
+    }
+   ],
+   "credits": [
+    "Ben Burnes"
+   ]
+  },
+  "cloth": {
+   "cat": "trigger",
+   "gain": 0,
+   "label": "布料沙沙（叠衣服/擦拭）",
+   "files": [
+    {
+     "src": "cloth/cloth_01.ogg",
+     "dur": 0.661,
+     "gain": 0.0,
+     "onset": 0.078,
+     "sharp": 1.65,
+     "pierce": -14.9
+    },
+    {
+     "src": "cloth/cloth_02.ogg",
+     "dur": 0.415,
+     "gain": 0.0,
+     "onset": 0.092,
+     "sharp": 1.63,
+     "pierce": -18.5
+    },
+    {
+     "src": "cloth/cloth_03.ogg",
+     "dur": 0.477,
+     "gain": 0.0,
+     "onset": 0.05,
+     "sharp": 1.6,
+     "pierce": -16.8
+    },
+    {
+     "src": "cloth/cloth_04.ogg",
+     "dur": 0.384,
+     "gain": 0.0,
+     "onset": 0.03,
+     "sharp": 1.9,
+     "pierce": -16.4
+    },
+    {
+     "src": "cloth/cloth_05.ogg",
+     "dur": 0.976,
+     "gain": 0.0,
+     "onset": 0.03,
+     "sharp": 1.69,
+     "pierce": -23.3
+    }
+   ],
+   "credits": [
+    "Ben Burnes",
+    "Kenney"
+   ]
+  },
+  "fabric_swish": {
+   "cat": "trigger",
+   "gain": 0,
+   "label": "扫一扫/拖一拖",
+   "files": [
+    {
+     "src": "fabric_swish/fabric_swish_01.ogg",
+     "dur": 0.525,
+     "gain": 0.0,
+     "onset": 0.008,
+     "sharp": 2.01,
+     "pierce": -13.4
+    },
+    {
+     "src": "fabric_swish/fabric_swish_02.ogg",
+     "dur": 0.6,
+     "gain": 0.0,
+     "onset": 0.055,
+     "sharp": 1.87,
+     "pierce": -19.9
+    },
+    {
+     "src": "fabric_swish/fabric_swish_03.ogg",
+     "dur": 0.61,
+     "gain": 0.0,
+     "onset": 0.007,
+     "sharp": 1.83,
+     "pierce": -19.8
+    },
+    {
+     "src": "fabric_swish/fabric_swish_04.ogg",
+     "dur": 0.525,
+     "gain": 0.0,
+     "onset": 0.001,
+     "sharp": 1.69,
+     "pierce": -13.1
+    }
+   ],
+   "credits": [
+    "Ben Burnes"
+   ]
+  },
+  "place": {
+   "cat": "trigger",
+   "gain": 0,
+   "label": "放好啦（咚）",
+   "files": [
+    {
+     "src": "place/place_01.ogg",
+     "dur": 0.623,
+     "gain": 0.0,
+     "onset": 0.0,
+     "sharp": 1.74,
+     "pierce": -18.4
+    },
+    {
+     "src": "place/place_02.ogg",
+     "dur": 0.621,
+     "gain": 0.0,
+     "onset": 0.0,
+     "sharp": 1.75,
+     "pierce": -16.3
+    },
+    {
+     "src": "place/place_03.ogg",
+     "dur": 0.7,
+     "gain": 0.0,
+     "onset": 0.0,
+     "sharp": 1.61,
+     "pierce": -22.2
+    },
+    {
+     "src": "place/place_04.ogg",
+     "dur": 0.277,
+     "gain": 0.0,
+     "onset": 0.025,
+     "sharp": 1.86,
+     "pierce": -17.2
+    },
+    {
+     "src": "place/place_05.ogg",
+     "dur": 0.315,
+     "gain": 0.0,
+     "onset": 0.038,
+     "sharp": 1.72,
+     "pierce": -14.9
+    },
+    {
+     "src": "place/place_06.ogg",
+     "dur": 0.261,
+     "gain": 0.0,
+     "onset": 0.012,
+     "sharp": 1.91,
+     "pierce": -18.7
+    },
+    {
+     "src": "place/place_07.ogg",
+     "dur": 0.475,
+     "gain": 0.0,
+     "onset": 0.001,
+     "sharp": 1.6,
+     "pierce": -20.0
+    },
+    {
+     "src": "place/place_08.ogg",
+     "dur": 0.354,
+     "gain": 0.0,
+     "onset": 0.014,
+     "sharp": 1.89,
+     "pierce": -18.7
+    }
+   ],
+   "credits": [
+    "Ben Burnes",
+    "Kenney"
+   ]
+  },
+  "wood_step": {
+   "cat": "step",
+   "gain": 0,
+   "label": "木台面/木地板脚步",
+   "files": [
+    {
+     "src": "wood_step/wood_step_01.ogg",
+     "dur": 0.271,
+     "gain": 0.0,
+     "onset": 0.0,
+     "sharp": 0.78,
+     "pierce": -50.4
+    },
+    {
+     "src": "wood_step/wood_step_02.ogg",
+     "dur": 0.14,
+     "gain": 0.0,
+     "onset": 0.0,
+     "sharp": 0.74,
+     "pierce": -52.7
+    },
+    {
+     "src": "wood_step/wood_step_03.ogg",
+     "dur": 0.135,
+     "gain": 0.0,
+     "onset": 0.0,
+     "sharp": 0.72,
+     "pierce": -57.0
+    },
+    {
+     "src": "wood_step/wood_step_04.ogg",
+     "dur": 0.135,
+     "gain": 0.0,
+     "onset": 0.0,
+     "sharp": 0.95,
+     "pierce": -41.9
+    },
+    {
+     "src": "wood_step/wood_step_05.ogg",
+     "dur": 0.13,
+     "gain": 0.0,
+     "onset": 0.0,
+     "sharp": 0.75,
+     "pierce": -55.4
+    }
+   ],
+   "credits": [
+    "Kenney"
+   ]
+  },
+  "chop": {
+   "cat": "trigger",
+   "gain": 0,
+   "label": "切菜（木砧板 咚）",
+   "files": [
+    {
+     "src": "chop/chop_01.ogg",
+     "dur": 0.24,
+     "gain": 0.0,
+     "onset": 0.049,
+     "sharp": 1.74,
+     "pierce": -10.3
+    },
+    {
+     "src": "chop/chop_02.ogg",
+     "dur": 0.364,
+     "gain": 0.0,
+     "onset": 0.022,
+     "sharp": 1.24,
+     "pierce": -22.0
+    },
+    {
+     "src": "chop/chop_03.ogg",
+     "dur": 0.36,
+     "gain": 0.0,
+     "onset": 0.02,
+     "sharp": 1.59,
+     "pierce": -18.2
+    },
+    {
+     "src": "chop/chop_04.ogg",
+     "dur": 0.426,
+     "gain": 0.0,
+     "onset": 0.035,
+     "sharp": 1.47,
+     "pierce": -18.4
+    }
+   ],
+   "credits": [
+    "Kenney",
+    "rubberduck"
+   ]
+  },
+  "plop": {
+   "cat": "trigger",
+   "gain": 0,
+   "label": "啵（落进碗里/玩具归位）",
+   "files": [
+    {
+     "src": "plop/plop_01.ogg",
+     "dur": 0.21,
+     "gain": 0.0,
+     "onset": 0.014,
+     "sharp": 1.62,
+     "pierce": -19.0
+    },
+    {
+     "src": "plop/plop_02.ogg",
+     "dur": 0.255,
+     "gain": 0.0,
+     "onset": 0.076,
+     "sharp": 1.64,
+     "pierce": -20.0
+    },
+    {
+     "src": "plop/plop_03.ogg",
+     "dur": 0.186,
+     "gain": 0.0,
+     "onset": 0.001,
+     "sharp": 1.91,
+     "pierce": -15.8
+    }
+   ],
+   "credits": [
+    "Ben Burnes",
+    "rubberduck"
+   ]
+  },
+  "sizzle": {
+   "cat": "sustain",
+   "gain": 0,
+   "label": "煎锅滋滋（雨声拟音）",
+   "files": [
+    {
+     "src": "sizzle/sizzle_01.ogg",
+     "dur": 2.44,
+     "gain": 0.0,
+     "onset": 0.001,
+     "sharp": 2.49,
+     "pierce": -12.5
+    },
+    {
+     "src": "sizzle/sizzle_02.ogg",
+     "dur": 2.4,
+     "gain": 0.0,
+     "onset": 0.001,
+     "sharp": 2.5,
+     "pierce": -12.1
+    },
+    {
+     "src": "sizzle/sizzle_03.ogg",
+     "dur": 2.365,
+     "gain": 0.36,
+     "onset": 0.001,
+     "sharp": 2.48,
+     "pierce": -10.1
+    },
+    {
+     "src": "sizzle/sizzle_04.ogg",
+     "dur": 2.455,
+     "gain": 0.0,
+     "onset": 0.001,
+     "sharp": 2.48,
+     "pierce": -11.3
+    }
+   ],
+   "credits": [
+    "Moodist 收录（Pixabay / Freesound）"
+   ]
+  },
+  "amb_kitchen": {
+   "cat": "ambience",
+   "gain": 0,
+   "label": "厨房：小锅咕嘟",
+   "files": [
+    {
+     "src": "amb_kitchen/amb_kitchen_01.ogg",
+     "dur": 15.5,
+     "gain": 0.0,
+     "onset": 0.0,
+     "sharp": 2.14,
+     "pierce": -8.6
+    }
+   ],
+   "credits": [
+    "Moodist 收录（Pixabay / Freesound）"
+   ]
+  },
+  "amb_room": {
+   "cat": "ambience",
+   "gain": 0,
+   "label": "房间：窗外小雨",
+   "files": [
+    {
+     "src": "amb_room/amb_room_01.ogg",
+     "dur": 29.643,
+     "gain": 0.0,
+     "onset": 0.0,
+     "sharp": 1.75,
+     "pierce": -13.5
+    }
+   ],
+   "credits": [
+    "Moodist 收录（Pixabay / Freesound）"
+   ]
+  },
+  "amb_forest": {
+   "cat": "ambience",
+   "gain": 0,
+   "label": "林间微风（树叶沙沙）",
+   "files": [
+    {
+     "src": "amb_forest/amb_forest_01.ogg",
+     "dur": 45.0,
+     "gain": 0.0,
+     "onset": 0.0,
+     "sharp": 2.25,
+     "pierce": -11.5
+    }
+   ],
+   "credits": [
+    "Moodist 收录（Pixabay / Freesound）"
    ]
   }
  },

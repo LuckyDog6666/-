@@ -53,6 +53,9 @@ async function main() {
   }, cfgAll.game || {});
   if (params.get('layout')) cfg.layout = params.get('layout');
   if (params.get('stages')) cfg.stages = params.get('stages').split(',');
+  // 调试：?seg=3 从第 3 段开始；?gim=slide 把某种闯关元素排在第一个（检查画面用）
+  if (params.get('seg')) cfg.startSegment = Math.max(0, Number(params.get('seg')) || 0);
+  if (params.get('gim')) cfg.forceGimmick = params.get('gim');
   if (params.get('hud') === '0') document.body.classList.add('hide-board', 'hide-tips');
   if (cfg.hud && cfg.hud.showBoard === false) document.body.classList.add('hide-board');
   if (cfg.hud && cfg.hud.showTips === false) document.body.classList.add('hide-tips');
@@ -61,8 +64,9 @@ async function main() {
   const stage = document.getElementById('stage');
   const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance', preserveDrawingBuffer: params.has('capture') });
   renderer.outputColorSpace = THREE.SRGBColorSpace;
-  renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.08;
+  // PBR Neutral 色调映射：基本保留材质原本的糖果色（ACES 会把粉色、天蓝洗得发灰）
+  renderer.toneMapping = THREE.NeutralToneMapping ?? THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.0;
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   stage.prepend(renderer.domElement);
@@ -71,7 +75,7 @@ async function main() {
   try {
     const pmrem = new THREE.PMREMGenerator(renderer);
     scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
-    scene.environmentIntensity = 0.45;
+    scene.environmentIntensity = 0.35;
     pmrem.dispose();
   } catch (e) { console.warn('[env] 环境贴图创建失败', e); }
   const camera = new THREE.PerspectiveCamera(40, 16 / 9, 0.1, 400);
@@ -150,8 +154,9 @@ async function main() {
       report('error', err && err.stack || err);
       if (errorCount > 50) location.reload();
     }
-    // 自动画质：持续掉帧就降低分辨率，持续流畅再慢慢提回来
+    // 自动画质：持续掉帧就降低分辨率，持续流畅再慢慢提回来（?fixedq 关闭，截图/录屏用）
     fpsAcc += 1 / Math.max(dt, 1e-3); fpsN++;
+    if (fpsN >= 30 && params.has('fixedq')) { fps = fpsAcc / fpsN; fpsAcc = 0; fpsN = 0; }
     if (fpsN >= 30) {
       fps = fpsAcc / fpsN; fpsAcc = 0; fpsN = 0;
       const t = now / 1000;

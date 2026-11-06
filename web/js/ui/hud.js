@@ -13,7 +13,7 @@ export class Hud {
     this.root = root;
     h('div', 'vignette', root);
     // 关卡卡片：世界名、解压站进度点、解压进度条、累计踩踏数
-    const card = h('div', 'level-card', root);
+    const card = this.card = h('div', 'level-card', root);
     const r1 = h('div', 'row1', card);
     this.elLv = h('span', 'lv', r1, '第 1 关');
     this.elName = h('span', 'name', r1, '');
@@ -30,14 +30,14 @@ export class Hud {
       const row = h('div', 'cr', this.cmds);
       h('b', null, row, k); h('span', null, row, v);
     }
-    this.elVoteHint = h('div', 'cv', this.cmds, '打「雪/落叶/史莱姆/水洼/沙滩/键盘」投票下一关');
+    this.elVoteHint = h('div', 'cv', this.cmds, '打「雪/落叶/史莱姆/水洼/沙滩/键盘/厨房/打扫」投票下一关');
     this.elVotes = h('div', 'votes', this.cmds);
     // 当前解压站的小标签
     this.elStation = h('div', 'station-pill', root, '');
     // 舞曲署名（CC BY 要求注明作者）
     this.elMusic = h('div', 'music-credit', root, '');
     // 感谢榜
-    const board = h('div', 'board', root);
+    const board = this.boardEl = h('div', 'board', root);
     h('h3', null, board, cfg.boardTitle || '💖 今日感谢榜 💖');
     this.elBoard = h('ol', null, board);
     this.setBoard([]);
@@ -60,6 +60,7 @@ export class Hud {
     this.irisR = 150;
     this.tipList = cfg.tips && cfg.tips.length ? cfg.tips : [
       '送任意礼物，糯糯会停下来给你跳支舞～',
+      '每一关都有跳跳石、蹦床、滑滑梯，陪糯糯一起闯关 🛝',
       '中礼物：糯糯把你的名字踩进雪地/沙子里 ✍️',
       '大礼物：巨人糯糯出动，每一脚都超级重！',
       '戴上耳机听 🎧 每种材质都是真实录制的 ASMR 声音',
@@ -89,9 +90,12 @@ export class Hud {
     this.elLv.textContent = `第 ${n} 关`;
     this.elName.textContent = name;
     this.elDots.textContent = '';
-    this.dots = stations.map((label, i) => {
-      const d = h('span', i === stations.length - 1 ? 'dot big' : 'dot', this.elDots, i === stations.length - 1 ? '★' : '');
-      d.title = label;
+    // 解压站 = 圆点，闯关小挑战 = 小菱形，终点 = ★
+    this.dots = stations.map((st, i) => {
+      const it = typeof st === 'string' ? { label: st, kind: 'station' } : st;
+      const last = i === stations.length - 1;
+      const d = h('span', last ? 'dot big' : it.kind === 'gimmick' ? 'dot gim' : 'dot', this.elDots, last ? '★' : '');
+      d.title = it.label;
       return d;
     });
   }
@@ -174,6 +178,20 @@ export class Hud {
     const W = this.root.clientWidth || innerWidth, H = this.root.clientHeight || innerHeight;
     x = Math.min(Math.max(x, bw), Math.max(bw, W - bw));
     y = Math.min(Math.max(y, bh), Math.max(bh, H - 12));
+    // 不盖住左上角的关卡卡片和右上角的感谢榜：重叠时挪到它们下面（面板位置每秒刷新一次，避免每帧排版）
+    const now = performance.now();
+    if (!this._avoid || now - this._avoidT > 1000) {
+      this._avoidT = now;
+      const base = this.root.getBoundingClientRect();
+      this._avoid = [this.card, this.boardEl].filter((e) => e && e.offsetParent !== null).map((e) => {
+        const r = e.getBoundingClientRect();
+        return [r.left - base.left, r.top - base.top, r.right - base.left, r.bottom - base.top];
+      });
+    }
+    for (const [l, t, r, b] of this._avoid) {
+      // 面板在上半屏就挪到它下面，在下半屏（竖屏的感谢榜）就挪到它上面
+      if (x + bw > l && x - bw < r && y > t && y - bh < b) y = t > H / 2 ? Math.max(bh, t - 4) : Math.min(b + bh + 4, H - 12);
+    }
     this.bubble.style.left = `${x}px`; this.bubble.style.top = `${y}px`;
   }
 

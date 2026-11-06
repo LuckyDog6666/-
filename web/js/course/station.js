@@ -4,8 +4,9 @@ import * as THREE from 'three';
 
 export class Station {
   constructor(ctx, def) {
-    this.ctx = ctx;           // { M, G, rng, theme }
+    this.ctx = ctx;           // { M, G, rng, stage }
     this.def = def;           // 定义（类型、颜色、声音、名字等）
+    this.kind = 'station';    // station 解压站（踩上去有声音和痕迹）/ task 任务站 / gimmick 闯关元素
     this.group = new THREE.Group();
     this.length = def.length || 2.4;
     this.width = def.width || 1.6;

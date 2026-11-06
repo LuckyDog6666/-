@@ -306,6 +306,74 @@ export function buildProp(type, rng) {
       P.push(part(sph(0.11, 10, 8), c, V(-0.3, 0.35, 0.1))); P.push(part(sph(0.11, 10, 8), c, V(0.3, 0.35, 0.1)));
       break;
     }
+    // ---------- 厨房 ----------
+    case 'toaster': {
+      const c = pick(['#ffb3d1', '#9fe0d0', '#ffe08a']);
+      P.push(part(roundedBox(0.7, 0.5, 0.45, 0.14, 3), c, V(0, 0.25, 0)));
+      P.push(part(roundedBox(0.5, 0.03, 0.08, 0.015, 2), '#5a5470', V(0, 0.5, -0.08)));
+      P.push(part(roundedBox(0.5, 0.03, 0.08, 0.015, 2), '#5a5470', V(0, 0.5, 0.08)));
+      P.push(part(roundedBox(0.4, 0.16, 0.06, 0.03, 2), '#f0b45a', V(0, 0.56, -0.08)));
+      P.push(part(cyl(0.04, 0.04, 0.06, 10), '#ffffff', V(0.36, 0.3, 0), [0, 0, Math.PI / 2]));
+      break;
+    }
+    case 'kettle': {
+      const c = pick(['#7fd6ff', '#ff9ec4', '#c9a0ff']);
+      P.push(part(sph(0.32, 20, 14), c, V(0, 0.3, 0), [0, 0, 0], V(1, 0.85, 1)));
+      P.push(part(cyl(0.14, 0.2, 0.08, 16), c, V(0, 0.56, 0)));
+      P.push(part(sph(0.06, 10, 8), '#ffffff', V(0, 0.62, 0)));
+      P.push(part(cyl(0.035, 0.06, 0.32, 10), c, V(0.33, 0.36, 0), [0, 0, -1.0]));
+      P.push(part(new THREE.TorusGeometry(0.2, 0.035, 8, 16, Math.PI), '#ffffff', V(0, 0.6, 0), [0, Math.PI / 2, 0]));
+      break;
+    }
+    case 'fruit_bowl': {
+      P.push(part(new THREE.SphereGeometry(0.35, 20, 10, 0, TAU, Math.PI / 2, Math.PI / 2), '#ffffff', V(0, 0.32, 0)));
+      for (let i = 0; i < 5; i++) { const a = (i / 5) * TAU; P.push(part(sph(0.12, 12, 10), ['#ff5c5c', '#ffd166', '#ff9f43', '#9be89b', '#ff8fb3'][i], V(Math.cos(a) * 0.14, 0.34 + (i % 2) * 0.06, Math.sin(a) * 0.14))); }
+      break;
+    }
+    case 'herb_pot': {
+      P.push(part(cyl(0.18, 0.14, 0.28, 16), pick(['#ffb3d1', '#ffd98a', '#9fd8ff']), V(0, 0.14, 0)));
+      for (let i = 0; i < 6; i++) { const a = (i / 6) * TAU; P.push(part(blobGeometry(0.11, i, 0.1, 1), '#6fcf6a', V(Math.cos(a) * 0.08, 0.38 + (i % 2) * 0.08, Math.sin(a) * 0.08))); }
+      break;
+    }
+    case 'mixer': {
+      const c = pick(['#ff9ec4', '#7fdcc0']);
+      P.push(part(roundedBox(0.55, 0.12, 0.35, 0.05, 2), c, V(0, 0.06, 0)));
+      P.push(part(roundedBox(0.16, 0.6, 0.3, 0.06, 2), c, V(-0.2, 0.4, 0)));
+      P.push(part(roundedBox(0.5, 0.22, 0.32, 0.1, 3), c, V(0.02, 0.72, 0)));
+      P.push(part(new THREE.SphereGeometry(0.2, 18, 10, 0, TAU, Math.PI / 2, Math.PI / 2), '#e8eef7', V(0.1, 0.32, 0)));
+      break;
+    }
+    // ---------- 卧室 ----------
+    case 'plant': {
+      P.push(part(cyl(0.22, 0.17, 0.4, 16), pick(['#ffffff', '#ffd6e8', '#c9e8ff']), V(0, 0.2, 0)));
+      for (let i = 0; i < 7; i++) { const a = (i / 7) * TAU; P.push(part(new THREE.SphereGeometry(0.14, 10, 8).scale(0.5, 1.6, 0.25), '#5fbf7a', V(Math.cos(a) * 0.1, 0.65, Math.sin(a) * 0.1), [Math.sin(a) * 0.5, a, -Math.cos(a) * 0.5])); }
+      break;
+    }
+    case 'plush': { // 小兔玩偶
+      const c = pick(['#ffd6e8', '#e1f3ff', '#fff0c2', '#eae1ff']);
+      P.push(part(blobGeometry(0.22, 2, 0.03, 3), c, V(0, 0.22, 0), [0, 0, 0], V(1, 0.9, 0.9)));
+      P.push(part(sph(0.18, 16, 12), c, V(0, 0.52, 0)));
+      for (const s of [-1, 1]) P.push(part(new THREE.SphereGeometry(0.06, 10, 8).scale(1, 2.6, 0.8), c, V(s * 0.08, 0.78, 0), [0, 0, -s * 0.2]));
+      P.push(part(sph(0.025, 8, 6), '#2a1830', V(-0.06, 0.55, 0.16))); P.push(part(sph(0.025, 8, 6), '#2a1830', V(0.06, 0.55, 0.16)));
+      P.push(part(sph(0.03, 8, 6), '#ff8fb3', V(0, 0.5, 0.17)));
+      break;
+    }
+    case 'toy_chest': {
+      P.push(part(roundedBox(0.9, 0.5, 0.55, 0.06, 2), pick(['#7fd6ff', '#ffb3d1', '#ffd98a']), V(0, 0.25, 0)));
+      P.push(part(roundedBox(0.94, 0.08, 0.59, 0.04, 2), '#ffffff', V(0, 0.52, 0)));
+      P.push(part(sph(0.08, 12, 10), '#ff8fb3', V(0, 0.32, 0.29), [0, 0, 0], V(1, 1, 0.4)));
+      break;
+    }
+    case 'cushion_pile': {
+      for (let i = 0; i < 3; i++) P.push(part(roundedBox(0.5, 0.14, 0.5, 0.06, 3), pick(['#ffc2d8', '#c9e8ff', '#fff0a8', '#d7c9ff']), V(i * 0.03, 0.07 + i * 0.14, 0), [0, i * 0.4, 0]));
+      break;
+    }
+    case 'floor_lamp': {
+      P.push(part(cyl(0.18, 0.2, 0.04, 16), '#ffffff', V(0, 0.02, 0)));
+      P.push(part(cyl(0.02, 0.02, 1.3, 8), '#ffffff', V(0, 0.66, 0)));
+      GL.push({ geo: new THREE.CylinderGeometry(0.16, 0.26, 0.3, 18, 1, true).translate(0, 1.4, 0), color: '#fff3c2' });
+      break;
+    }
     // ---------- 水晶洞 ----------
     case 'crystal_cluster': {
       const c = pick(['#9fe8ff', '#e7b3ff', '#ffb3e6', '#b3ffd9']);

@@ -1,5 +1,5 @@
 // 一键自检：node tools/selftest.mjs
-// 检查：协议解码、礼物去重/连击、BarrageGrab 解析、配置解析、解压世界与 AI 导演、弹幕互动、全部声音素材与授权。
+// 检查：协议解码、礼物去重/连击、BarrageGrab 解析、配置解析、闯关世界与闯关元素、AI 导演、弹幕互动、全部声音素材（授权、刺耳度、声画同步数据）。
 import zlib from 'node:zlib';
 import { encode } from '../server/douyin/proto.js';
 import { decodePushFrame, decodeFetchBody, messagesToEvents, GiftDeduper } from '../server/douyin/decode.js';
@@ -8,7 +8,7 @@ import { stripComments, deepMerge, DEFAULTS } from '../server/config.js';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { STAGES } from '../web/js/course/stages.js';
+import { STAGES, soundsForStage } from '../web/js/course/stages.js';
 import { Director } from '../web/js/ai/director.js';
 import { Rng } from '../web/js/core/util.js';
 import { GiftManager } from '../web/js/game/giftManager.js';
@@ -115,54 +115,75 @@ section('配置文件');
   ok(m.game.audio.master === 0.5 && m.game.audio.sfx === DEFAULTS.game.audio.sfx && m.port === 17890 && m.forwardChat === true, '用户配置与默认值合并');
 }
 
-section('解压世界与 AI 导演');
+section('闯关世界、闯关元素与 AI 导演');
 {
-  // 站点类型（从源码里读，避免在 Node 里加载 three.js）
-  const stSrc = fs.readFileSync(path.join(ROOT, 'web/js/course/stations.js'), 'utf8');
-  const typeBlock = stSrc.slice(stSrc.indexOf('export const STATION_TYPES = {'));
-  const types = new Set([...typeBlock.slice(0, typeBlock.indexOf('};')).matchAll(/(\w+): \w+/g)].map((m) => m[1]));
+  // 类型表从源码里读（避免在 Node 里加载 three.js）
+  const typesIn = (file, marker) => {
+    const src = fs.readFileSync(path.join(ROOT, file), 'utf8');
+    const block = src.slice(src.indexOf(marker));
+    return new Set([...block.slice(0, block.indexOf('};')).matchAll(/(\w+): \w+/g)].map((m) => m[1]));
+  };
+  const stationTypes = typesIn('web/js/course/stations.js', 'export const STATION_TYPES = {');
+  const taskTypes = typesIn('web/js/course/tasks.js', 'export const TASK_TYPES = {');
+  const gimTypes = typesIn('web/js/course/gimmicks.js', 'export const GIMMICK_TYPES = {');
   const bad = [];
+  let nStations = 0, nGims = 0;
   for (const st of STAGES) {
+    if (!['outdoor', 'kitchen', 'room'].includes(st.env)) bad.push(`${st.id} 环境类型 ${st.env}`);
     if (!st.stations || st.stations.length < 4) bad.push(`${st.id} 站点太少`);
     if (!st.finale || !st.finale.finale) bad.push(`${st.id} 缺少终点解压物`);
     for (const d of [...st.stations, st.finale]) {
-      if (!types.has(d.type)) bad.push(`${st.id}/${d.label} 未知类型 ${d.type}`);
-      if (!d.sound || !d.sound.step) bad.push(`${st.id}/${d.label} 没有声音`);
+      nStations++;
+      const isTask = taskTypes.has(d.type);
+      if (!stationTypes.has(d.type) && !isTask) bad.push(`${st.id}/${d.label} 未知类型 ${d.type}`);
+      if (!isTask && (!d.sound || !d.sound.step)) bad.push(`${st.id}/${d.label} 没有声音`);
       if (!d.label) bad.push(`${st.id} 有站点没有名字`);
     }
+    const kinds = new Set((st.gimmicks || []).map((g) => g.type));
+    if ((st.gimmicks || []).length < 3) bad.push(`${st.id} 闯关元素少于 3 个`);
+    if (!kinds.has('slide') && !kinds.has('bounce')) bad.push(`${st.id} 没有滑梯或蹦床（缺少"转"）`);
+    for (const g of st.gimmicks || []) { nGims++; if (!gimTypes.has(g.type)) bad.push(`${st.id} 未知闯关元素 ${g.type}`); if (!g.label) bad.push(`${st.id} 闯关元素没有名字`); }
     if (!st.voteKeys || !st.voteKeys.length) bad.push(`${st.id} 没有投票关键字`);
   }
-  ok(bad.length === 0, `${STAGES.length} 个解压世界、${STAGES.reduce((n, s) => n + s.stations.length + 1, 0)} 个解压站定义完整`, bad.slice(0, 4).join('; '));
-  // 导演：每个站的玩法计划
+  ok(bad.length === 0, `${STAGES.length} 个世界（含厨房做饭、打扫房间）、${nStations} 个解压站/任务站、${nGims} 个闯关元素定义完整`, bad.slice(0, 4).join('; '));
+  ok(STAGES.some((s) => s.env === 'kitchen') && STAGES.some((s) => s.env === 'room'), '有厨房做饭、打扫房间等多元场景');
+  ok(gimTypes.size >= 5 && ['hop', 'bounce', 'slide', 'float', 'bridge'].every((t) => gimTypes.has(t)), `闯关元素：跳跳石、蹦床、滑滑梯、气球飘飘、摇摇桥（${gimTypes.size} 种）`);
+  // 导演：每个解压站的玩法计划——一条迎着镜头前进的 S 形路线
   const d = new Director(new Rng(7), { stageSeconds: 210 });
-  let planBad = 0, total = 0, specials = 0;
+  let planBad = 0, specials = 0, total = 0;
   for (const st of STAGES) {
-    const fake = st.stations.map((def, i) => ({ def, length: def.length || 2.4, width: def.width || 1.3, specials: def.specials || [] }));
+    const fake = st.stations.filter((def) => stationTypes.has(def.type)).map((def) => ({ def, length: def.length || 2.4, width: def.width || 1.6, specials: def.specials || [] }));
     d.beginStage(st, fake);
     fake.forEach((s, i) => {
       const p = d.planStation(s, i);
-      const odd = p.lanes.length % 2 === 1;
-      const inTray = p.lanes.every((z) => Math.abs(z) <= s.width / 2 - 0.25);
-      if (!odd || !inTray || !(p.stepDur > 0.3 && p.stepDur < 1.6) || !['normal', 'stomp', 'tiptoe'].includes(p.gait)) planBad++;
+      const xs = p.path.map((w) => w.x);
+      const forward = xs.every((x, k) => k === 0 || x > xs[k - 1]);
+      const inTray = p.path.every((w) => w.x >= 0 && w.x <= s.length && Math.abs(w.z) <= s.width / 2 - 0.25);
+      // 每一段最多偏离前进方向约 25°（再斜，镜头里就会变成侧面）
+      const gentle = p.path.every((w, k) => k === 0 || Math.atan2(Math.abs(w.z - p.path[k - 1].z), w.x - p.path[k - 1].x) < 0.46);
+      if (p.path.length < 3 || !forward || !inTray || !gentle || !(p.stepDur > 0.3 && p.stepDur < 1.6) || !['normal', 'stomp', 'tiptoe'].includes(p.gait)) planBad++;
       if (p.special && !(s.def.specials || []).includes(p.special)) planBad++;
       if (p.special) specials++;
-      total += p.lanes.length * (s.length / p.stride) * p.stepDur;
+      let len = 0; for (let k = 1; k < p.path.length; k++) len += Math.hypot(p.path[k].x - p.path[k - 1].x, p.path[k].z - p.path[k - 1].z);
+      total += (len / p.stride) * p.stepDur;
       d.tick(25);
     });
   }
-  ok(planBad === 0, '每个解压站的玩法计划合理（奇数趟、在托盘内、步速与动作有效）', planBad + ' 个问题');
-  const perStage = total / STAGES.length;
-  ok(perStage > 60 && perStage < 200, `平均每关踩踏时长 ${perStage.toFixed(0)} 秒（加上特别动作约 2~4 分钟一关）`);
-  ok(specials >= STAGES.length * 3, `特别动作（坐下/踩奶/切/蹦/按）出现 ${specials} 次`);
+  ok(planBad === 0, '每个解压站的路线都朝着镜头前进（每段偏离不超过 25°，不会走成侧面）、在托盘内，步速与动作有效', planBad + ' 个问题');
+  ok(specials >= STAGES.length * 2, `特别动作（坐下/踩奶/切/蹦/按）出现 ${specials} 次`);
+  ok(total / STAGES.length > 10, `每个世界踩踏时长约 ${(total / STAGES.length).toFixed(0)} 秒（另有任务站、闯关元素和终点，约 3 分钟一关）`);
   // 弹幕
   const c1 = d.onChat('踩奶踩奶', STAGES), c2 = d.onChat('下一关想去雪地', STAGES), c3 = d.onChat('哈哈哈', STAGES);
   ok(c1 && c1.act === 'knead' && c2 && c2.kind === 'vote' && c2.stage.id === 'snow' && c3 === null, '弹幕指令与投票识别');
+  const ck = d.onChat('想看做饭，去厨房', STAGES), cc = d.onChat('下一关去打扫房间', STAGES);
+  ok(ck && ck.stage && ck.stage.id === 'kitchen' && cc && cc.stage && cc.stage.id === 'clean', '弹幕可以投票去厨房 / 打扫房间');
+  d.votes.clear();
   d.onChat('沙滩', STAGES); d.onChat('沙滩！', STAGES);
   const nx = d.nextStage(STAGES, 'snow', []);
   ok(nx.id === 'beach' && nx.votes === 2, '下一关按弹幕投票决定', JSON.stringify(nx));
   const q = [], seen = [];
   let last = null;
-  for (let i = 0; i < 18; i++) { const n = d.nextStage(STAGES, last, q); seen.push(n.id); if (n.id === last) { last = 'REPEAT'; break; } last = n.id; }
+  for (let i = 0; i < 24; i++) { const n = d.nextStage(STAGES, last, q); seen.push(n.id); if (n.id === last) { last = 'REPEAT'; break; } last = n.id; }
   ok(last !== 'REPEAT' && new Set(seen).size === STAGES.length, '没人投票时轮流去所有世界、不连续重复', seen.join(','));
 }
 
@@ -210,7 +231,7 @@ section('ASMR 声音（全部是真实录音）');
   const man = JSON.parse(fs.readFileSync(path.join(SND, 'manifest.json'), 'utf8'));
   const sounds = man.sounds || {};
   const need = new Set(['land_soft', 'path_step', 'purr', 'music_dance']);
-  for (const st of STAGES) { need.add(st.ambience); need.add(st.pathSound); for (const dd of [...st.stations, st.finale]) for (const k of ['step', 'heavy', 'special', 'pull']) if (dd.sound[k]) need.add(dd.sound[k]); }
+  for (const st of STAGES) for (const id of soundsForStage(st)) need.add(id);
   const missing = [...need].filter((id) => !sounds[id] || !sounds[id].files || !sounds[id].files.length);
   ok(missing.length === 0, `游戏用到的 ${need.size} 种声音都有真实录音`, missing.join(','));
   const RANGE = { trigger: [0.1, 2.6], sustain: [0.8, 4.0], soft: [3, 12], step: [0.1, 0.8], ambience: [15, 120], music: [20, 90] };
@@ -242,6 +263,20 @@ section('ASMR 声音（全部是真实录音）');
   const synth = ['dsp.js', 'recipes.js', 'synthWorker.js', 'audioEngine.js'].filter((f) => fs.existsSync(path.join(ROOT, 'web/js/audio', f)));
   ok(synth.length === 0, '游戏里没有任何程序合成的声音', synth.join(','));
   ok(sounds.music_dance && sounds.music_dance.files.every((f) => f.bpm >= 80 && f.bpm <= 170), '舞曲都有节拍信息（舞步踩在拍子上）');
+  // 刺耳度体检（打包工具写进 manifest）：2~5 kHz 的窄带尖音（pierce）、感知锐度（sharp）
+  const LIM = { music: { pierce: -7, sharp: 2.0 }, ambience: { pierce: -8, sharp: 3.0 } };
+  const harsh = [], noAudit = [];
+  for (const [id, def] of Object.entries(sounds)) {
+    const lim = LIM[def.cat] || { pierce: -6.5, sharp: 3.5 };
+    for (const f of def.files) {
+      if (f.pierce == null || f.sharp == null) { noAudit.push(f.src); continue; }
+      if (f.pierce > lim.pierce || f.sharp > lim.sharp) harsh.push(`${f.src}（尖音 ${f.pierce} dB，锐度 ${f.sharp}）`);
+      if (def.cat !== 'music' && !(f.onset >= 0 && f.onset < 0.6)) noAudit.push(f.src + ' 起音');
+    }
+  }
+  ok(noAudit.length === 0, '每个录音都有体检数据（起音位置用于声画同步）', noAudit.slice(0, 3).join(','));
+  ok(harsh.length === 0, '没有刺耳的声音（2~5kHz 尖音、过高的锐度）', harsh.slice(0, 3).join('; '));
+  ok(!sounds.music_dance.files.some((f) => /fluffing/i.test(f.title || '')) && sounds.music_dance.files.length >= 4, `舞曲 ${sounds.music_dance.files.length} 首（已删除有尖音的 Fluffing a Duck）`);
 }
 
 console.log(`\n结果：${pass} 项通过，${fail} 项失败`);

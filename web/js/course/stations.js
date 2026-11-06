@@ -797,18 +797,18 @@ export class SquishyStation extends Station {
     this.items = [];
     const shape = d.shape || 'bread';
     const size = Math.min(d.finale ? 1.7 : 0.95, (this.length - 0.1) / n - 0.08, d.finale ? this.width - 0.1 : 9);
-    const geo = this.ctx.G.get(`squishy|${shape}|${size.toFixed(2)}`, () => {
-      if (shape === 'bread') { const g = roundedBox(size, size * 0.42, size * 0.85, size * 0.2, 5); const p = g.attributes.position; for (let i = 0; i < p.count; i++) { const y = p.getY(i); if (y > 0) p.setY(i, y + 0.06 * Math.cos(p.getX(i) / size * Math.PI)); } g.computeVertexNormals(); return g.translate(0, size * 0.21, 0); }
-      return blobGeometry(size * 0.5, 5, 0.04, 4).scale(1, 0.5, 0.85).translate(0, size * 0.25, 0);
-    });
+    const made = this.ctx.G.get(`squishy|${shape}|${size.toFixed(2)}`, () => squishyShape(shape, size));
+    const geo = made;
+    const top = made.userData.top ?? size * 0.42;
     for (let i = 0; i < n; i++) {
       const color = (d.colors || ['#ffe0b3', '#ffd6e8'])[i % (d.colors || [1, 1]).length];
-      const m = new THREE.Mesh(geo, this.ctx.M.soft(color, { rough: 0.85, rim: 0.4, rimColor: '#ffffff' }));
+      const m = new THREE.Mesh(geo, this.ctx.M.soft(made.userData.vc ? '#ffffff' : color, { vc: !!made.userData.vc, rough: 0.85, rim: 0.4, rimColor: '#ffffff' }));
       const x = 0.05 + size / 2 + i * (size + 0.08);
       m.position.set(x, 0, 0);
       m.castShadow = true;
+      m.receiveShadow = true;
       this.group.add(m);
-      this.items.push({ m, x, size, s: 1, target: 1, top: size * 0.42 + 0.03 });
+      this.items.push({ m, x, size, s: 1, target: 1, top: top + 0.03 });
     }
     return this;
   }
@@ -845,6 +845,63 @@ export class SquishyStation extends Station {
       it.m.scale.set(1 + (1 - it.s) * 0.25, it.s, 1 + (1 - it.s) * 0.2);
     }
   }
+}
+
+// 慢回弹捏捏的形状：面包 / 团子 / 松饼塔 / 软软床（后两种带顶点色，userData.top = 顶面高度）
+function squishyShape(shape, size) {
+  if (shape === 'bread') {
+    const g = roundedBox(size, size * 0.42, size * 0.85, size * 0.2, 5);
+    const p = g.attributes.position;
+    for (let i = 0; i < p.count; i++) { const y = p.getY(i); if (y > 0) p.setY(i, y + 0.06 * Math.cos(p.getX(i) / size * Math.PI)); }
+    g.computeVertexNormals();
+    g.translate(0, size * 0.21, 0);
+    g.userData.top = size * 0.42;
+    return g;
+  }
+  if (shape === 'pancakes' || shape === 'bed') {
+    const parts = [];
+    const add = (geo, color, x = 0, y = 0, z = 0) => { geo.translate(x, y, z); parts.push([geo, new THREE.Color(color)]); };
+    const R = size * 0.44;
+    if (shape === 'pancakes') {
+      add(new THREE.CylinderGeometry(R + 0.12, R + 0.08, 0.04, 40), '#ffffff', 0, 0.02, 0);
+      for (let k = 0; k < 5; k++) add(new THREE.CylinderGeometry(R - k * 0.012, R - k * 0.012 + 0.01, 0.12, 40), k % 2 ? '#e9a043' : '#f2b862', 0, 0.1 + k * 0.122, 0);
+      const ty = 0.1 + 5 * 0.122 - 0.05;
+      add(new THREE.CylinderGeometry(R * 0.72, R * 0.78, 0.03, 36), '#b8652a', 0, ty, 0);
+      for (let k = 0; k < 7; k++) { const a = (k / 7) * Math.PI * 2; add(new THREE.SphereGeometry(0.05, 10, 8).scale(1, 1.6, 1), '#b8652a', Math.cos(a) * R * 0.95, ty - 0.08, Math.sin(a) * R * 0.95); }
+      add(roundedBox(0.2, 0.08, 0.2, 0.03, 2), '#fff1a8', 0.05, ty + 0.05, 0);
+      add(new THREE.SphereGeometry(0.09, 14, 10).scale(1, 1.2, 1), '#ff4d6d', -0.18, ty + 0.08, 0.12);
+      const g = mergeColored(parts);
+      g.userData.top = ty + 0.02; g.userData.vc = true;
+      return g;
+    }
+    const L = size, D = size * 0.86;
+    add(roundedBox(L, 0.22, D, 0.07, 3), '#e8b98a', 0, 0.11, 0);
+    add(roundedBox(L * 0.97, 0.24, D * 0.96, 0.11, 4), '#ffffff', 0, 0.32, 0);
+    add(roundedBox(L * 0.62, 0.07, D * 0.98, 0.035, 3), '#ffc2d8', L * 0.2, 0.45, 0);
+    for (const z of [-0.22, 0.22]) add(blobGeometry(0.2, 3, 0.04, 3).scale(1, 0.45, 1.5), '#c9e8ff', -L * 0.32, 0.5, z * size);
+    const g = mergeColored(parts);
+    g.userData.top = 0.47; g.userData.vc = true;
+    return g;
+  }
+  const g = blobGeometry(size * 0.5, 5, 0.04, 4).scale(1, 0.5, 0.85).translate(0, size * 0.25, 0);
+  g.userData.top = size * 0.42;
+  return g;
+}
+function mergeColored(parts) {
+  const pos = [], nrm = [], col = [];
+  for (const [geo, c] of parts) {
+    const g = geo.index ? geo.toNonIndexed() : geo;
+    if (!g.attributes.normal) g.computeVertexNormals();
+    const p = g.attributes.position, n = g.attributes.normal;
+    for (let i = 0; i < p.count; i++) { pos.push(p.getX(i), p.getY(i), p.getZ(i)); nrm.push(n.getX(i), n.getY(i), n.getZ(i)); col.push(c.r, c.g, c.b); }
+    if (g !== geo) g.dispose();
+    geo.dispose();
+  }
+  const out = new THREE.BufferGeometry();
+  out.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  out.setAttribute('normal', new THREE.Float32BufferAttribute(nrm, 3));
+  out.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+  return out;
 }
 
 // ================= 12. 玻璃/水晶砖：敲一敲 =================

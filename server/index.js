@@ -193,7 +193,8 @@ function readBody(req, limit = 1e6) {
 }
 function serveFile(res, base, rel) {
   const p = path.normalize(path.join(base, rel));
-  if (!p.startsWith(base)) return send(res, 403, 'forbidden', 'text/plain');
+  // 严格限制在 base 目录之内（"web-xxx" 这样同名前缀的兄弟目录也不行）
+  if (p !== base && !p.startsWith(base + path.sep)) return send(res, 403, 'forbidden', 'text/plain');
   fs.stat(p, (err, st) => {
     if (err || !st.isFile()) return send(res, 404, 'not found', 'text/plain');
     const ext = path.extname(p).toLowerCase();

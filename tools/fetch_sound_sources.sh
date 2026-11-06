@@ -17,7 +17,7 @@ fetch_repo() { # url commit dest paths...
   for p in "$@"; do cp -r "$dir/$p" "$dest/"; done
 }
 
-# Moodist（Pixabay Content License / CC0）：踩雪、碎石、落叶、泡泡、纸、键盘、猫咪呼噜、雨、风、海浪
+# Moodist（Pixabay Content License / CC0）：踩雪、碎石、落叶、泡泡、猫咪呼噜、雨、风、海浪、煮水、窗外雨、林间风
 fetch_repo https://github.com/remvze/moodist.git 11c0be2200116a3635880d600fd6953899cc51a3 "$RAW/moodist" \
   public/sounds/nature public/sounds/things public/sounds/rain public/sounds/animals
 # Minetest Game（CC0 / CC BY 3.0，见其 mods/default/README.md）
@@ -27,7 +27,8 @@ cp "$TMP"/mtg/mods/default/sounds/*.ogg "$RAW/mtg/"
 # CC0 合集（Ben Burnes 微型素材包、rubberduck、Kenney）
 fetch_repo https://github.com/lavenderdotpet/CC0-Public-Domain-Sounds.git f2b6264f9ab89fabc266914c3654685d68c5a39b "$RAW/cc0col" \
   "Micro Pack - CaptSubtle - Melon" "bb - Bottle Plops (Apr 2021)" "bb - Keyboard Sounds (Mar 2021)" \
-  25-CC0-mud-sfx 40-cc0-water-splash-slime-sfx kenney_impactsounds
+  25-CC0-mud-sfx 40-cc0-water-splash-slime-sfx kenney_impactsounds \
+  "Micro Pack - Organic Wooshes" "BB_Retail Therapy Sample Pack" kenney_rpgaudio 100-CC0-SFX
 # Blanket（CC0 / CC BY / Public Domain，见 SOUNDS_LICENSING.md）
 git clone -q --filter=blob:none --no-checkout https://github.com/rafaelmardojai/blanket.git "$TMP/blanket"
 git -C "$TMP/blanket" checkout -q 775f2a767230a9681850d1b1e085be58656f1382 -- data/resources/sounds
