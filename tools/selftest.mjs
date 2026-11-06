@@ -148,6 +148,22 @@ section('闯关世界、闯关元素与 AI 导演');
   ok(bad.length === 0, `${STAGES.length} 个世界（含厨房做饭、打扫房间）、${nStations} 个解压站/任务站、${nGims} 个闯关元素定义完整`, bad.slice(0, 4).join('; '));
   ok(STAGES.some((s) => s.env === 'kitchen') && STAGES.some((s) => s.env === 'room'), '有厨房做饭、打扫房间等多元场景');
   ok(gimTypes.size >= 5 && ['hop', 'bounce', 'slide', 'float', 'bridge'].every((t) => gimTypes.has(t)), `闯关元素：跳跳石、蹦床、滑滑梯、气球飘飘、摇摇桥（${gimTypes.size} 种）`);
+  // 静态检查：属性不能和同一个文件里的方法同名（例如 this.run = 0.22 会把 run() 覆盖掉，整段玩法被跳过）
+  {
+    const shadow = [];
+    const walk = (dir) => {
+      for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+        const f = path.join(dir, e.name);
+        if (e.isDirectory()) { walk(f); continue; }
+        if (!e.name.endsWith('.js')) continue;
+        const src = fs.readFileSync(f, 'utf8');
+        const methods = new Set([...src.matchAll(/^ {2}(?:async\s+)?([A-Za-z_]\w*)\s*\([^)]*\)\s*\{/gm)].map((m) => m[1]).filter((n) => !['if', 'for', 'while', 'switch', 'catch', 'constructor'].includes(n)));
+        for (const m of src.matchAll(/this\.([A-Za-z_]\w*)\s*=(?!=)/g)) if (methods.has(m[1])) shadow.push(`${path.relative(ROOT, f)}: this.${m[1]} =`);
+      }
+    };
+    walk(path.join(ROOT, 'web/js'));
+    ok(shadow.length === 0, '没有属性覆盖同名方法（如 this.run = … 会让整段玩法失效）', shadow.slice(0, 4).join('; '));
+  }
   // 导演：每个解压站的玩法计划——一条迎着镜头前进的 S 形路线
   const d = new Director(new Rng(7), { stageSeconds: 210 });
   let planBad = 0, specials = 0, total = 0;

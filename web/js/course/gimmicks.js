@@ -368,7 +368,7 @@ export class SlideGimmick extends Gimmick {
     const H = this.H = d.height || 1.05;
     // 楼梯坡度约 38°（6 级、每级 0.22）：比镜头俯角缓，正前方偏高的机位能越过台阶看到往上爬的糯糯
     const steps = 6, run = 0.22;
-    this.run = run;
+    this.stepRun = run; // 注意：不能叫 this.run，会覆盖 run() 方法
     this.stairEnd = steps * run; // 1.32
     this.topEnd = this.stairEnd + 0.38;
     this.length = this.topEnd + 3.67; // 滑道 + 落地堆（半径 0.72）
@@ -526,7 +526,7 @@ export class SlideGimmick extends Gimmick {
     await pet.idleAction('peek', 0.6);
     G.unsay();
     const topPos = this.W(this.stairEnd + 0.18, H, 0);
-    await G.walkTo(topPos, { stepDur: 0.4, stride: this.run, sound: d.stepSound || 'wood_step', gain: -3 });
+    await G.walkTo(topPos, { stepDur: 0.4, stride: this.stepRun, sound: d.stepSound || 'wood_step', gain: -3 });
     // 在顶上转身对镜头挥挥手
     G.cam('point', { pos: () => this.W(this.stairEnd + 2.1, H + 0.75, 2.1), look: () => V(pet.root.position.x, pet.root.position.y + 0.5, pet.root.position.z), lambda: 1.6 });
     pet.faceTowards(this.x0 + this.stairEnd + 2.1, 2.1);
