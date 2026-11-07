@@ -222,9 +222,19 @@ function buildOutdoor(course) {
   const hc = st.hills || [st.groundAlt, st.ground];
   for (let i = 0; i < 16; i++) {
     const a = -Math.PI * 0.05 - (i / 15) * Math.PI * 0.95; // 从 -x 方向绕到 -z 方向
-    const d = rng.range(30, 46);
-    const s = rng.range(5, 10);
-    hills.push(part(new THREE.SphereGeometry(1, 20, 10, 0, TAU, 0, Math.PI / 2), hc[i % hc.length], V(cx * 0.4 + Math.cos(a) * d, -0.5, Math.sin(a) * d * 0.8), [0, rng.range(0, TAU), 0], V(s * rng.range(1.2, 2), s * rng.range(0.45, 0.8), s)));
+    let d = rng.range(30, 46);
+    const s = rng.range(5, 10), sx = rng.range(1.2, 2);
+    // 山的整个底面（最大半径 s·sx）都要离路线至少 3：路线尽头正前方的山以前会把山脚伸到终点那一段上，糯糯走进山坡里
+    const R = s * Math.max(sx, 1);
+    const at = (dd) => ({ x: cx * 0.4 + Math.cos(a) * dd, z: Math.sin(a) * dd * 0.8 });
+    for (let k = 0; k < 40; k++) {
+      const h = at(d);
+      const dx = Math.max(0, -3 - h.x, h.x - (L + 3));
+      if (Math.hypot(dx, h.z) - R >= 3) break;
+      d += 2;
+    }
+    const h = at(d);
+    hills.push(part(new THREE.SphereGeometry(1, 20, 10, 0, TAU, 0, Math.PI / 2), hc[i % hc.length], V(h.x, -0.5, h.z), [0, rng.range(0, TAU), 0], V(s * sx, s * rng.range(0.45, 0.8), s)));
   }
   addBaked(course, hills, { rough: 0.95, rim: 0.15, shadow: false });
   // 云朵（一朵朵软软的白色棉花，慢慢飘）
