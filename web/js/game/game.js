@@ -405,7 +405,8 @@ export class Game {
         await pet.idleAction('stretch', 1.0);
       }
       this.cam.set('front');
-      await this.hopLocal(s, s.length - 0.25, 0, { height: 0.5, dur: 0.6 });
+      // 从高高的大物件上直接跳下来，落在后面的小路上（不是走下来：走下来时身体后半截会穿过它的边）
+      await this.hopLocal(s, s.length + 0.62, 0, { height: 0.5, dur: 0.65 });
     } else if (type === 'crunch') {
       await this.walkTo(this.course.world(s, s.length * 0.35, 0), { gait: 'stomp', stepDur: 0.62, stride: 0.3, power: 0.9 });
       await this.doSpecial(s, 'stomp', {});
