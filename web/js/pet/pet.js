@@ -426,6 +426,16 @@ export class Pet {
     const sides = side ? [side] : ['L', 'R'];
     for (const k of sides) { const r = this.reach[k]; r.target = 0; r.speed = o.speed ?? 6; }
   }
+  // 世界坐标的点是否在身体里（< 1 在里面，r 用来留一点余量）。连续调用前先 refreshBodyInverse()
+  refreshBodyInverse() {
+    this.root.updateMatrixWorld(true);
+    this._bodyInv = (this._bodyInv || new THREE.Matrix4()).copy(this.body.matrixWorld).invert();
+  }
+  bodyInside(p, r = 0.5) {
+    if (!this._bodyInv) this.refreshBodyInverse();
+    const q = _v3.copy(p).applyMatrix4(this._bodyInv);
+    return bodyEll(q.x, q.y, q.z, r);
+  }
   // 干活时身体前倾（弧度）、蹲下（0..1）、视线看着手上的活儿
   setLean(v) { this.work.leanT = v; }
   setCrouch(v) { this.work.crouchT = clamp(v, 0, 1); }
@@ -986,6 +996,16 @@ const _q1 = new THREE.Quaternion(), _q2 = new THREE.Quaternion(), _q3 = new THRE
 const _e1 = new THREE.Euler();
 const _X = new THREE.Vector3(1, 0, 0), _DOWN = new THREE.Vector3(0, -1, 0), _UP = new THREE.Vector3(0, 1, 0);
 const _v1 = new THREE.Vector3(), _v2 = new THREE.Vector3(), _v3 = new THREE.Vector3();
+
+// 身体形状的逆变换（和建模时"底部压扁、下半身微微鼓起"一一对应）：身体几何坐标里的点，返回 < 1 表示在身体里面
+export function bodyEll(x, y, z, r = 0.5) {
+  let y0 = (y - 0.387) / 0.9;
+  if (y0 < -0.175) y0 = -0.175 + (y0 + 0.175) / 0.45;
+  const ny = Math.max(-1, Math.min(1, y0 / 0.5));
+  const bulge = 1 + 0.07 * Math.max(0, -ny) - 0.03 * Math.max(0, ny);
+  const x0 = x / (1.06 * bulge), z0 = z / bulge;
+  return (x0 * x0 + y0 * y0 + z0 * z0) / (r * r);
+}
 const _m1 = new THREE.Matrix4();
 
 // 每种道具动作"接触"的相位（0~1）：声音和特效在这一帧触发

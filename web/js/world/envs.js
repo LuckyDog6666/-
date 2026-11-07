@@ -70,6 +70,126 @@ function sky(course, colors, sunDir = V(-0.5, 0.35, -0.8), sunColor = '#fff3d6')
   course.sky = m;
 }
 
+
+// ---------------- 动画电影里常见的"氛围小件" ----------------
+// 窗外的手绘天空：渐变的蓝天、几朵软软的云、远处的小山坡（不受灯光影响，永远亮亮的）
+function paintedSky(course, w, h, o = {}) {
+  return canvasTex(course, 512, Math.round(512 * h / w), (g, W, H) => {
+    const gr = g.createLinearGradient(0, 0, 0, H);
+    gr.addColorStop(0, o.top || '#8fcfff'); gr.addColorStop(0.7, o.mid || '#d4eeff'); gr.addColorStop(1, o.bot || '#fff4e0');
+    g.fillStyle = gr; g.fillRect(0, 0, W, H);
+    // 太阳的光晕
+    const sg = g.createRadialGradient(W * 0.2, H * 0.18, 0, W * 0.2, H * 0.18, W * 0.35);
+    sg.addColorStop(0, 'rgba(255,250,225,0.95)'); sg.addColorStop(0.25, 'rgba(255,244,210,0.45)'); sg.addColorStop(1, 'rgba(255,244,210,0)');
+    g.fillStyle = sg; g.fillRect(0, 0, W, H);
+    // 云：一团团圆，底部带一点淡紫的影子
+    const cloud = (cx, cy, s) => {
+      for (const [dx, dy, r] of [[-0.9, 0.15, 0.55], [-0.35, -0.15, 0.75], [0.3, -0.25, 0.85], [0.95, 0.1, 0.6], [0.2, 0.2, 0.7]]) {
+        g.fillStyle = 'rgba(205,210,240,0.55)'; g.beginPath(); g.arc(cx + dx * s, cy + dy * s + s * 0.12, r * s, 0, TAU); g.fill();
+      }
+      for (const [dx, dy, r] of [[-0.9, 0.15, 0.55], [-0.35, -0.15, 0.75], [0.3, -0.25, 0.85], [0.95, 0.1, 0.6], [0.2, 0.2, 0.7]]) {
+        g.fillStyle = '#ffffff'; g.beginPath(); g.arc(cx + dx * s, cy + dy * s, r * s, 0, TAU); g.fill();
+      }
+    };
+    cloud(W * 0.62, H * 0.3, W * 0.07); cloud(W * 0.25, H * 0.55, W * 0.05); cloud(W * 0.88, H * 0.62, W * 0.045);
+    if (o.hills !== false) {
+      g.fillStyle = o.hill2 || '#bfe8b0'; g.beginPath(); g.ellipse(W * 0.25, H * 1.05, W * 0.5, H * 0.22, 0, 0, TAU); g.fill();
+      g.fillStyle = o.hill || '#a6dd98'; g.beginPath(); g.ellipse(W * 0.85, H * 1.08, W * 0.55, H * 0.2, 0, 0, TAU); g.fill();
+    }
+    if (o.rain) {
+      for (let i = 0; i < 60; i++) { const x = Math.random() * W, y = Math.random() * H, r = 2 + Math.random() * 5; g.fillStyle = 'rgba(255,255,255,0.55)'; g.beginPath(); g.ellipse(x, y, r * 0.7, r, 0, 0, TAU); g.fill(); g.strokeStyle = 'rgba(255,255,255,0.35)'; g.lineWidth = 1.5; g.beginPath(); g.moveTo(x, y + r); g.lineTo(x + Math.random() * 2, y + r + 8 + Math.random() * 20); g.stroke(); }
+    }
+  });
+}
+function windowGlass(course, tex, w, h, pos) {
+  const m = new THREE.Mesh(course.G.track(new THREE.PlaneGeometry(w, h)), course.M.track(new THREE.MeshBasicMaterial({ map: tex, fog: false })));
+  m.position.copy(pos);
+  course.group.add(m);
+  return m;
+}
+// 从窗户斜照进来的几束柔光（加色混合、两端都淡出；只是"空气里的光"，不挡任何东西）
+function sunbeams(course, origin, ww, wh, dir, o = {}) {
+  const tex = canvasTex(course, 64, 256, (g, W, H) => {
+    const img = g.createImageData(W, H);
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+      const u = (x + 0.5) / W - 0.5, v = y / (H - 1);
+      const across = Math.exp(-u * u * 14);
+      const along = Math.pow(1 - v, 1.4) * Math.min(1, v * 10 + 0.15);
+      const a = across * along;
+      const i = (y * W + x) * 4;
+      img.data[i] = img.data[i + 1] = img.data[i + 2] = 255; img.data[i + 3] = Math.round(255 * a);
+    }
+    g.putImageData(img, 0, 0);
+  });
+  tex.colorSpace = THREE.NoColorSpace;
+  const mat = course.M.track(new THREE.MeshBasicMaterial({ map: tex, color: new THREE.Color(o.color || '#fff0c8'), transparent: true, opacity: o.opacity ?? 0.16, blending: THREE.AdditiveBlending, depthWrite: false, fog: false, side: THREE.DoubleSide }));
+  const d = dir.clone().normalize();
+  const side = new THREE.Vector3().crossVectors(d, V(0, 0, 1)).normalize();
+  const rng = course.rng;
+  const n = o.count || 4;
+  for (let k = 0; k < n; k++) {
+    const start = origin.clone().add(V((k / (n - 1 || 1) - 0.5) * ww * 0.8 + rng.range(-0.08, 0.08), rng.range(-0.25, 0.25) * wh, 0));
+    const len = rng.range(2.2, 3.0) * (o.len || 1), w = rng.range(0.22, 0.42) * (o.width || 1);
+    const end = start.clone().addScaledVector(d, len);
+    const a = start.clone().addScaledVector(side, w / 2), b = start.clone().addScaledVector(side, -w / 2);
+    const c = end.clone().addScaledVector(side, -w * 0.9), e = end.clone().addScaledVector(side, w * 0.9);
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.Float32BufferAttribute([a.x, a.y, a.z, b.x, b.y, b.z, c.x, c.y, c.z, e.x, e.y, e.z], 3));
+    g.setAttribute('uv', new THREE.Float32BufferAttribute([0, 1, 1, 1, 1, 0, 0, 0], 2));
+    g.setIndex([0, 1, 2, 0, 2, 3]);
+    const m = new THREE.Mesh(course.G.track(g), mat);
+    m.renderOrder = 5;
+    course.group.add(m);
+  }
+}
+// 墙根 / 墙和台面相接处的柔和接触阴影（动画里的"角落暗一点"，让场景更有体积感）
+function contactShade(course, w, h, pos, rotX = 0, o = {}) {
+  const tex = canvasTex(course, 4, 128, (g, W, H) => {
+    // 默认下深上浅（竖着贴在墙上）；flip：上深下浅（平放在地上时深的一边朝墙）
+    const gr = o.flip ? g.createLinearGradient(0, 0, 0, H) : g.createLinearGradient(0, H, 0, 0);
+    gr.addColorStop(0, `rgba(255,255,255,${o.strength ?? 0.5})`); gr.addColorStop(0.45, `rgba(255,255,255,${(o.strength ?? 0.5) * 0.3})`); gr.addColorStop(1, 'rgba(255,255,255,0)');
+    g.fillStyle = gr; g.fillRect(0, 0, W, H);
+  });
+  const m = new THREE.Mesh(course.G.track(new THREE.PlaneGeometry(w, h)), course.M.track(new THREE.MeshBasicMaterial({ map: tex, color: new THREE.Color(o.color || '#6e4f72'), transparent: true, depthWrite: false })));
+  m.position.copy(pos); m.rotation.x = rotX;
+  m.renderOrder = 1;
+  course.group.add(m);
+  return m;
+}
+// 手绘瓷砖：每块砖有上亮下暗的渐变、顶边一道高光、底边一点阴影，砖缝凹下去（凹凸贴图）
+function tileTextures(course, colors, repeat) {
+  const N = 4, S = 512;
+  const draw = (g, W, H, bump) => {
+    const s = W / N;
+    g.fillStyle = bump ? 'rgb(30,30,30)' : '#eadbd0'; g.fillRect(0, 0, W, H);
+    for (let i = 0; i < N; i++) for (let j = 0; j < N; j++) {
+      const x = i * s + 5, y = j * s + 5, w = s - 10, r = 14;
+      const path = () => { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + w, r); g.arcTo(x + w, y + w, x, y + w, r); g.arcTo(x, y + w, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); };
+      if (bump) {
+        const gr = g.createRadialGradient(x + w / 2, y + w / 2, w * 0.25, x + w / 2, y + w / 2, w * 0.75);
+        gr.addColorStop(0, 'rgb(235,235,235)'); gr.addColorStop(1, 'rgb(150,150,150)');
+        g.fillStyle = gr; path(); g.fill();
+        continue;
+      }
+      const base = new THREE.Color(colors[(i + j) % colors.length]);
+      const hi = base.clone().lerp(new THREE.Color('#ffffff'), 0.45), lo = base.clone().lerp(new THREE.Color('#d9b9c9'), 0.25);
+      const gr = g.createLinearGradient(0, y, 0, y + w);
+      gr.addColorStop(0, '#' + hi.getHexString()); gr.addColorStop(0.55, '#' + base.getHexString()); gr.addColorStop(1, '#' + lo.getHexString());
+      g.fillStyle = gr; path(); g.fill();
+      // 顶边高光 + 左上角一小块反光
+      g.save(); path(); g.clip();
+      g.strokeStyle = 'rgba(255,255,255,0.75)'; g.lineWidth = 5; g.beginPath(); g.moveTo(x + r, y + 3); g.lineTo(x + w - r, y + 3); g.stroke();
+      g.fillStyle = 'rgba(255,255,255,0.35)'; g.beginPath(); g.ellipse(x + w * 0.28, y + w * 0.22, w * 0.16, w * 0.07, -0.5, 0, TAU); g.fill();
+      g.strokeStyle = 'rgba(150,100,130,0.18)'; g.lineWidth = 6; g.beginPath(); g.moveTo(x + r, y + w - 3); g.lineTo(x + w - r, y + w - 3); g.stroke();
+      g.restore();
+    }
+  };
+  const map = canvasTex(course, S, S, (g, W, H) => draw(g, W, H, false), repeat);
+  const bump = canvasTex(course, S / 2, S / 2, (g, W, H) => draw(g, W, H, true), repeat);
+  bump.colorSpace = THREE.NoColorSpace;
+  return { map, bump };
+}
+
 // ======================= 户外 =======================
 function buildOutdoor(course) {
   const st = course.stage, rng = course.rng, L = course.length;
@@ -350,19 +470,17 @@ function buildKitchen(course) {
   // 架子 + 罐子
   cab.push(part(roundedBox(2.4, 0.05, 0.3, 0.02, 2), '#f2c99c', V(wx + 2.8, 1.3, BACK + 0.15)));
   addBaked(course, cab, { rough: 0.6, rim: 0.2, aoBase: FLOOR - 0.05 });
-  const glass = new THREE.Mesh(course.G.track(new THREE.PlaneGeometry(1.8, 1.25)), course.M.soft('#bfe6ff', { rough: 0.1, rim: 0.4, emissive: '#dff3ff', ei: 0.65 }));
-  glass.position.set(wx, 1.83, BACK + 0.01);
-  course.group.add(glass);
+  windowGlass(course, paintedSky(course, 1.8, 1.25), 1.8, 1.25, V(wx, 1.83, BACK + 0.01));
+  sunbeams(course, V(wx, 1.83, BACK + 0.05), 1.7, 1.1, V(0.22, -0.55, 1), { count: 4, opacity: 0.13 });
   // 瓷砖墙（台面到吊柜之间）
-  const tiles = canvasTex(course, 256, 256, (g, w, h) => {
-    g.fillStyle = '#ffffff'; g.fillRect(0, 0, w, h);
-    const s = w / 4;
-    for (let i = 0; i < 4; i++) for (let j = 0; j < 4; j++) { g.fillStyle = (i + j) % 2 ? (st.tile || '#ffe1ec') : '#ffffff'; g.fillRect(i * s + 3, j * s + 3, s - 6, s - 6); }
-  }, [W / 1.2, 1]);
-  const back = new THREE.Mesh(course.G.track(new THREE.PlaneGeometry(W, 1.2)), course.M.soft('#ffffff', { rough: 0.3, rim: 0.1, map: tiles }));
+  const tiles = tileTextures(course, ['#ffffff', st.tile || '#ffe1ec'], [W / 1.2, 1]);
+  const back = new THREE.Mesh(course.G.track(new THREE.PlaneGeometry(W, 1.2)), course.M.track(new THREE.MeshStandardMaterial({ map: tiles.map, bumpMap: tiles.bump, bumpScale: 2.2, roughness: 0.26, metalness: 0 })));
   back.position.set(cx, 0.6, BACK + 0.005);
   back.receiveShadow = true;
   course.group.add(back);
+  // 墙和台面相接处暗一点（接触阴影）
+  contactShade(course, W, 0.42, V(cx, 0.035 + 0.21, BACK + 0.012), 0, { strength: 0.42 });
+  contactShade(course, W, 0.5, V(cx, 0.037, BACK + 0.25), -Math.PI / 2, { strength: 0.3, flip: true });
   // 冰箱（起点一侧，大大的、圆圆的，贴着冰箱贴）
   const fr = [];
   fr.push(part(roundedBox(1.3, 3.0, 1.2, 0.15, 3), '#c9f0ff', V(x0 + 1.0, 0.55, BACK + 1.0)));
@@ -452,14 +570,12 @@ function buildRoom(course) {
   P.push(part(new THREE.CylinderGeometry(0.18, 0.28, 0.32, 18, 1, true), '#fff1a8', V(L * 0.55 - 1, 1.6, BACK + 0.4)));
   addBaked(course, P, { rough: 0.7, rim: 0.2 });
   // 窗玻璃：淡蓝的天，玻璃上有雨滴
-  const rainTex = canvasTex(course, 256, 256, (g, w, h) => {
-    const gr = g.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, '#b9d7ef'); gr.addColorStop(1, '#e3f0f8');
-    g.fillStyle = gr; g.fillRect(0, 0, w, h);
-    for (let i = 0; i < 60; i++) { const x = Math.random() * w, y = Math.random() * h, r = 2 + Math.random() * 5; g.fillStyle = 'rgba(255,255,255,0.55)'; g.beginPath(); g.ellipse(x, y, r * 0.7, r, 0, 0, TAU); g.fill(); g.strokeStyle = 'rgba(255,255,255,0.35)'; g.lineWidth = 1.5; g.beginPath(); g.moveTo(x, y + r); g.lineTo(x + Math.random() * 2, y + r + 8 + Math.random() * 20); g.stroke(); }
-  });
-  const glass = new THREE.Mesh(course.G.track(new THREE.PlaneGeometry(1.85, 1.6)), course.M.soft('#ffffff', { rough: 0.1, rim: 0.2, map: rainTex, emissive: '#e6f3ff', ei: 0.45 }));
-  glass.position.set(wx, 1.75, BACK + 0.01);
-  course.group.add(glass);
+  // 窗外：刚下过小雨、云缝里透出太阳（玻璃上还挂着雨滴），一束束柔光照进房间
+  windowGlass(course, paintedSky(course, 1.85, 1.6, { top: '#a9d4f2', mid: '#dcefff', bot: '#fff6e6', rain: true }), 1.85, 1.6, V(wx, 1.75, BACK + 0.01));
+  sunbeams(course, V(wx, 1.75, BACK + 0.05), 1.75, 1.4, V(-0.18, -0.52, 1), { count: 4, opacity: 0.12, len: 1.25 });
+  // 墙根的接触阴影（墙上 + 地板上）
+  contactShade(course, W, 0.6, V(cx, 0.3, BACK + 0.062), 0, { strength: 0.38 });
+  contactShade(course, W, 0.8, V(cx, 0.004, BACK + 0.45), -Math.PI / 2, { strength: 0.32, flip: true });
   // 圆形小地毯 + 散落的装饰
   const list = [];
   for (let x = x0 + 1.5; x < x1 - 1; x += rng.range(1.8, 3.0)) {

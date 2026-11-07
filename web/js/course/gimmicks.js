@@ -375,7 +375,7 @@ export class SlideGimmick extends Gimmick {
     this.entryX = -0.3; // 在果冻垫前面停下（圆肚子不会顶到垫子边）
     this.padX = 0.62; this.padR = 0.42; this.padH = 0.15;
     this.platX0 = 1.25;
-    this.topEnd = this.platX0 + 0.9;
+    this.topEnd = this.platX0 + 1.1; // 平台够长：站在上面挥手时，身体和滑道口之间还留着空隙
     this.landX = this.platX0 + 0.48;
     const R = this.chuteR = 0.72;
     this.chuteDrop = 0.7 * R; // 槽底比中心线低多少
@@ -449,7 +449,7 @@ export class SlideGimmick extends Gimmick {
     }
     // 落地堆
     this.pileX = this.topEnd + 3.3;
-    this.length = this.pileX + 0.85;
+    this.length = this.pileX + 1.2; // 出口离落地堆的边留出糯糯一个身位（跳出来不会坐在盆沿上）
     this._pile(d.pile || 'balls', this.pileX);
     return this;
   }
@@ -506,7 +506,15 @@ export class SlideGimmick extends Gimmick {
     const dp = Math.hypot(x - this.padX, z);
     if (dp < this.padR) { const k = dp / this.padR; return this.padH * this.padSy * Math.sqrt(Math.max(0, 1 - k * k)); }
     if (x >= this.platX0 && x < this.topEnd && Math.abs(z) < 0.6) return this.H;
+    if (Math.hypot(x - this.pileX, z) < 0.6) return this.pileTop();
     return 0;
+  }
+  // 坐在落地堆里时脚底的高度：球池 / 枕头 / 落叶是一圈"坑"，雪堆 / 面粉堆被压扁后坐在上面，水池坐在池底
+  pileTop() {
+    const k = this.pileKind;
+    if (k === 'snow' || k === 'flour') return 0.08 + 0.31 * (this.mound ? this.mound.scale.y : 1) - 0.04;
+    if (k === 'pool') return 0;
+    return 0.1;
   }
   // 果冻垫被压一下 / 弹一下
   _boing(G, power, sound = true) {
@@ -529,15 +537,15 @@ export class SlideGimmick extends Gimmick {
         it.rot += dt * 3;
         if (it.y < it.y0 && it.vy < 0) {
           it.vy *= -0.3; it.vx *= 0.5; it.vz *= 0.5; it.y = it.y0;
-          // 慢慢回到堆里
-          it.x = lerp(it.x, it.x0, 0.35); it.z = lerp(it.z, it.z0, 0.35);
-          if (Math.abs(it.vy) < 0.3) it.live = false;
+          // 落到堆上它该在的位置（被挤开的落在坑的四周）
+          it.x = lerp(it.x, it.x0, 0.45); it.z = lerp(it.z, it.z0, 0.45);
+          if (Math.abs(it.vy) < 0.3) { it.live = false; it.x = it.x0; it.z = it.z0; }
         }
       }
       this._writePile();
       if (!any) this.pileLive = false;
     }
-    if (this.mound && this.moundSq) { const s = this.moundSq.update(dt); this.mound.scale.set(1 + (1 - s) * 0.3, s, 1 + (1 - s) * 0.3); }
+    if (this.mound && this.moundSq) { const s = this.moundSq.update(dt); this.mound.scale.set(1 + (1 - s) * 0.45, s, 1 + (1 - s) * 0.45); }
     if (this.padObj) {
       const s = clamp(this.padSq.update(dt), 0.6, 1.3);
       this.padSy = s;
@@ -549,14 +557,31 @@ export class SlideGimmick extends Gimmick {
     const d = this.def;
     const k = this.pileKind;
     if (this.pileIM) {
+      // 砸出一个坑：身体占住的那一圈里的球 / 枕头 / 叶子被挤开，飞起来落到四周堆成一圈（不会落回糯糯身体里）
       const r = this.ctx.rng;
+      const cx = p.x - this.x0, cz = p.z;
       for (const it of this.pileItems) {
-        const dx = it.x - (p.x - this.x0), dz = it.z - p.z, dist = Math.hypot(dx, dz);
-        if (dist < 0.55) { it.live = true; const a = Math.atan2(dz, dx); const sp = (0.55 - dist) * r.range(2, 4); it.vx = Math.cos(a) * sp; it.vz = Math.sin(a) * sp; it.vy = r.range(1.5, 3.2); }
+        const dx = it.x - cx, dz = it.z - cz, dist = Math.hypot(dx, dz);
+        if (dist < 0.6) {
+          const a = dist > 0.01 ? Math.atan2(dz, dx) : r.range(0, TAU);
+          const rr = r.range(0.58, 0.68);
+          it.x0 = cx + Math.cos(a) * rr; it.z0 = cz + Math.sin(a) * rr; it.y0 = 0.07 + r.range(0, 0.16);
+          it.live = true;
+          if (dist < 0.48) {
+            // 正好在肚子底下的：直接挤到坑边上（被身体挡着看不见），再轻轻弹一下
+            it.x = it.x0; it.z = it.z0; it.y = it.y0;
+            it.vx = Math.cos(a) * 0.3; it.vz = Math.sin(a) * 0.3; it.vy = r.range(0.6, 1.1);
+          } else {
+            // 坑边上的：贴着地面往外飞（不会往上穿过身体）
+            const sp = r.range(0.5, 0.8);
+            it.vx = Math.cos(a) * sp; it.vz = Math.sin(a) * sp; it.vy = r.range(0.6, 1.0);
+          }
+        }
       }
       this.pileLive = true;
     }
-    if (this.mound) { this.moundSq = this.moundSq || new Spring(120, 6, 1); this.moundSq.x = 0.7; }
+    // 雪堆 / 面粉堆被砸扁（一直扁着，糯糯坐在上面）
+    if (this.mound) { this.moundSq = this.moundSq || new Spring(120, 7, 1); this.moundSq.x = 0.45; this.moundSq.target = 0.58; }
     if (k === 'snow' || k === 'flour') G.burst('poof', V(p.x, p.y + 0.1, p.z), { colors: k === 'snow' ? ['#ffffff', '#eef6ff'] : ['#ffffff', '#fff6e8'], count: 18, scale: 1.0 });
     if (k === 'snow') G.burst('snow', V(p.x, p.y + 0.1, p.z), { colors: ['#ffffff'], count: 12 });
     if (k === 'leaves') G.burst('leaves', V(p.x, p.y + 0.1, p.z), { colors: d.pileColors || ['#f29b4b', '#e9603b', '#f7c548'], count: 18 });
@@ -628,22 +653,23 @@ export class SlideGimmick extends Gimmick {
       p.addScaledVector(nrm, -drop);
       ridePts.push(this.W(p.x, p.y, p.z));
     }
-    ridePts.push(this.W(this.pileX - 0.15, 0.2, 0));
+    ridePts.push(this.W(this.pileX - 0.08, this.pileTop() + 0.12, 0));
     const curveW = new THREE.CatmullRomCurve3(ridePts, false, 'centripetal');
     G.sfx('whoosh', this.W(this.topEnd, H, 0), { gain: -2, main: false });
     G.sfx('slide_roll', this.W(this.topEnd, H, 0), { gain: -3, maxDur: 1.7 });
     G.say(d.wee || '呜呼～～');
     await pet.ride(curveW, d.slideDur || 2.0, { faceTo: () => G.camPos(), faceK: 0.35, align: true, bank: 0 });
     G.unsay();
-    // 扑进软软的落地堆
-    const land = this.W(this.pileX, 0.22, 0);
+    // 扑进软软的落地堆（先砸出坑 / 把雪堆压扁，再坐进去：身体不会和球、雪穿插）
+    const land = this.W(this.pileX, this.pileTop(), 0);
+    this._splash(G, land);
+    if (this.mound) { this.mound.scale.y = 0.58; land.y = this.W(0, this.pileTop(), 0).y; }
     pet.root.position.copy(land);
-    pet.setGround(land.y - 0.12);
-    pet.sinkTarget = 0.22;
+    pet.setGround(land.y);
+    pet.sinkTarget = this.pileKind === 'pool' ? 0.05 : 0.03;
     pet.sq.x = 0.7;
     G.sfx(d.land || 'land_soft', land, { gain: 1 });
     if (d.land2) G.sfx(d.land2, land, { gain: -2, main: false, delay: 0.06 });
-    this._splash(G, land);
     G.camBump(0.05);
     G.countStep();
     pet.expr('closed', 'open', 1.0);
@@ -654,7 +680,8 @@ export class SlideGimmick extends Gimmick {
     const out = this.W(this.length + 0.12, 0, 0);
     out.y = G.yAt(out.x, out.z);
     G.cam('front', {});
-    await pet.hop(out, { height: 0.4, dur: 0.55 });
+    pet.sinkTarget = 0;
+    await pet.hop(out, { height: 0.45, dur: 0.6 });
     pet.setGround(out.y);
     G.sfx(G.pathSound, out, { gain: -1 });
     this.done = true;

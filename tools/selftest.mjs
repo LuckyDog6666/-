@@ -164,6 +164,17 @@ section('闯关世界、闯关元素与 AI 导演');
     walk(path.join(ROOT, 'web/js'));
     ok(shadow.length === 0, '没有属性覆盖同名方法（如 this.run = … 会让整段玩法失效）', shadow.slice(0, 4).join('; '));
   }
+  // 穿模保护（静态检查）：这些都是在浏览器里逐帧审计出来的穿模问题，改代码时别退回去
+  {
+    const src = (f) => fs.readFileSync(path.join(ROOT, f), 'utf8');
+    const gim = src('web/js/course/gimmicks.js'), hf = src('web/js/course/heightfield.js'), game = src('web/js/game/game.js'), tasks = src('web/js/course/tasks.js');
+    const slide = gim.slice(gim.indexOf('class SlideGimmick'), gim.indexOf('class FloatGimmick'));
+    ok(!/this\.stairs\b/.test(slide) && /padX/.test(slide) && /align:\s*true/.test(slide), '滑滑梯：果冻弹弹垫弹上平台（圆肚子不会吃进台阶），滑行时身体顺着槽底坐正（不穿槽壁）');
+    ok(/conform\(/.test(hf) && /_conformBelly\(\)/.test(game), '软材料（沙、雪、史莱姆、奶油）顺着圆肚子凹下去，不会长进身体');
+    // 拿起道具（pickTool）到放下（putTool）之间，走路必须用 walkCarry（道具跟着身体走）
+    const held = [...tasks.matchAll(/await this\.pickTool\([\s\S]*?await this\.putTool\(/g)].map((m) => m[0]);
+    ok(/walkCarry\(/.test(tasks) && held.length > 0 && held.every((seg) => !/G\.walkTo\(/.test(seg)), '拿着扫帚 / 拖把走路时，道具跟着身体一起走');
+  }
   // 导演：每个解压站的玩法计划——一条迎着镜头前进的 S 形路线
   const d = new Director(new Rng(7), { stageSeconds: 210 });
   let planBad = 0, specials = 0, total = 0;

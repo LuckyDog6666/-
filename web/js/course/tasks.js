@@ -618,8 +618,10 @@ export class PanStation extends TaskStation {
     this.bmesh(G.track(new THREE.CylinderGeometry(0.175, 0.155, 0.035, 40).translate(0, 0.0175, 0)), M.soft(pc, { rough: 0.35, rim: 0.4 }), 0, 0, 0, pan);
     this.bmesh(G.track(new THREE.CylinderGeometry(0.158, 0.158, 0.004, 40)), M.soft('#3d4a5c', { rough: 0.3 }), 0, 0.036, 0, pan);
     this.bmesh(G.track(new THREE.TorusGeometry(0.172, 0.011, 8, 48).rotateX(Math.PI / 2)), M.soft(pc, { rough: 0.35 }), 0, 0.035, 0, pan);
-    const handle = this.bmesh(G.track(new THREE.CapsuleGeometry(0.022, 0.2, 4, 10).rotateZ(Math.PI / 2)), M.soft('#ffb3d1', { rough: 0.5, rim: 0.3 }), 0.27, 0.03, 0.04, pan);
-    handle.rotation.y = 0.35;
+    // 长长的锅柄朝着糯糯的左手（左手握着锅柄、右手倒面糊 / 翻松饼，像真的在煎）
+    const handle = this.bmesh(G.track(new THREE.CapsuleGeometry(0.022, 0.33, 4, 10).rotateZ(Math.PI / 2)), M.soft('#ffb3d1', { rough: 0.5, rim: 0.3 }), -0.3175, 0.03, -0.1455, pan);
+    handle.rotation.y = -0.43;
+    this.panGrip = V(-0.454, 0.052, -0.208); // 锅柄靠末端的握手处（锅的局部坐标）
     this.pan = pan;
     this.panTop = 0.038;
     // 量杯（装着面糊）：在锅右边
@@ -675,9 +677,15 @@ export class PanStation extends TaskStation {
     const r = G.rng;
     // 量杯姿态：杯嘴在 (锅中心附近 + lift)，tilt = 向前倾倒的角度（0 = 立着）
     const panUp = (lift, tilt = 0) => ({ tip: this._panW(0.07, this.panTop + lift, -0.05), dir: this.BD(0, -Math.cos(tilt), -Math.sin(tilt)).normalize(), side: this.BD(1, 0, 0) });
+    // 左手握住 / 松开锅柄
+    const grip = () => this._panW(this.panGrip.x, this.panGrip.y, this.panGrip.z);
+    const holdPan = async () => { await this.moveL(grip(), 0.3, ease.inOutQuad); pet.reachTo('L', () => ({ pos: grip() })); };
+    const letGo = async () => { this.lp.copy(grip()); pet.reachTo('L', () => ({ pos: this.lp })); await this.moveL(this.PR(G, -0.36, H + 0.03, EDGE + 0.05), 0.2, ease.inOutQuad); };
+    const panX0 = this.pan.position.x, panY0 = this.pan.position.y;
     for (let k = 0; k < this.cakes.length; k++) {
       const cake = this.cakes[k];
       pet.gazeAt(() => this._panW(0, this.panTop, 0));
+      await holdPan();
       // 1) 拿起量杯，杯嘴对准锅中间，慢慢倾斜：一道细细的面糊流进锅里，摊成圆圆的一张
       await this.pickTool(G, this.jug);
       await this.toolTo(panUp(0.15, 0), 0.4, ease.inOutQuad);
@@ -706,6 +714,9 @@ export class PanStation extends TaskStation {
       // 2) 滋滋煎着，表面冒小泡泡
       const sizzle = G.sfx('sizzle', this._panW(0, 0.05, 0), { gain: -9, main: false });
       this.bubbles = Array.from({ length: 14 }, () => ({ x: 0.03 + r() * 0.16 - 0.08, z: -0.02 + r() * 0.16 - 0.08, t: -r() * 1.0, life: 0.5 + r() * 0.6 }));
+      // 左手握着锅柄轻轻晃一晃锅（松饼在锅里跟着滑一滑）
+      await this.tween(0.75, (u) => { this.pan.position.x = panX0 + Math.sin(u * TAU * 3) * 0.011 * (1 - u); });
+      this.pan.position.x = panX0;
       // 3) 拿起锅铲，从松饼边上铲进去，往上一挑：松饼在空中翻个面落回锅里
       await this.pickTool(G, this.spatula);
       const near = this._panW(0, this.panTop + 0.006, -0.17), under = this._panW(0, this.panTop + 0.004, 0.03);
@@ -719,6 +730,8 @@ export class PanStation extends TaskStation {
       G.sfx('whoosh', under, { gain: -9, main: false });
       const lift = this.toolTo({ tip: under.clone().add(V(0, 0.08, -0.02)), dir: this.BD(0, -0.35, 0.94).normalize(), side: sideX }, 0.14, ease.outQuad);
       const c0 = cake.position.clone();
+      // 翻的同时左手把锅往上轻轻一颠
+      this.tween(0.22, (u) => { this.pan.position.y = panY0 + Math.sin(u * Math.PI) * 0.014; }).then(() => { this.pan.position.y = panY0; });
       await this.tween(0.6, (u) => {
         cake.position.set(lerp(c0.x, 0, u), c0.y + 4 * 0.2 * u * (1 - u), lerp(c0.z, 0, u));
         cake.rotation.x = Math.PI * ease.inOutQuad(u);
@@ -742,7 +755,7 @@ export class PanStation extends TaskStation {
       this.bench.attach(cake);
       const follow = () => { const w = carry.clone().add(off); w.y = Math.max(w.y, carry.y + 0.012); this.bench.worldToLocal(w); cake.position.copy(w); };
       this.tweens.push({ t: 0, dur: 99, fn: follow, res: () => {}, tag: 'follow' });
-      await this.toolTo({ tip: under.clone().add(V(0, 0.09, 0)), dir: flat, side: sideX }, 0.25, ease.outQuad);
+      await Promise.all([this.toolTo({ tip: under.clone().add(V(0, 0.09, 0)), dir: flat, side: sideX }, 0.25, ease.outQuad), letGo()]);
       await this.shuffle(G, 0.42, 0.42);
       const plateTop = this.B(this.plateC.x, H + 0.02 + this.stack * 0.024 + 0.012, this.plateC.z);
       await this.toolTo({ tip: plateTop.clone().add(V(0, 0.04, 0.06)), dir: flat, side: sideX }, 0.3, ease.inOutQuad);
@@ -1047,7 +1060,7 @@ export class SweepStation extends FloorTask {
     G.burst('sparkles', this.W(L - 0.6, 0.15, 0.45), { colors: ['#ffffff', '#fff2a8'], count: 16 });
     // 扫帚立在簸箕旁边
     this.group.updateMatrixWorld(true);
-    this.broom.pose = { tip: this.bench.worldToLocal(head(0.5, 0.35)), dir: V(0.05, -0.99, 0.12), side: V(1, 0, 0) };
+    this.broom.pose = { tip: this.bench.worldToLocal(head(0.46, 0.4)), dir: V(0.05, -0.99, 0.12), side: V(1, 0, 0) };
     this._placeRest(this.broom);
     await this.putTool(G, this.broom, 0.3);
     await G.walkTo(this.W(L - 1.1, 0, 0), { stepDur: 0.36, stride: 0.2 });
@@ -1190,10 +1203,15 @@ export class MopStation extends FloorTask {
       await this.walkCarry(G, this.W(nx, 0, 0), { stepDur: 0.36, stride: 0.18, keepFace: true });
       x = nx;
     }
+    // 往路边挪一小步，把拖把靠在小路外侧（下一段走过去时不会蹭到）
+    await this.toolTo(this.floorPose(G, head(0.55, 0.3), 0.05), 0.15);
+    await this.walkCarry(G, this.W(x + 0.1, 0, 0.22), { stepDur: 0.36, stride: 0.18, keepFace: true });
     this.group.updateMatrixWorld(true);
-    this.mop.pose = { tip: this.bench.worldToLocal(head(0.5, 0.35)), dir: V(0.05, -0.99, 0.12), side: V(1, 0, 0) };
+    this.mop.pose = { tip: this.bench.worldToLocal(head(0.46, 0.46)), dir: V(0.05, -0.99, 0.12), side: V(1, 0, 0) };
     this._placeRest(this.mop);
     await this.putTool(G, this.mop, 0.3);
+    // 退回小路中间再往前走（离靠在路边的拖把远远的）
+    await G.walkTo(this.W(x, 0, 0), { stepDur: 0.36, stride: 0.2, keepFace: true });
     G.burst('sparkles', this.W(L / 2, 0.1, 0.45), { colors: ['#ffffff', '#e9f6ff', '#fff2a8'], count: 22 });
     pet.expr('happy', 'open', 1.2);
     await this.endWork(G);

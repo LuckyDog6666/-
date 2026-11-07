@@ -21,6 +21,10 @@ export class Heightfield {
     this.rest = new Float32Array(this.count);
     this.h = new Float32Array(this.count);
     this.press = new Float32Array(this.count); // 0..1 被压过的程度（决定颜色）
+    // 肚子压出来的凹陷：只影响画面（渲染高度 = min(h, cap)），不影响"脚下有多高"的物理高度，
+    // 否则糯糯会被自己压出来的坑越拉越低
+    this.cap = new Float32Array(this.count).fill(Infinity);
+    this.capIdx = [];
     const col = new Float32Array(this.count * 3);
     g.setAttribute('color', new THREE.BufferAttribute(col, 3));
     this.c0 = new THREE.Color(this.o.color || '#ffd0e6');
@@ -137,6 +141,53 @@ export class Heightfield {
     return a * (1 - tx) * (1 - tz) + b * tx * (1 - tz) + c * (1 - tx) * tz + d * tx * tz;
   }
 
+  // 画面上的高度（含肚子压出来的凹陷）：用来摆放亮片、拉丝等贴在表面上的小东西
+  visualHeightAt(x, z) {
+    const { length: L, width: W } = this.o;
+    const fx = Math.min(this.nx - 1e-4, Math.max(0, (x / L) * this.nx));
+    const fz = Math.min(this.nz - 1e-4, Math.max(0, ((z + W / 2) / W) * this.nz));
+    const ix = Math.floor(fx), iz = Math.floor(fz);
+    const tx = fx - ix, tz = fz - iz;
+    const row = this.nx + 1;
+    const v = (i) => Math.min(this.h[i], this.cap[i]);
+    const a = v(iz * row + ix), b = v(iz * row + ix + 1), c = v((iz + 1) * row + ix), d = v((iz + 1) * row + ix + 1);
+    return a * (1 - tx) * (1 - tz) + b * tx * (1 - tz) + c * (1 - tx) * tz + d * tx * tz;
+  }
+
+  /**
+   * 圆肚子压在材料上：被身体"吃进去"的表面顶点往下压到身体底面（材料顺着肚子凹下去，不会长进身体里）。
+   * inside(x, y, z)：站点坐标里的点是否在身体里（返回值 < 1 表示在里面）；传 null 清除凹陷。
+   * cx, cz：身体中心（站点坐标），r：搜索半径
+   */
+  conform(inside, cx = 0, cz = 0, r = 0.6) {
+    const pos = this.geo.attributes.position;
+    const prev = this.capIdx;
+    const next = [];
+    let changed = false;
+    if (inside) {
+      for (let i = 0; i < this.count; i++) {
+        const vx = pos.getX(i), vz = pos.getZ(i);
+        if (Math.abs(vx - cx) > r || Math.abs(vz - cz) > r) continue;
+        const h = this.h[i];
+        if (inside(vx, h, vz) >= 1) continue;
+        // 二分找身体底面（身体是凸的：竖直方向上在身体里的是一段区间）
+        let lo = h - Math.max(0.6, r * 1.2), hi = h; // 巨人模式身体更大，往下找得更深
+        if (inside(vx, lo, vz) < 1) continue;
+        for (let k = 0; k < 14; k++) { const m = (lo + hi) / 2; if (inside(vx, m, vz) < 1) hi = m; else lo = m; }
+        const c = lo - 0.006;
+        if (Math.abs(this.cap[i] - c) > 2e-4) changed = true;
+        this.cap[i] = c;
+        next.push(i);
+      }
+    }
+    // 上一帧被压、这一帧不压了的顶点：放开
+    const keep = new Set(next);
+    for (const i of prev) if (!keep.has(i)) { this.cap[i] = Infinity; changed = true; }
+    this.capIdx = next;
+    if (changed) this._write();
+    return changed;
+  }
+
   /**
    * 压出脚印：椭圆形（脚掌），depth 下陷深度，rim 边缘隆起
    * shape: 'paw' 带三个小脚趾印 | 'round'
@@ -231,6 +282,7 @@ export class Heightfield {
   reset() {
     this.h.set(this.rest);
     this.press.fill(0);
+    this.cap.fill(Infinity); this.capIdx = [];
     this._write();
   }
 
@@ -240,9 +292,10 @@ export class Heightfield {
     const c = new THREE.Color();
     const deep = this.o.depthShade || 0.05;
     for (let i = 0; i < this.count; i++) {
-      pos.setY(i, this.h[i]);
+      const y = Math.min(this.h[i], this.cap[i]);
+      pos.setY(i, y);
       // 颜色：被压过的地方变成"压实色"，越深越暗（像真的坑底），被挤起来的边缘略微提亮
-      const dd = this.rest[i] - this.h[i];
+      const dd = this.rest[i] - y;
       const k = Math.min(1, Math.max(this.press[i] * 0.8, dd / deep));
       c.copy(this.c0).lerp(this.c1, k);
       if (dd < -0.004) c.offsetHSL(0, 0, Math.min(0.06, -dd * 3));

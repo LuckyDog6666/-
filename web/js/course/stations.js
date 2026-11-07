@@ -89,7 +89,7 @@ export class SoftSlab extends Station {
   _refreshGlitter() {
     if (!this.glitter) return;
     const m4 = new THREE.Matrix4();
-    this.glitterPos.forEach(([x, z], i) => { m4.makeTranslation(x, this.hf.heightAt(x, z) + 0.004, z); this.glitter.setMatrixAt(i, m4); });
+    this.glitterPos.forEach(([x, z], i) => { m4.makeTranslation(x, this.hf.visualHeightAt(x, z) + 0.004, z); this.glitter.setMatrixAt(i, m4); });
     this.glitter.instanceMatrix.needsUpdate = true;
   }
   footstep(x, z, side, power = 0.5, heading) {
@@ -241,7 +241,7 @@ export class SlimeStation extends Station {
   }
   _glit() {
     const m4 = new THREE.Matrix4(), q = new THREE.Quaternion();
-    this.glitterPos.forEach(([x, z, r], i) => { q.setFromEuler(new THREE.Euler(-Math.PI / 2, 0, r)); m4.compose(V(x, this.hf.heightAt(x, z) + 0.003, z), q, V(1, 1, 1)); this.glitter.setMatrixAt(i, m4); });
+    this.glitterPos.forEach(([x, z, r], i) => { q.setFromEuler(new THREE.Euler(-Math.PI / 2, 0, r)); m4.compose(V(x, this.hf.visualHeightAt(x, z) + 0.003, z), q, V(1, 1, 1)); this.glitter.setMatrixAt(i, m4); });
     this.glitter.instanceMatrix.needsUpdate = true;
   }
   topY(x, z) { return this.hf.heightAt(x, z) - 0.02; }
@@ -276,8 +276,14 @@ export class SlimeStation extends Station {
       api.sink(0.07);
       await api.wait(1.6);
       api.sfx(this.sound.pull || this.sound.special || this.sound.step, { gain: 0, maxDur: 3.4 });
+      // 起身：肚子边上一圈细丝连着史莱姆，越拉越长、越来越细，然后"啪"地断开
+      this.strands.forEach((st, i) => {
+        const a = -1.35 + (i / Math.max(1, this.strands.length - 1)) * 2.7 + (Math.random() - 0.5) * 0.2;
+        const out = api.bodyPoint ? api.bodyPoint(Math.sin(a) * 0.53, 0.17, Math.cos(a) * 0.53) : { x: x + Math.sin(a) * 0.5, z: z0 + Math.cos(a) * 0.5 };
+        st.life = 1.1; st.x = out.x; st.z = out.z; st.side = 0;
+        st.to = api.bodyPoint ? () => api.bodyPoint(Math.sin(a) * 0.4, 0.17, Math.cos(a) * 0.4) : null;
+      });
       api.sink(0);
-      for (const s of this.strands) { s.life = 1.2; s.x = x + (Math.random() - 0.5) * 0.3; s.z = z0 + (Math.random() - 0.5) * 0.3; s.side = 0; }
       await pose;
       await api.pose('stretch', 1.0);
     } else if (api.reach) {
@@ -328,22 +334,30 @@ export class SlimeStation extends Station {
       const u = clamp(1 - s.life / 0.9, 0, 1); // 0→1 越拉越长越细
       const r = 0.03 * (1 - u) + 0.003;
       s.m.visible = true;
-      const base = V(s.x, this.hf.heightAt(s.x, s.z) - 0.01, s.z);
+      const base = V(s.x, this.hf.visualHeightAt(s.x, s.z) - 0.01, s.z);
       s.m.position.copy(base);
       let to = null;
       if (s.to) { try { to = s.to(); } catch { to = null; } }
+      let d, len;
       if (to) {
-        // 小手拉出来的丝：从小坑一直连到小手；手挪开太远就断
-        const d = V(to.x - base.x, to.y - 0.02 - base.y, to.z - base.z);
-        const len = d.length();
-        if (len < 0.01 || Math.hypot(d.x, d.z) > 0.16) { s.life = 0; s.m.visible = false; continue; }
-        s.m.quaternion.setFromUnitVectors(V(0, 1, 0), d.multiplyScalar(1 / len));
-        s.m.scale.set(r, len, r);
+        // 小手 / 肚子边拉出来的丝：从史莱姆表面一直连到小手（或肚子边）；挪开太远就断
+        d = V(to.x - base.x, to.y - 0.02 - base.y, to.z - base.z);
+        len = d.length();
+        if (len < 0.01 || len > 0.42 || Math.hypot(d.x, d.z) > 0.2) { s.life = 0; s.m.visible = false; continue; }
+        d.multiplyScalar(1 / len);
       } else {
-        // 脚底拉出来的丝：很短（脚只抬起一点点），不会戳进圆肚子
-        s.m.quaternion.identity();
-        s.m.scale.set(r, 0.03 + u * 0.06, r);
+        // 脚底拉出来的丝：很短（脚只抬起一点点）
+        d = V(0, 1, 0); len = 0.03 + u * 0.06;
       }
+      // 丝的另一头碰到身体就停在身体表面（不会戳进糯糯身体里）
+      if (this.insideBody) {
+        const at = (k) => this.insideBody(base.x + d.x * len * k, base.y + d.y * len * k, base.z + d.z * len * k) < 1;
+        if (at(0)) { s.m.visible = false; continue; }
+        if (at(1)) { let lo = 0, hi = 1; for (let k = 0; k < 10; k++) { const m = (lo + hi) / 2; if (at(m)) hi = m; else lo = m; } len *= lo; }
+        if (len < 0.012) { s.m.visible = false; continue; }
+      }
+      s.m.quaternion.setFromUnitVectors(V(0, 1, 0), d);
+      s.m.scale.set(r, len, r);
       s.m.material.opacity = 0.85 * (1 - u * 0.6);
     }
   }
@@ -907,11 +921,10 @@ export class SquishyStation extends Station {
     const it = this._item(api.localPos().x);
     const pose = api.pose('sit', 2.4);
     await api.wait(0.3);
-    it.s = 0.42;
+    // 一屁股坐下去：捏捏整个被压扁（糯糯跟着表面一起往下沉，身体不会陷进捏捏里面）
+    it.s = 0.38;
     api.sfx(this.sound.special || this.sound.step, { gain: 1, maxDur: 3.2 });
-    api.sink(0.05);
     await pose;
-    api.sink(0);
   }
   update(dt) {
     super.update(dt);

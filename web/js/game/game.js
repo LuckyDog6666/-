@@ -556,6 +556,8 @@ export class Game {
       reach: (side, x, y, z, o = {}) => { const w = self.course.world(s, x, z, y); pet.reachTo(side, w, o); return w; },
       // 小手现在在哪（站点坐标）
       hand: (side) => { const h = pet.handWorld(side); return { x: h.x - s.x0, y: h.y - s.group.position.y, z: h.z }; },
+      // 身体上的一个点（身体几何坐标 → 站点坐标），比如肚子边缘：用来连史莱姆的拉丝
+      bodyPoint: (lx, ly, lz) => { pet.root.updateMatrixWorld(true); const w = pet.body.localToWorld(new THREE.Vector3(lx, ly, lz)); return { x: w.x - s.x0, y: w.y - s.group.position.y, z: w.z }; },
       release: (side) => pet.release(side),
       lean: (v) => pet.setLean(v),
       crouch: (v) => pet.setCrouch(v),
@@ -582,6 +584,13 @@ export class Game {
   async doSpecial(s, name, plan = {}) {
     const pet = this.pet;
     if (name === 'knead') return this.doKnead(s, plan);
+    // 坐下（身体会陷下去、变宽）之前，先挪到离托盘边够远的地方：圆肚子不会压到托盘的边框
+    if (name === 'sit' && s.hf && !s.blocks && !s.items) {
+      const lp = this.stationApi(s).localPos();
+      const mx = Math.min(0.62, s.length / 2), mz = Math.max(0, s.width / 2 - 0.6);
+      const tx = clamp(lp.x, mx, s.length - mx), tz = clamp(lp.z, -mz, mz);
+      if (Math.hypot(tx - lp.x, tz - lp.z) > 0.03) await this.walkTo(this.course.world(s, tx, tz), { stepDur: 0.5, stride: 0.2 });
+    }
     // 坐下 / 俯身按：转向镜头，正脸特写；跳起来踩：正前方低机位
     if (name === 'sit' || name === 'press' || name === 'cut') { this.faceCamera(); this.cam.set('face'); } else this.cam.set('macro');
     try { await s.perform(name, this.stationApi(s)); } catch (e) { console.error('[special]', e); }
@@ -938,6 +947,7 @@ export class Game {
         p.y = damp(p.y, gy, 8, dt);
         this.pet.setGround(gy);
       }
+      this._conformBelly();
     }
     if (this.crownUntil && this.time > this.crownUntil && !this.dancing) { this.pet.setCrown(false); this.crownUntil = 0; }
     if (this.giantUntil && this.time > this.giantUntil && !this.dancing && !this._shrinking) { this._shrinking = true; this.endGiant().finally(() => { this._shrinking = false; }); }
@@ -954,6 +964,25 @@ export class Game {
       const s = this.toScreen(head);
       this.hud.placeBubble(s.x, s.y);
     }
+  }
+
+  // 软材料（沙子、雪、史莱姆、奶油……）顺着圆肚子凹下去：画面上材料不会"长进"糯糯的身体里
+  _conformBelly() {
+    const pet = this.pet, course = this.course;
+    if (!course) return;
+    const p = pet.root.position;
+    const s = course.segmentAt(p.x, p.z);
+    const hf = s && s.hf && typeof s.hf.conform === 'function' ? s.hf : null;
+    if (this._bellyHF && this._bellyHF !== hf) { this._bellyHF.conform(null); this._bellyHF = null; }
+    if (this._bellySeg && this._bellySeg !== s) { this._bellySeg.insideBody = null; this._bellySeg = null; }
+    if (!hf) return;
+    pet.refreshBodyInverse();
+    const gx = s.x0, gy = s.group.position.y, w = this._bellyV || (this._bellyV = new THREE.Vector3());
+    // 0.515：身体半径再加上描边的厚度
+    const inside = (x, y, z) => pet.bodyInside(w.set(gx + x, gy + y, z), 0.515);
+    hf.conform(inside, p.x - gx, p.z, 0.62 * pet.root.scale.x);
+    s.insideBody = inside; // 站点自己的小东西（史莱姆拉丝等）也可以用它避开身体
+    this._bellyHF = hf; this._bellySeg = s;
   }
 
   status() {

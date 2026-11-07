@@ -70,7 +70,12 @@ export class Course {
       else s = createStation(ctx, d);
       s.index = this.segments.length;
       s.finale = !!d.finale;
-      if (this.segments.length) x += d.finale ? GAP + 0.4 : s.kind === 'gimmick' || this.segments[this.segments.length - 1].kind === 'gimmick' ? 0.55 : GAP;
+      if (this.segments.length) {
+        const prevG = this.segments[this.segments.length - 1].kind === 'gimmick';
+        // 闯关元素落地点在下一段起点前 0.43：下一段是要跳上去的一块块（果冻、面包）时多留一点，
+        // 落地时圆肚子不会顶到第一块
+        x += d.finale ? GAP + 0.4 : prevG && (s.blocks || s.items) ? 0.95 : s.kind === 'gimmick' || prevG ? 0.55 : GAP;
+      }
       s.x0 = x;
       s.x1 = x + s.length;
       // 走上去的解压站（沙子、雪、史莱姆、泥巴、冰面、泡泡……）表面和小路基本齐平（像嵌在地上的一池）：
