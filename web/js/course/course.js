@@ -86,7 +86,7 @@ export class Course {
       let y = s.kind === 'gimmick' ? PATH_Y : PATH_Y - 0.02;
       if (s.kind === 'station' && !s.blocks && !s.items && !d.finale) {
         const top = s.topY(s.length / 2, 0);
-        if (top > 0.03) y = PATH_Y + 0.02 - top;
+        if (top > 0.03) { y = PATH_Y + 0.02 - top; s.sunk = true; }
       }
       s.group.position.set(x, y, 0);
       this.group.add(s.group);
@@ -168,6 +168,18 @@ export class Course {
     let a = -1.2;
     for (const [g0, g1] of gaps) { pieces.push([a, g0]); a = g1; }
     pieces.push([a, this.length + 1.2]);
+    // 嵌在小路里的解压站（史莱姆、太空沙……）：站点托盘正下方不铺小路（材料被压出深坑时，坑底不会露出小路的顶面），
+    // 只在托盘两边留两条窄窄的路边，路边的缝线小圆点照样连着
+    const holes = this.stations.filter((s) => s.sunk && s.trayInset != null).map((s) => [s.x0 - s.trayInset, s.x1 + s.trayInset, s.width / 2 + s.trayInset]);
+    const strips = [];
+    for (const [h0, h1, hw] of holes) {
+      for (let i = pieces.length - 1; i >= 0; i--) {
+        const [p0, p1] = pieces[i];
+        if (h1 <= p0 || h0 >= p1) continue;
+        pieces.splice(i, 1, ...[[p0, Math.max(p0, h0)], [Math.min(p1, h1), p1]].filter(([u, v]) => v - u > 0.01));
+        strips.push([Math.max(p0, h0), Math.min(p1, h1), hw]);
+      }
+    }
     const tex = this.M.track(Tex.groundNoise().clone());
     tex.needsUpdate = true;
     tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
@@ -175,12 +187,24 @@ export class Course {
     const mat = this.M.soft(st.path, { rough: 0.98, rim: st.pathRug ? 0.35 : 0.15, map: tex });
     const dotGeo = this.G.track(new THREE.SphereGeometry(0.022, 6, 4));
     const dotMat = this.M.soft(st.pathSide, { rough: 0.8 });
-    for (const [x0, x1] of pieces) {
+    for (const [x0, x1, hw] of strips) {
+      const L = x1 - x0, w = PATH_W / 2 - hw;
+      if (L < 0.05 || w < 0.03) continue;
+      for (const side of [-1, 1]) {
+        const m = new THREE.Mesh(this.G.track(roundedBox(L, 0.05, w, Math.min(0.025, w * 0.4), 3).translate(x0 + L / 2, -0.01, side * (hw + w / 2))), mat);
+        m.receiveShadow = true;
+        this.group.add(m);
+      }
+      pieces.push([x0, x1, true]);
+    }
+    for (const [x0, x1, stripOnly] of pieces) {
       const L = x1 - x0;
       if (L < 0.05) continue;
-      const m = new THREE.Mesh(this.G.track(roundedBox(L, 0.05, PATH_W, 0.025, 3).translate(x0 + L / 2, -0.01, 0)), mat);
-      m.receiveShadow = true;
-      this.group.add(m);
+      if (!stripOnly) {
+        const m = new THREE.Mesh(this.G.track(roundedBox(L, 0.05, PATH_W, 0.025, 3).translate(x0 + L / 2, -0.01, 0)), mat);
+        m.receiveShadow = true;
+        this.group.add(m);
+      }
       // 两侧的缝线小圆点（让跑道更像精致的手工垫子）
       const n = Math.max(0, Math.floor(L / 0.32)) * 2;
       if (!n) continue;

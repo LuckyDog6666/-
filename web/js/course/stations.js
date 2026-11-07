@@ -16,6 +16,7 @@ function tray(st, color, h = 0.08, inset = 0.06) {
   const m = new THREE.Mesh(geo, M.soft(color, { rough: 0.55, rim: 0.25 }));
   m.receiveShadow = true; m.castShadow = true;
   st.group.add(m);
+  st.trayInset = inset; // 小路在托盘正下方开的口要和托盘一样大
   return m;
 }
 
