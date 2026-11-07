@@ -61,6 +61,7 @@ export function buildProp(type, rng) {
   const P = [];   // 普通顶点色零件
   const GL = [];  // 发光零件
   const GS = [];  // 半透明零件
+  const extra = []; // 单独动的零件
   let anim = null;
   const pick = (a) => rng.pick(a);
   switch (type) {
@@ -447,6 +448,103 @@ export function buildProp(type, rng) {
       for (let i = 0; i < 5; i++) GL.push({ geo: new THREE.OctahedronGeometry(0.1, 0).translate(Math.cos(i * 1.3) * 0.18, 0.1, Math.sin(i * 1.3) * 0.18), color: RAINBOW[(i * 3) % 7] });
       break;
     }
+    // ---------- 远景地标（每个世界一个"故事书里的房子"：暖暖发光的窗户是冷暖对比的焦点） ----------
+    case 'cottage': case 'cottage_snow': case 'cottage_forest': {
+      const snow = type === 'cottage_snow', forest = type === 'cottage_forest';
+      const wall = snow ? '#ffe9d6' : forest ? '#ffe3c2' : '#fff1dc';
+      const roofC = snow ? '#e8645a' : forest ? '#c96f4a' : '#ff8f8f';
+      P.push(part(roundedBox(2.0, 1.5, 1.6, 0.22, 3), wall, V(0, 0.75, 0)));
+      // 圆圆的拱形屋顶（像面包一样鼓鼓的）
+      const roof = new THREE.CylinderGeometry(1.18, 1.18, 2.35, 20, 1, false, 0, Math.PI); roof.rotateZ(Math.PI / 2); roof.rotateY(Math.PI / 2); roof.scale(1, 0.8, 1);
+      P.push(part(roof, roofC, V(0, 1.45, 0)));
+      if (snow) { const cap = new THREE.CylinderGeometry(1.2, 1.2, 2.2, 20, 1, false, Math.PI * 0.2, Math.PI * 0.6); cap.rotateZ(Math.PI / 2); cap.rotateY(Math.PI / 2); cap.scale(1, 0.84, 1.02); P.push(part(cap, '#ffffff', V(0, 1.47, 0))); }
+      P.push(part(roundedBox(0.32, 0.75, 0.32, 0.08, 2), '#c98b6a', V(0.62, 2.3, -0.2)));
+      for (let k = 0; k < 3; k++) P.push(part(blobGeometry(0.16 + k * 0.05, k + 2, 0.1, 2), '#ffffff', V(0.68 + k * 0.18, 2.85 + k * 0.32, -0.25)));
+      // 门 + 门把手 + 门前小台阶
+      P.push(part(roundedBox(0.5, 0.86, 0.1, 0.2, 3), '#b07a4f', V(-0.35, 0.47, 0.8)));
+      P.push(part(sph(0.04, 8, 6), '#ffd166', V(-0.2, 0.47, 0.86)));
+      P.push(part(roundedBox(0.7, 0.1, 0.32, 0.05, 2), '#d9c7b4', V(-0.35, 0.05, 0.96)));
+      // 窗户：白色窗框 + 暖黄的光
+      P.push(part(roundedBox(0.52, 0.52, 0.08, 0.12, 2), '#ffffff', V(0.45, 0.92, 0.79)));
+      GL.push({ geo: roundedBox(0.4, 0.4, 0.04, 0.1, 2).translate(0.45, 0.92, 0.83), color: '#ffd98a' });
+      P.push(part(roundedBox(0.04, 0.4, 0.03, 0.01, 1), '#ffffff', V(0.45, 0.92, 0.86)));
+      P.push(part(roundedBox(0.4, 0.04, 0.03, 0.01, 1), '#ffffff', V(0.45, 0.92, 0.86)));
+      // 窗台花箱
+      P.push(part(roundedBox(0.6, 0.12, 0.16, 0.04, 2), '#a8754a', V(0.45, 0.6, 0.86)));
+      for (let k = 0; k < 5; k++) P.push(part(sph(0.06, 8, 6), snow ? '#ff8fb3' : pick(['#ff8fb3', '#ffd166', '#ffffff']), V(0.25 + k * 0.1, 0.7, 0.88)));
+      if (snow) for (let k = 0; k < 4; k++) P.push(part(blobGeometry(0.3, k + 1, 0.15, 2), '#ffffff', V(-1 + k * 0.65, 0.05, 0.85 - (k % 2) * 0.2), [0, 0, 0], V(1.2, 0.35, 0.8)));
+      break;
+    }
+    case 'lighthouse': {
+      for (let k = 0; k < 5; k++) P.push(part(blobGeometry(0.5, k + 3, 0.2, 2), pick(['#d9c3a0', '#c9b391', '#e6d4b4']), V(Math.cos(k * 1.3) * 0.7, 0.12, Math.sin(k * 1.3) * 0.6), [0, 0, 0], V(1, 0.5, 1)));
+      P.push(part(cyl(0.5, 0.72, 3.0, 24), '#ffffff', V(0, 1.6, 0)));
+      // 红白条纹：比塔身略粗一点点（塔身半径从底部 0.72 收到顶部 0.5）
+      const R = (h) => 0.72 - (h - 0.1) / 3.0 * 0.22;
+      for (let k = 0; k < 3; k++) { const y = 0.55 + k * 0.95; P.push(part(cyl(R(y + 0.38) + 0.015, R(y) + 0.015, 0.38, 24), '#ff6b6b', V(0, y + 0.19, 0))); }
+      P.push(part(cyl(0.72, 0.72, 0.08, 24), '#5a8fa8', V(0, 3.12, 0)));
+      GL.push({ geo: new THREE.CylinderGeometry(0.4, 0.4, 0.5, 18).translate(0, 3.42, 0), color: '#fff1a8' });
+      for (let k = 0; k < 6; k++) { const a = (k / 6) * TAU; P.push(part(cyl(0.025, 0.025, 0.5, 6), '#5a8fa8', V(Math.cos(a) * 0.41, 3.42, Math.sin(a) * 0.41))); }
+      P.push(part(cone(0.58, 0.5, 20), '#ff6b6b', V(0, 3.92, 0)));
+      P.push(part(sph(0.08, 10, 8), '#ffd166', V(0, 4.22, 0)));
+      P.push(part(roundedBox(0.36, 0.6, 0.1, 0.15, 2), '#5a8fa8', V(0, 0.55, 0.7)));
+      GL.push({ geo: roundedBox(0.2, 0.26, 0.04, 0.08, 2).translate(0, 1.9, 0.62), color: '#ffe08a' });
+      break;
+    }
+    case 'candy_castle': {
+      P.push(part(roundedBox(1.8, 1.4, 1.2, 0.18, 3), '#ffc2d8', V(0, 0.7, 0)));
+      // 一圈白色"糖霜"
+      P.push(part(roundedBox(1.86, 0.12, 1.26, 0.06, 2), '#ffffff', V(0, 1.38, 0)));
+      for (let k = 0; k < 7; k++) P.push(part(new THREE.SphereGeometry(0.13, 12, 8, 0, TAU, 0, Math.PI / 2).scale(1, 1.2, 1), RAINBOW[k % RAINBOW.length], V(-0.78 + k * 0.26, 1.44, 0.5)));
+      const towers = [[-1.05, 0, 2.4, '#d7c9ff', '#c9a0ff'], [1.05, 0, 2.1, '#c8f5e0', '#ff8fb3'], [0, -0.45, 2.9, '#fff0a8', '#ff8fb3']];
+      for (const [x, z, h, c, rc] of towers) {
+        P.push(part(cyl(0.36, 0.4, h, 18), c, V(x, h / 2, z)));
+        P.push(part(roundedBox(0.84, 0.1, 0.84, 0.05, 2).scale(1, 1, 1), '#ffffff', V(x, h, z), [0, 0, 0], V(0.95, 1, 0.95)));
+        P.push(part(cone(0.48, 0.8, 18), rc, V(x, h + 0.42, z)));
+        P.push(part(sph(0.08, 8, 6), '#ffd166', V(x, h + 0.86, z)));
+        GL.push({ geo: new THREE.CircleGeometry(0.12, 16).translate(x, h * 0.7, z + 0.405), color: '#fff1c2' });
+      }
+      P.push(part(roundedBox(0.5, 0.75, 0.1, 0.22, 3), '#8a5a44', V(0, 0.38, 0.61)));
+      P.push(part(cyl(0.025, 0.025, 1.0, 6), '#ffffff', V(1.4, 0.5, 0.5)));
+      P.push(part(new THREE.CylinderGeometry(0.28, 0.28, 0.08, 24).rotateX(Math.PI / 2), '#ff8fb3', V(1.4, 1.1, 0.5)));
+      P.push(part(new THREE.TorusGeometry(0.17, 0.035, 8, 24), '#ffffff', V(1.4, 1.1, 0.55)));
+      break;
+    }
+    case 'windmill': {
+      P.push(part(cyl(0.52, 0.78, 2.4, 20), '#fff4e0', V(0, 1.2, 0)));
+      P.push(part(cone(0.72, 0.85, 20), '#c96f4a', V(0, 2.82, 0)));
+      P.push(part(roundedBox(0.42, 0.7, 0.1, 0.18, 2), '#b07a4f', V(0, 0.36, 0.72)));
+      GL.push({ geo: roundedBox(0.3, 0.3, 0.04, 0.1, 2).translate(0, 1.45, 0.6), color: '#ffd98a' });
+      P.push(part(cyl(0.12, 0.12, 0.2, 12), '#a8754a', V(0, 2.3, 0.62), [Math.PI / 2, 0, 0]));
+      for (let k = 0; k < 4; k++) P.push(part(sph(0.07, 8, 6), pick(['#ff8fb3', '#ffd166', '#ffffff']), V(-0.6 + k * 0.4, 0.06, 0.85)));
+      // 风车叶（单独一个零件，绕着轮毂慢慢转）
+      const S = [];
+      for (let k = 0; k < 4; k++) {
+        const a = (k / 4) * TAU;
+        const blade = roundedBox(0.3, 1.25, 0.05, 0.05, 2).translate(0.06, 0.75, 0);
+        blade.rotateZ(a);
+        S.push(part(blade, k % 2 ? '#ffffff' : '#cfe8ff'));
+        const arm = new THREE.CylinderGeometry(0.03, 0.03, 0.8, 6).translate(0, 0.4, 0); arm.rotateZ(a);
+        S.push(part(arm, '#a8754a'));
+      }
+      S.push(part(sph(0.12, 12, 8), '#ff8fb3'));
+      extra.push({ geo: bake(S), mat: 'vc', pos: V(0, 2.3, 0.75), spin: true });
+      anim = 'windmill';
+      break;
+    }
+    case 'toy_castle': {
+      const cols = ['#ff8fb3', '#7fd6ff', '#ffd166', '#9be89b', '#c9a0ff'];
+      for (let i = 0; i < 3; i++) for (let j = 0; j < 2; j++) P.push(part(roundedBox(0.6, 0.6, 0.6, 0.08, 2), cols[(i + j * 2) % cols.length], V(-0.65 + i * 0.65, 0.3 + j * 0.62, 0)));
+      for (const x of [-1.3, 1.3]) {
+        for (let j = 0; j < 4; j++) P.push(part(roundedBox(0.6, 0.6, 0.6, 0.08, 2), cols[(j + (x > 0 ? 2 : 0)) % cols.length], V(x, 0.3 + j * 0.62, 0)));
+        P.push(part(cone(0.5, 0.75, 4), x > 0 ? '#ff8fb3' : '#7fd6ff', V(x, 2.85, 0), [0, Math.PI / 4, 0]));
+        GL.push({ geo: new THREE.CircleGeometry(0.12, 16).translate(x, 1.9, 0.31), color: '#fff1c2' });
+      }
+      // 积木拱门 + 小旗
+      P.push(part(new THREE.CylinderGeometry(0.33, 0.33, 0.6, 20, 1, false, Math.PI / 2, Math.PI).rotateX(Math.PI / 2), '#ffffff', V(0, 1.22, 0)));
+      P.push(part(cyl(0.02, 0.02, 0.8, 6), '#ffffff', V(0, 2.2, 0)));
+      P.push(part(cone(0.16, 0.3, 3).rotateZ(-Math.PI / 2), '#ff6b6b', V(0.15, 2.48, 0)));
+      break;
+    }
     default:
       P.push(part(sph(0.2), '#ffffff', V(0, 0.2, 0)));
   }
@@ -454,5 +552,6 @@ export function buildProp(type, rng) {
   if (P.length) parts.push({ geo: bake(P), mat: 'vc' });
   for (const p of GL) parts.push({ geo: p.geo, mat: 'glow', color: p.color });
   for (const p of GS) parts.push({ geo: p.geo, mat: 'glossy', color: p.color });
+  for (const p of extra) parts.push(p); // 需要单独动起来的零件（风车叶等）：{ geo, mat, pos, spin }
   return { parts, anim };
 }

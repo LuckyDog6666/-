@@ -428,7 +428,8 @@ export class SlideGimmick extends Gimmick {
     this.group.add(rail);
     // 滑道：一条 S 形的 U 形槽（开口朝上），槽底的起点和平台一样高
     const lift = this.chuteDrop;
-    const pts = [V(this.topEnd - 0.04, H + lift, 0), V(this.topEnd + 0.7, H * 0.8 + lift, 0.3), V(this.topEnd + 1.55, H * 0.45 + lift, -0.25), V(this.topEnd + 2.3, H * 0.15 + lift, 0.05), V(this.topEnd + 2.85, 0.08 + lift, 0)];
+    // 滑道末端微微翘起、悬在落地盆上方（比盆沿高）：糯糯从盆沿上方飞进去，不会擦着盆沿 / 雪堆的边冲进去
+    const pts = [V(this.topEnd - 0.04, H + lift, 0), V(this.topEnd + 0.7, H * 0.8 + lift, 0.3), V(this.topEnd + 1.55, H * 0.5 + lift, -0.25), V(this.topEnd + 2.3, Math.max(0.3, H * 0.3) + lift, 0.05), V(this.topEnd + 2.85, 0.3 + lift, 0)];
     this.curveLocal = new THREE.CatmullRomCurve3(pts, false, 'centripetal');
     const chute = new THREE.Mesh(G.track(halfPipe(this.curveLocal, R, 90, 16)), M.soft(colA, { rough: 0.25, rim: 0.5, rimColor: '#ffffff', side: THREE.DoubleSide }));
     chute.castShadow = true; chute.receiveShadow = true;
@@ -658,11 +659,15 @@ export class SlideGimmick extends Gimmick {
     G.sfx('whoosh', this.W(this.topEnd, H, 0), { gain: -2, main: false });
     G.sfx('slide_roll', this.W(this.topEnd, H, 0), { gain: -3, maxDur: 1.7 });
     G.say(d.wee || '呜呼～～');
-    await pet.ride(curveW, d.slideDur || 2.0, { faceTo: () => G.camPos(), faceK: 0.35, align: true, bank: 0 });
-    G.unsay();
-    // 扑进软软的落地堆（先砸出坑 / 把雪堆压扁，再坐进去：身体不会和球、雪穿插）
+    const slideDur = d.slideDur || 2.0;
+    const riding = pet.ride(curveW, slideDur, { faceTo: () => G.camPos(), faceK: 0.35, align: true, bank: 0 });
+    // 落地前一瞬间：球 / 枕头被冲开、雪堆被压扁（身体落下去的地方已经空出来了）
     const land = this.W(this.pileX, this.pileTop(), 0);
+    await G.wait(slideDur - 0.15);
     this._splash(G, land);
+    await riding;
+    G.unsay();
+    // 扑进软软的落地堆，坐在坑里 / 压扁的雪堆上
     if (this.mound) { this.mound.scale.y = 0.58; land.y = this.W(0, this.pileTop(), 0).y; }
     pet.root.position.copy(land);
     pet.setGround(land.y);

@@ -139,6 +139,7 @@ function sunbeams(course, origin, ww, wh, dir, o = {}) {
     g.setIndex([0, 1, 2, 0, 2, 3]);
     const m = new THREE.Mesh(course.G.track(g), mat);
     m.renderOrder = 5;
+    m.userData.light = true; // 只是空气里的光，不是实体（穿过去是正常的）
     course.group.add(m);
   }
 }
@@ -256,7 +257,12 @@ function buildOutdoor(course) {
     if (rng.next() < 0.5) list.push({ type: rng.pick(st.props), x: x + rng.range(-0.8, 0.8), z: rng.range(3.4, 6.5), s: rng.range(0.55, 0.9), rot: rng.range(0, TAU) });
     if (x < 0 && rng.next() < 0.8) list.push({ type: rng.pick(st.props), x: x + rng.range(-1, 1), z: rng.range(-2.2, 2.2), s: rng.range(0.8, 1.4), rot: rng.range(0, TAU) });
   }
-  placeProps(course, list);
+  // 远景地标：每个世界一座"故事书里的房子"，窗户暖暖地亮着（冷暖对比的视觉焦点），沿着路线每隔一段出现一次
+  const LANDMARK = { snow: 'cottage_snow', forest: 'cottage_forest', rain: 'windmill', beach: 'lighthouse', slime: 'candy_castle', toy: 'toy_castle' };
+  const lm = st.landmark || LANDMARK[st.id];
+  const marks = [];
+  if (lm) for (let x = 4 + rng.range(0, 4); x < L + 6; x += rng.range(15, 21)) marks.push({ type: lm, x, z: -rng.range(8.5, 11), s: rng.range(1.05, 1.3), rot: rng.range(-0.35, 0.35) });
+  placeProps(course, marks.concat(list)); // 地标先放，周围的小装饰给它让位
   dressGround(course);
   if (st.sea) {
     // 彩虹沙滩：远处一片会动的大海
@@ -270,6 +276,7 @@ function buildOutdoor(course) {
 
 // 每种装饰物大致占地半径（scale = 1 时）：用来避免装饰物互相穿插
 const PROP_R = {
+  cottage: 1.7, cottage_snow: 1.7, cottage_forest: 1.7, lighthouse: 1.2, candy_castle: 1.8, windmill: 1.6, toy_castle: 1.8,
   tree: 0.75, pine_snow: 0.65, big_mushroom: 0.62, igloo: 0.95, snowman: 0.45, cake: 0.62, big_donut: 0.62, cookie_stack: 0.4,
   rainbow_arch: 1.1, cloud_big: 0.9, candy_tree: 0.6, coral_fan: 0.5, big_shell: 0.58, sea_rock: 0.55, rock: 0.42, snow_rock: 0.48,
   bush: 0.5, flowers: 0.35, stump: 0.4, teddy: 0.45, toy_chest: 0.5, floor_lamp: 0.35, plant: 0.35, cushion_pile: 0.5,
@@ -385,6 +392,8 @@ function placeProps(course, list) {
         const mat = pt.mat === 'vc' ? vcMat : pt.mat === 'glow' ? course.M.basic(pt.color, { fog: true }) : course.M.glossy(pt.color, { opacity: 0.6 });
         const mesh = new THREE.Mesh(course.G.track(pt.geo), mat);
         mesh.castShadow = true;
+        if (pt.pos) mesh.position.copy(pt.pos);
+        if (pt.spin) mesh.userData.spin = true;
         g.add(mesh);
       }
       g.position.set(p.x, p.y || 0, p.z); g.rotation.y = p.rot; g.scale.setScalar(p.s);

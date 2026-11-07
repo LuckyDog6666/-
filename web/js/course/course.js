@@ -205,6 +205,7 @@ export class Course {
       if (a.kind === 'sway') { o.rotation.z = Math.sin(t * 1.3 + ph) * 0.12; o.rotation.x = Math.cos(t * 1.1 + ph) * 0.06; }
       else if (a.kind === 'bob') o.position.y = Math.sin(t * 0.8 + ph) * 0.18;
       else if (a.kind === 'spin') o.rotation.y = t * 0.8 + ph;
+      else if (a.kind === 'windmill') { for (const c of o.children) if (c.userData.spin) c.rotation.z = -t * 0.55 + ph; }
       else if (a.kind === 'clouds') for (const c of o.children) { c.position.x += dt * c.userData.drift; if (c.position.x > this.length + 40) c.position.x -= this.length + 80; }
     }
   }
