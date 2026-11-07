@@ -17,6 +17,7 @@ function tray(st, color, h = 0.08, inset = 0.06) {
   m.receiveShadow = true; m.castShadow = true;
   st.group.add(m);
   st.trayInset = inset; // 小路在托盘正下方开的口要和托盘一样大
+  st.trayTop = h - 0.02; // 托盘内底的高度（站点局部坐标）：材料被压出的坑最深到这里
   return m;
 }
 

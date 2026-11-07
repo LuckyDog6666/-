@@ -194,6 +194,7 @@ function tileTextures(course, colors, repeat) {
 // ======================= 户外 =======================
 function buildOutdoor(course) {
   const st = course.stage, rng = course.rng, L = course.length;
+  course.floorUnderSunk = -0.02; // 地面（大圆盘）的高度：嵌在地里的软材料，坑最深到这里
   sky(course, st.sky);
   // 地面：大圆盘 + 柔和斑驳
   const cx = L / 2, R = L * 0.6 + 34;
@@ -454,11 +455,40 @@ function buildKitchen(course) {
   const wood = canvasTex(course, 512, 128, (g, w, h) => {
     g.fillStyle = '#f6dfc2'; g.fillRect(0, 0, w, h);
     for (let i = 0; i < 70; i++) { g.strokeStyle = `rgba(${200 + Math.random() * 30},${160 + Math.random() * 30},${120 + Math.random() * 20},0.35)`; g.lineWidth = 1 + Math.random() * 2; g.beginPath(); const y = Math.random() * h; g.moveTo(0, y); g.bezierCurveTo(w * 0.3, y + 6, w * 0.6, y - 6, w, y + Math.random() * 4); g.stroke(); }
-  }, [W / 3, 1]);
-  const top = new THREE.Mesh(course.G.track(roundedBox(W, 0.12, FRONT - BACK, 0.04, 3)), course.M.soft('#ffffff', { rough: 0.55, rim: 0.15, map: wood }));
-  top.position.set(cx, 0.035 - 0.06, (BACK + FRONT) / 2);
-  top.receiveShadow = true;
-  course.group.add(top);
+  }, [1, 1]);
+  // 台面：嵌进台面的解压站（面团等）下面开一个口，四周是木头"井壁"，材料可以被压出深深的坑，坑底不会露出台面
+  const woodMat = course.M.soft('#ffffff', { rough: 0.55, rim: 0.15, map: wood });
+  const TOP1 = 0.035, TOP0 = TOP1 - 0.12;
+  const slab = (xa, xb, za, zb) => {
+    if (xb - xa < 0.01 || zb - za < 0.01) return;
+    const g = new THREE.BoxGeometry(xb - xa, TOP1 - TOP0, zb - za);
+    g.translate((xa + xb) / 2, (TOP0 + TOP1) / 2, (za + zb) / 2);
+    // 按世界坐标贴木纹：几块拼起来纹理是连着的
+    const pa = g.attributes.position, uv = g.attributes.uv;
+    for (let i = 0; i < pa.count; i++) uv.setXY(i, pa.getX(i) / 3, (pa.getZ(i) - BACK) / (FRONT - BACK));
+    const m = new THREE.Mesh(course.G.track(g), woodMat);
+    m.receiveShadow = true;
+    course.group.add(m);
+  };
+  const holes = course.stations.filter((st2) => st2.sunk && st2.trayInset != null)
+    .map((st2) => ({ a: st2.x0 - st2.trayInset, b: st2.x1 + st2.trayInset, hz: st2.width / 2 + st2.trayInset, y0: st2.group.position.y - 0.03 }))
+    .sort((p, q) => p.a - q.a);
+  let cur = x0;
+  const well = [];
+  for (const h of holes) {
+    slab(cur, h.a, BACK, FRONT);
+    slab(h.a, h.b, BACK, -h.hz);
+    slab(h.a, h.b, h.hz, FRONT);
+    cur = h.b;
+    const dh = TOP1 - h.y0, t = 0.02, ym = (TOP1 + h.y0) / 2;
+    well.push(part(new THREE.BoxGeometry(h.b - h.a, dh, t), '#e2b98f', V((h.a + h.b) / 2, ym, -h.hz + t / 2)));
+    well.push(part(new THREE.BoxGeometry(h.b - h.a, dh, t), '#e2b98f', V((h.a + h.b) / 2, ym, h.hz - t / 2)));
+    well.push(part(new THREE.BoxGeometry(t, dh, 2 * h.hz), '#e2b98f', V(h.a + t / 2, ym, 0)));
+    well.push(part(new THREE.BoxGeometry(t, dh, 2 * h.hz), '#e2b98f', V(h.b - t / 2, ym, 0)));
+    well.push(part(new THREE.BoxGeometry(h.b - h.a, 0.02, 2 * h.hz), '#d9a87c', V((h.a + h.b) / 2, h.y0, 0)));
+  }
+  slab(cur, x1, BACK, FRONT);
+  if (well.length) addBaked(course, well, { rough: 0.6, rim: 0.1, flat: true, shadow: false });
   // 台面下的柜门（薄荷绿 + 小圆把手）
   const cab = [];
   cab.push(part(new THREE.BoxGeometry(W, -FLOOR - 0.12, 0.6), '#bfe8d8', V(cx, (FLOOR - 0.12) / 2 + 0.0, FRONT - 0.35)));
@@ -517,6 +547,7 @@ function buildKitchen(course) {
 // ======================= 卧室（打扫房间） =======================
 function buildRoom(course) {
   const st = course.stage, rng = course.rng, L = course.length;
+  course.floorUnderSunk = 0.0; // 木地板的高度
   const x0 = -5, x1 = L + 5, W = x1 - x0, cx = (x0 + x1) / 2;
   const BACK = -3.0;
   course.scene.background = new THREE.Color(st.sky[1]);

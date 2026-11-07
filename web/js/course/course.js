@@ -99,6 +99,12 @@ export class Course {
     this.end = new THREE.Vector3(this.length - 1.0, PATH_Y, 0);
     buildEnvironment(this);
     if (!st.noPath) this._buildPath();
+    // 嵌在地面里的软材料：坑最深到托盘内底，也不低于周围的地面（厨房台面在站点下面开了口，就只看托盘）
+    for (const s of this.stations) {
+      if (!s.sunk || !s.hf) continue;
+      const ground = (this.floorUnderSunk ?? -Infinity) - s.group.position.y;
+      s.hf.floorY = Math.max(s.trayTop ?? -Infinity, ground) + 0.004;
+    }
     this.scene.add(this.group);
     return this;
   }

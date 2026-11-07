@@ -26,6 +26,8 @@ export class Heightfield {
     // 否则糯糯会被自己压出来的坑越拉越低
     this.cap = new Float32Array(this.count).fill(Infinity);
     this.capIdx = [];
+    // 坑最深能到哪里（站点局部坐标）：不能低于托盘内底 / 周围的地面，不然坑底会露出地面，身体也会碰到地面
+    this.floorY = -Infinity;
     const col = new Float32Array(this.count * 3);
     g.setAttribute('color', new THREE.BufferAttribute(col, 3));
     this.c0 = new THREE.Color(this.o.color || '#ffd0e6');
@@ -183,7 +185,7 @@ export class Heightfield {
         let lo = h - Math.max(0.6, r * 1.2), hi = h; // 巨人模式身体更大，往下找得更深
         if (inside(vx, lo, vz) < 1) continue;
         for (let k = 0; k < 14; k++) { const m = (lo + hi) / 2; if (inside(vx, m, vz) < 1) hi = m; else lo = m; }
-        const c = lo - 0.006;
+        const c = Math.max(lo - 0.006, this.floorY);
         if (Math.abs(this.cap[i] - c) > 2e-4) changed = true;
         this.cap[i] = c;
         next.push(i);
@@ -230,7 +232,7 @@ export class Heightfield {
           target = Math.max(target, Math.min(this.h[i] + dp * rim * k * 0.5, this.rest[i] + dp * rim * k));
         }
       }
-      this.h[i] = target;
+      this.h[i] = Math.max(target, this.floorY);
       this.press[i] = Math.min(1, Math.max(this.press[i], pressed * strength));
     }
     this._write();
@@ -255,7 +257,7 @@ export class Heightfield {
       const px = x0 + dx * t, pz = z0 + dz * t;
       const d = Math.hypot(vx - px, vz - pz) / width;
       if (d < 1) {
-        this.h[i] = Math.min(this.h[i], this.rest[i] - depth * (1 - d * d));
+        this.h[i] = Math.max(this.floorY, Math.min(this.h[i], this.rest[i] - depth * (1 - d * d)));
         this.press[i] = Math.max(this.press[i], 1 - d);
       }
     }
