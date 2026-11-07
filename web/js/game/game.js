@@ -69,6 +69,7 @@ export class Game {
     const self = this;
     return {
       get pet() { return self.pet; },
+      get portrait() { return !!(self.hud && self.hud.portrait); }, // 竖屏：机位要退远一点（水平视角窄）
       wait: (s) => self.wait(s),
       sfx: (id, pos, o) => self.sfx(id, pos, o),
       stopSfx: (v, f) => self.audio.stop(v, f),
@@ -243,7 +244,7 @@ export class Game {
         // 走到这一段的入口（闯关元素在入口前停一下，先"看一眼"前面的挑战）
         this.cam.set('front');
         // 一块块跳上去玩的（果冻、面包）：在更前面停下，圆肚子不会顶到第一块
-        const entryX = s.kind === 'gimmick' ? s.x0 - 0.12 : (s.blocks || s.items) ? s.x0 - 0.62 : s.x0 - 0.32;
+        const entryX = s.entryX != null ? s.x0 + s.entryX : s.kind === 'gimmick' ? s.x0 - 0.12 : (s.blocks || s.items) ? s.x0 - 0.62 : s.x0 - 0.32;
         await this.walkTo(V(entryX, 0, 0), { stepDur: 0.42, stride: 0.3 });
         if (s.kind === 'gimmick') await s.run(this.api);
         else if (s.finale) await this.runFinale(s);
@@ -546,6 +547,19 @@ export class Game {
         return pet.walk(V(tx, self.course.yAt(tx, tz), tz), { steps, stepDur: steps > 1 ? 0.3 : 0.36, lift: 0.06, gait: 'tiptoe', keepFacing: true, yAt: (a, b) => self.course.yAt(a, b) });
       },
       say: (t) => self.hud.say(t),
+      // 小手真的去碰材料：front(px, pz) 把"糯糯身体前方的点"（相对糯糯、按它的朝向）换算成站点坐标；
+      // reach(side, x, y, z) 让一只手伸到站点坐标里的这个点（IK，手臂会稍微拉长），release() 收回
+      front: (px, pz) => {
+        const w = new THREE.Vector3(px, 0, pz).applyAxisAngle(new THREE.Vector3(0, 1, 0), pet.targetFacing).add(pet.root.position);
+        return { x: w.x - s.x0, z: w.z };
+      },
+      reach: (side, x, y, z, o = {}) => { const w = self.course.world(s, x, z, y); pet.reachTo(side, w, o); return w; },
+      // 小手现在在哪（站点坐标）
+      hand: (side) => { const h = pet.handWorld(side); return { x: h.x - s.x0, y: h.y - s.group.position.y, z: h.z }; },
+      release: (side) => pet.release(side),
+      lean: (v) => pet.setLean(v),
+      crouch: (v) => pet.setCrouch(v),
+      gaze: (x, y, z) => pet.gazeAt(x == null ? null : self.course.world(s, x, z, y)),
       // 糯糯面朝 +x 还是 -x；turn 让它转过身
       dir: () => (Math.sin(pet.facing) >= 0 ? 1 : -1),
       turn: (d) => {

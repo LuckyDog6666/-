@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import { AsmrAudio } from './audio/asmrAudio.js';
 import { RoomEnvironment } from '../vendor/addons/RoomEnvironment.js';
 import { Particles } from './render/particles.js';
+import { FilmLook } from './render/post.js';
 import { MaterialBank } from './render/materials.js';
 import { Hud } from './ui/hud.js';
 import { Game } from './game/game.js';
@@ -78,6 +79,8 @@ async function main() {
     scene.environmentIntensity = 0.35;
     pmrem.dispose();
   } catch (e) { console.warn('[env] 环境贴图创建失败', e); }
+  // 动画电影感的后期（柔光 + 轻微调色）；掉帧时自动关闭，config.json 里 "post": false 或 ?nopost 可关
+  const film = new FilmLook(renderer, { enabled: cfg.post !== false && !params.has('nopost') });
   const camera = new THREE.PerspectiveCamera(40, 16 / 9, 0.1, 400);
   let pixelRatio = Math.min(window.devicePixelRatio || 1, Number(params.get('pr')) || cfg.pixelRatio);
   const particles = new Particles(scene);
@@ -138,6 +141,20 @@ async function main() {
   window.__live = live;
 
   // ---- 主循环 ----
+  // ?manual：自检 / 截图用的逐帧模式——游戏不自己走，由 window.__advance(秒) 推进（每一小步之间让出微任务，
+  // 保证 await 链能接上），画面照常渲染。正常直播不会用到。
+  const MANUAL = params.has('manual');
+  if (MANUAL) {
+    window.__advance = async (sec, step = 1 / 60) => {
+      const n = Math.max(1, Math.round(sec / step));
+      for (let i = 0; i < n; i++) {
+        game.update(step);
+        for (let k = 0; k < 12; k++) await null;
+      }
+      film.render(scene, camera);
+      return game.time;
+    };
+  }
   let last = performance.now();
   let fpsAcc = 0, fpsN = 0, fps = 60, lowSince = 0, highSince = 0, cheapShadows = false;
   const loop = (now) => {
@@ -147,9 +164,10 @@ async function main() {
     if (!(dt > 0)) return;
     dt = Math.min(dt, 0.1); // 卡顿时不要"瞬移"
     try {
+      if (MANUAL) { film.render(scene, camera); return; }
       if (SIM > 1) for (let i = 0; i < SIM; i++) game.update(1 / 30); // 自检用：快进模拟
       else game.update(dt);
-      renderer.render(scene, camera);
+      try { film.render(scene, camera); } catch (e) { film.setEnabled(false); report('error', 'film look disabled: ' + (e && e.message || e)); renderer.render(scene, camera); }
     } catch (err) {
       report('error', err && err.stack || err);
       if (errorCount > 50) location.reload();
@@ -162,6 +180,11 @@ async function main() {
       const t = now / 1000;
       if (fps < 42) { if (!lowSince) lowSince = t; highSince = 0; } else if (fps > 57) { if (!highSince) highSince = t; lowSince = 0; } else { lowSince = highSince = 0; }
       if (lowSince && t - lowSince > 6 && pixelRatio > 0.75) { pixelRatio = Math.max(0.75, pixelRatio - 0.2); resize(); lowSince = 0; console.log('[quality] pixelRatio ->', pixelRatio); }
+      else if (lowSince && t - lowSince > 8 && pixelRatio <= 0.75 && film.enabled) {
+        // 分辨率已经最低还是卡：先关掉后期柔光
+        film.setEnabled(false); lowSince = 0;
+        console.log('[quality] film look off');
+      }
       else if (lowSince && t - lowSince > 8 && pixelRatio <= 0.75 && !cheapShadows) {
         // 分辨率已经最低还是卡：换成更省的阴影
         cheapShadows = true; lowSince = 0;

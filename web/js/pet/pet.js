@@ -509,7 +509,7 @@ export class Pet {
   faceTowards(x, z) { this.targetFacing = Math.atan2(x - this.root.position.x, z - this.root.position.z); }
 
   /**
-   * 跳到目标点。o: { height, dur, spin(圈), flip(圈), anticipation, onTakeoff, keepFacing }
+   * 跳到目标点。o: { height, dur, spin(圈), flip(圈), anticipation, onTakeoff, keepFacing, hEase(u)→水平进度 }
    * 返回 Promise，落地时 resolve。
    */
   hop(to, o = {}) {
@@ -519,7 +519,7 @@ export class Pet {
     const dur = o.dur ?? 0.46 + dist * 0.06;
     if (dist > 0.05 && !o.keepFacing) this.faceTowards(to.x, to.z);
     return new Promise((resolve) => {
-      this._start({ kind: 'hop', t: 0, from, to: to.clone(), height, dur, ant: o.anticipation ?? 0.11, spin: o.spin || 0, flip: o.flip || 0, resolve, onTakeoff: o.onTakeoff, launched: false, tuck: o.tuck ?? 0 });
+      this._start({ kind: 'hop', t: 0, from, to: to.clone(), height, dur, ant: o.anticipation ?? 0.11, spin: o.spin || 0, flip: o.flip || 0, resolve, onTakeoff: o.onTakeoff, launched: false, tuck: o.tuck ?? 0, hEase: o.hEase });
     });
   }
 
@@ -581,7 +581,7 @@ export class Pet {
    * 速度先慢后快（重力感），身体顺着弯道倾斜，小手举高。
    */
   ride(curve, dur = 1.8, o = {}) {
-    return new Promise((resolve) => { this._start({ kind: 'ride', t: 0, curve, dur, resolve, bank: o.bank ?? 1, faceTo: o.faceTo }); });
+    return new Promise((resolve) => { this._start({ kind: 'ride', t: 0, curve, dur, resolve, bank: o.bank ?? 1, faceTo: o.faceTo, faceK: o.faceK ?? 0.45, align: !!o.align }); });
   }
 
   /** 抓着气球/雨伞飘过去：弧线 + 轻轻摇摆，小脚晃呀晃 */
@@ -648,8 +648,10 @@ export class Pet {
         }
         const u = clamp((a.t - ant) / a.dur, 0, 1);
         airborne = u < 1;
-        pos.x = lerp(a.from.x, a.to.x, u);
-        pos.z = lerp(a.from.z, a.to.z, u);
+        // hEase：水平方向的缓动（例如先往上、再往前，越过高台的边缘）
+        const uh = a.hEase ? a.hEase(u) : u;
+        pos.x = lerp(a.from.x, a.to.x, uh);
+        pos.z = lerp(a.from.z, a.to.z, uh);
         pos.y = lerp(a.from.y, a.to.y, u) + 4 * a.height * u * (1 - u);
         const air = Math.sin(u * Math.PI);
         P.sy += 0.1 * air;
@@ -755,14 +757,23 @@ export class Pet {
       this.groundY = p.y;
       let face = Math.atan2(tan.x, tan.z);
       // 弯道上也把小脸转向镜头一些（一半顺着滑道、一半看观众）
-      if (a.faceTo) { const c = a.faceTo(); const ac = Math.atan2(c.x - pos.x, c.z - pos.z); const d = ((ac - face + Math.PI) % TAU + TAU) % TAU - Math.PI; face += d * 0.45; }
+      if (a.faceTo) { const c = a.faceTo(); const ac = Math.atan2(c.x - pos.x, c.z - pos.z); const d = ((ac - face + Math.PI) % TAU + TAU) % TAU - Math.PI; face += d * a.faceK; }
       this.targetFacing = face;
       this.facing = dampAngle(this.facing, face, 14, dt);
+      if (a.align) {
+        // 身体"坐正"在槽底：身体的上方向 = 滑道横截面的法线（下坡时自然往后靠）
+        const side = _v1.crossVectors(tan, _UP).normalize();
+        const up = _v2.crossVectors(side, tan).normalize().applyAxisAngle(_UP, -this.facing);
+        P.rx += Math.atan2(up.z, up.y);
+        P.rz += Math.atan2(-up.x, up.y);
+      }
       // 弯道上身体顺势倾斜
-      const tan2 = a.curve.getTangentAt(clamp(s + 0.03, 0, 1));
-      const turn = Math.atan2(tan2.x, tan2.z) - Math.atan2(tan.x, tan.z);
-      P.rz += clamp(-turn * 6 * a.bank, -0.35, 0.35);
-      P.sy *= 0.9; P.sx *= 1.05;
+      if (a.bank) {
+        const tan2 = a.curve.getTangentAt(clamp(s + 0.03, 0, 1));
+        const turn = Math.atan2(tan2.x, tan2.z) - Math.atan2(tan.x, tan.z);
+        P.rz += clamp(-turn * 6 * a.bank, -0.35, 0.35);
+      }
+      P.sy *= a.align ? 0.95 : 0.9; P.sx *= a.align ? 0.98 : 1.05;
       P.footL.z = P.footR.z = 0.12; P.footL.y = P.footR.y = 0.04; P.footL.rx = P.footR.rx = -1.1; // 坐着滑，小脚伸向前方
       P.armL.z = 2.5; P.armR.z = -2.5; P.armL.x = P.armR.x = 0.3; // 小手举高高
       P.mouth = 'open'; P.eyes = 'happy'; P.blush = 1;
@@ -973,7 +984,7 @@ export class Pet {
 
 const _q1 = new THREE.Quaternion(), _q2 = new THREE.Quaternion(), _q3 = new THREE.Quaternion(), _q4 = new THREE.Quaternion(), _q5 = new THREE.Quaternion();
 const _e1 = new THREE.Euler();
-const _X = new THREE.Vector3(1, 0, 0), _DOWN = new THREE.Vector3(0, -1, 0);
+const _X = new THREE.Vector3(1, 0, 0), _DOWN = new THREE.Vector3(0, -1, 0), _UP = new THREE.Vector3(0, 1, 0);
 const _v1 = new THREE.Vector3(), _v2 = new THREE.Vector3(), _v3 = new THREE.Vector3();
 const _m1 = new THREE.Matrix4();
 

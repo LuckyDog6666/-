@@ -24,6 +24,7 @@ export const DEFAULTS = {
   game: {
     layout: 'auto',
     pixelRatio: 1.25,
+    post: true,
     shadowSize: 2048,
     reloadHours: 6,
     stageSeconds: 210,

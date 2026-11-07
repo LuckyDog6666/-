@@ -130,8 +130,31 @@ export class SoftSlab extends Station {
       api.sink(Math.min(0.05, (d.depth ?? 0.06) * 0.8));
       await pose;
       api.sink(0);
+    } else if (name === 'press' && api.reach) {
+      // 俯身，两只小手轻轻按进材料里：手印就出现在小手真正按下去的地方
+      const inTray = (q) => ({ x: clamp(q.x, 0.1, this.length - 0.1), z: clamp(q.z, -this.width / 2 + 0.1, this.width / 2 - 0.1) });
+      const pts = [inTray(api.front(-0.26, 0.4)), inTray(api.front(0.26, 0.4))];
+      const f0 = api.front(0, 0), f1 = api.front(0, 1), hd = [f1.x - f0.x, f1.z - f0.z];
+      api.lean(0.34); api.crouch(0.55);
+      api.gaze((pts[0].x + pts[1].x) / 2, this.hf.heightAt(pts[0].x, pts[0].z), (pts[0].z + pts[1].z) / 2);
+      await api.wait(0.25);
+      for (let k = 0; k < 2; k++) {
+        const side = k ? 'R' : 'L', q = pts[k];
+        const y = this.hf.heightAt(q.x, q.z);
+        api.reach(side, q.x, y + 0.12, q.z);
+        await api.wait(0.32);
+        api.reach(side, q.x, y + 0.012, q.z, { speed: 16 });
+        await api.wait(0.13);
+        this.hf.stamp(q.x, q.z, { rx: 0.07, rz: 0.06, depth: (d.depth ?? 0.06) * 1.1, shape: 'paw', dir: hd });
+        this._refreshGlitter();
+        api.sfx(this.sound.special || this.sound.step, { gain: 0, maxDur: 2 });
+        if (d.fx) api.burst(d.fx, q.x, y, q.z, { colors: d.fxColors || [d.color], count: 6, scale: 0.5 });
+        await api.wait(0.38);
+        api.reach(side, q.x, y + 0.1, q.z);
+      }
+      await api.wait(0.3);
+      api.release(); api.lean(0); api.crouch(0); api.gaze(null);
     } else if (name === 'press') {
-      // 俯身用小手按一按：两个小手印（在身体前方）
       const t = ahead(this, api, 0.42);
       const x = t.x, p = t;
       const pose = api.pose('reach', 2.2);
@@ -143,20 +166,33 @@ export class SoftSlab extends Station {
         await api.wait(0.7);
       }
       await pose;
-    } else if (name === 'cut') {
-      // 用小手划出一道沟（太空沙最经典的"切一刀"画面）
-      const x = ahead(this, api, 0.45).x;
-      const pose = api.pose('reach', 2.3);
+    } else if (name === 'cut' && api.reach) {
+      // 用小手在材料上划出一道沟（太空沙最经典的"切一刀"）：沟就画在小手划过的地方
+      const inTray = (q) => ({ x: clamp(q.x, 0.08, this.length - 0.08), z: clamp(q.z, -this.width / 2 + 0.08, this.width / 2 - 0.08) });
+      const a = inTray(api.front(0.12, 0.5)), b = inTray(api.front(0.6, 0.25));
+      api.lean(0.32); api.crouch(0.5);
+      api.gaze(a.x, this.hf.heightAt(a.x, a.z), a.z);
+      const ya = this.hf.heightAt(a.x, a.z);
+      api.reach('R', a.x, ya + 0.12, a.z);
       await api.wait(0.35);
+      api.reach('R', a.x, ya + 0.005, a.z, { speed: 16 });
+      await api.wait(0.12);
       api.sfx(this.sound.special || this.sound.step, { gain: 1, maxDur: 3 });
-      for (let k = 0; k <= 10; k++) {
-        this.hf.groove(x, -this.width / 2 + 0.08, x, -this.width / 2 + 0.08 + (this.width - 0.16) * (k / 10), { width: 0.035, depth: 0.12 });
-        if (k === 5) api.sfx(this.sound.step, { gain: -2, maxDur: 1.5 });
-        await api.wait(0.12);
+      let px = a.x, pz = a.z;
+      for (let k = 1; k <= 12; k++) {
+        const u = k / 12, x = a.x + (b.x - a.x) * u, z = a.z + (b.z - a.z) * u;
+        this.hf.groove(px, pz, x, z, { width: 0.035, depth: 0.12 });
+        api.reach('R', x, this.hf.heightAt(x, z) + 0.005, z, { speed: 20 });
+        api.gaze(x, this.hf.heightAt(x, z), z);
+        if (k === 6) api.sfx(this.sound.step, { gain: -2, maxDur: 1.5 });
+        px = x; pz = z;
+        await api.wait(0.1);
       }
-      if (d.fx) api.burst(d.fx, x, this.hf.heightAt(x, 0), 0, { colors: d.fxColors || [d.color], count: 16 });
+      if (d.fx) api.burst(d.fx, b.x, this.hf.heightAt(b.x, b.z), b.z, { colors: d.fxColors || [d.color], count: 16 });
       this._refreshGlitter();
-      await pose;
+      api.reach('R', b.x, this.hf.heightAt(b.x, b.z) + 0.12, b.z);
+      await api.wait(0.3);
+      api.release(); api.lean(0); api.crouch(0); api.gaze(null);
     } else if (name === 'stomp') {
       // 跳起来，两只脚一起重重踩下去：一对深深的脚印
       const t = ahead(this, api, 0.28);
@@ -214,7 +250,7 @@ export class SlimeStation extends Station {
     this.hf.stamp(x, z, { rx: 0.12, rz: 0.09, depth: 0.07 + power * 0.03, shape: 'round', rim: 0.7 });
     // 上一只脚抬起来时拉丝
     const s = this.strands.find((q) => q.life <= 0) || this.strands[0];
-    s.life = 0.9; s.x = x; s.z = z; s.side = side;
+    s.life = 0.9; s.x = x; s.z = z; s.side = side; s.to = null;
     return { sound: this.sound.step, gain: (power - 0.5) * 2, maxDur: 2.6, sink: 0.05 };
   }
   get specials() { return this.def.specials || ['sit', 'press']; }
@@ -244,8 +280,33 @@ export class SlimeStation extends Station {
       for (const s of this.strands) { s.life = 1.2; s.x = x + (Math.random() - 0.5) * 0.3; s.z = z0 + (Math.random() - 0.5) * 0.3; s.side = 0; }
       await pose;
       await api.pose('stretch', 1.0);
+    } else if (api.reach) {
+      // 俯身用小手戳三下：左手、右手、右手——小坑就出现在小手戳下去的地方，抬手时拉出一点丝
+      const inTray = (q) => ({ x: clamp(q.x, 0.1, this.length - 0.1), z: clamp(q.z, -this.width / 2 + 0.1, this.width / 2 - 0.1) });
+      const pts = [['L', inTray(api.front(-0.24, 0.4))], ['R', inTray(api.front(0.26, 0.38))], ['R', inTray(api.front(0.42, 0.22))]];
+      api.lean(0.34); api.crouch(0.55);
+      await api.wait(0.25);
+      for (let k = 0; k < pts.length; k++) {
+        const [side, q] = pts[k];
+        const y = this.hf.heightAt(q.x, q.z);
+        api.gaze(q.x, y, q.z);
+        api.reach(side, q.x, y + 0.12, q.z);
+        await api.wait(0.3);
+        api.reach(side, q.x, y - 0.02, q.z, { speed: 14 });
+        await api.wait(0.14);
+        this.hf.stamp(q.x, q.z, { rx: 0.09, rz: 0.08, depth: 0.09, shape: 'round', rim: 0.8 });
+        api.sfx(k === 2 && this.sound.special ? this.sound.special : this.sound.step, { gain: 0, maxDur: 2.2 });
+        await api.wait(0.3);
+        // 抬手：一根细丝从小坑连到小手，拉长、变细，然后"啪"地断开
+        const st = this.strands[k % this.strands.length];
+        if (st) { st.life = 0.6; st.x = q.x; st.z = q.z; st.side = 0; st.to = () => api.hand(side); }
+        api.reach(side, q.x, y + 0.13, q.z, { speed: 5 });
+        await api.wait(0.45);
+        if (st) st.life = 0;
+      }
+      api.release(); api.lean(0); api.crouch(0); api.gaze(null);
     } else {
-      // 俯身用小手戳三下
+      // 后备：没有 IK 接口时
       const pose = api.pose('reach', 3.0);
       await api.wait(0.4);
       for (let k = 0; k < 3; k++) {
@@ -264,12 +325,25 @@ export class SlimeStation extends Station {
     for (const s of this.strands) {
       if (s.life <= 0) { s.m.visible = false; continue; }
       s.life -= dt;
-      const u = 1 - s.life / 0.9; // 0→1 越拉越长越细
-      const h = 0.05 + u * 0.22;
+      const u = clamp(1 - s.life / 0.9, 0, 1); // 0→1 越拉越长越细
       const r = 0.03 * (1 - u) + 0.003;
       s.m.visible = true;
-      s.m.position.set(s.x, this.hf.heightAt(s.x, s.z) - 0.01, s.z);
-      s.m.scale.set(r, h, r);
+      const base = V(s.x, this.hf.heightAt(s.x, s.z) - 0.01, s.z);
+      s.m.position.copy(base);
+      let to = null;
+      if (s.to) { try { to = s.to(); } catch { to = null; } }
+      if (to) {
+        // 小手拉出来的丝：从小坑一直连到小手；手挪开太远就断
+        const d = V(to.x - base.x, to.y - 0.02 - base.y, to.z - base.z);
+        const len = d.length();
+        if (len < 0.01 || Math.hypot(d.x, d.z) > 0.16) { s.life = 0; s.m.visible = false; continue; }
+        s.m.quaternion.setFromUnitVectors(V(0, 1, 0), d.multiplyScalar(1 / len));
+        s.m.scale.set(r, len, r);
+      } else {
+        // 脚底拉出来的丝：很短（脚只抬起一点点），不会戳进圆肚子
+        s.m.quaternion.identity();
+        s.m.scale.set(r, 0.03 + u * 0.06, r);
+      }
       s.m.material.opacity = 0.85 * (1 - u * 0.6);
     }
   }

@@ -53,6 +53,7 @@ class TaskStation extends Station {
   }
   update(dt) {
     super.update(dt);
+    if (this.carry) this.carry();
     for (let i = this.tweens.length - 1; i >= 0; i--) {
       const tw = this.tweens[i];
       tw.t += dt;
@@ -196,6 +197,19 @@ class TaskStation extends Station {
     pet.root.position.y = y0;
     pet.sq.kick(-0.7);
     pet.kickEars(0.8);
+  }
+  // 拿着道具走几步：道具和两只手的目标跟着身体一起平移
+  // （不然身体会走进停在原地的扫帚 / 拖把里）
+  async walkCarry(G, to, o) {
+    const pet = G.pet;
+    const last = pet.root.position.clone();
+    this.carry = () => {
+      const p = pet.root.position;
+      const d = V(p.x - last.x, 0, p.z - last.z);
+      last.copy(p);
+      this.tp.tip.add(d); this.lp.add(d); this.rp.add(d);
+    };
+    try { await G.walkTo(to, o); } finally { this.carry = null; }
   }
   // 走到工作台后面、转身面向观众、身体微微前倾、左手轻轻搭在台面上
   async beginWork(G, o = {}) {
@@ -1013,12 +1027,12 @@ export class SweepStation extends FloorTask {
       if (x > 0.8) G.unsay();
       const nx = Math.min(L - 0.95, x + 0.32);
       await this.toolTo(this.floorPose(G, head(0.6, 0.26), 0.06), 0.15);
-      await G.walkTo(this.W(nx, 0, 0), { stepDur: 0.38, stride: 0.16, keepFace: true });
+      await this.walkCarry(G, this.W(nx, 0, 0), { stepDur: 0.38, stride: 0.16, keepFace: true });
       x = nx;
     }
     // 最后几下：往簸箕那边挪一步，把一堆灰尘扫进簸箕
     await this.toolTo(this.floorPose(G, head(0.6, 0.26), 0.06), 0.15);
-    await G.walkTo(this.W(L - 1.2, 0, 0.3), { stepDur: 0.38, stride: 0.16, keepFace: true });
+    await this.walkCarry(G, this.W(L - 1.2, 0, 0.3), { stepDur: 0.38, stride: 0.16, keepFace: true });
     zOff = 0.12;
     for (const it of this.items) { if (!it.gone) { it.tx = Math.max(it.tx, L - 0.62); it.tz = clamp(it.tz, 0.5, 0.68); } }
     await stroke();
@@ -1173,7 +1187,7 @@ export class MopStation extends FloorTask {
       const nx = Math.min(L - 0.9, x + 0.42);
       if (nx <= x + 0.01) break;
       await this.toolTo(this.floorPose(G, head(0.6, 0.25), 0.04), 0.15);
-      await G.walkTo(this.W(nx, 0, 0), { stepDur: 0.36, stride: 0.18, keepFace: true });
+      await this.walkCarry(G, this.W(nx, 0, 0), { stepDur: 0.36, stride: 0.18, keepFace: true });
       x = nx;
     }
     this.group.updateMatrixWorld(true);
@@ -1369,7 +1383,8 @@ export class TidyStation extends TaskStation {
       const geo = G.get('toy|' + kind, () => toyGeo(kind));
       const g = new THREE.Group();
       const x = 0.95 + i * ((L - 1.75) / (n - 1)) + r.range(-0.05, 0.05);
-      g.position.set(x, 0.02, r.range(0.0, 0.12));
+      // 摆在小路靠镜头的一边：糯糯站在玩具斜后方，玩具正好在右手前面（圆肚子碰不到）
+      g.position.set(x, 0.02, r.range(0.48, 0.56));
       g.rotation.y = r.range(0, TAU);
       this.group.add(g);
       this.mesh(geo, M.soft(col, { rough: 0.4, rim: 0.4 }), 0, 0, 0, g);
@@ -1392,10 +1407,12 @@ export class TidyStation extends TaskStation {
       const t = this.toys[i];
       this.group.updateMatrixWorld(true);
       const tp = t.g.getWorldPosition(V(0, 0, 0));
-      // 走到玩具后面：玩具在右手前方（身体、小脚都碰不到它）
-      const stand = tp.clone().sub(V(0.42, 0, 0.08));
-      await G.walkTo(V(stand.x, 0, 0), { stepDur: 0.36, stride: 0.2 });
-      pet.face(this.face);
+      // 走到玩具斜后方：面朝 3/4 正面时，玩具正好在右手前方 0.6 左右（身体、小脚都碰不到它）
+      const f = 0.5;
+      const fwd = V(Math.sin(f), 0, Math.cos(f)), right = V(Math.cos(f), 0, -Math.sin(f));
+      const stand = tp.clone().addScaledVector(right, -0.26).addScaledVector(fwd, -0.56);
+      await G.walkTo(V(stand.x, 0, stand.z), { stepDur: 0.36, stride: 0.2 });
+      pet.face(f);
       pet.gazeAt(tp);
       await G.wait(0.18);
       // 蹲下去、伸手捡起来
@@ -1413,8 +1430,9 @@ export class TidyStation extends TaskStation {
       const boxTop = this.box.localToWorld(t.slot.clone());
       pet.gazeAt(boxTop);
       const hand0 = this.rp.clone();
-      await this.moveR(hand0.clone().add(V(-0.12, 0.05, -0.06)), 0.22, ease.outQuad);
-      await this.moveR(hand0.clone().add(V(0.08, 0.1, 0.05)), 0.1, ease.inQuad);
+      // 预备动作往身体外侧、往上收（不会把玩具收进肚子里），再往前一甩
+      await this.moveR(hand0.clone().addScaledVector(right, 0.12).addScaledVector(fwd, -0.03).add(V(0, 0.07, 0)), 0.22, ease.outQuad);
+      await this.moveR(hand0.clone().addScaledVector(fwd, 0.1).add(V(0.04, 0.1, 0)), 0.1, ease.inQuad);
       pet.drop('R', this.group);
       const p0 = t.g.position.clone(), p1 = this.group.worldToLocal(boxTop.clone());
       const dist = Math.hypot(p1.x - p0.x, p1.z - p0.z);
@@ -1422,7 +1440,7 @@ export class TidyStation extends TaskStation {
       G.sfx('whoosh', tp, { gain: -14, main: false });
       const spin = (G.rng() - 0.5) * 6;
       const q0 = t.g.quaternion.clone();
-      this.moveR(hand0.clone().add(V(0.05, -0.08, 0)), 0.25);
+      this.moveR(hand0.clone().addScaledVector(fwd, 0.06).add(V(0.03, -0.08, 0)), 0.25);
       await this.tween(fly, (u) => {
         arc(t.g, p0, p1, 0.35 + dist * 0.1, u);
         t.g.quaternion.copy(q0); t.g.rotateY(spin * u); t.g.rotateX(u * 1.5);

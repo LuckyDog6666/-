@@ -124,12 +124,15 @@ export class Course {
   _buildLights() {
     const st = this.stage;
     // 补光压低、主光加强：明暗对比出来，圆圆的身体才有体积感（动画电影的打光）
-    this.hemi = new THREE.HemisphereLight(new THREE.Color(st.hemi[0]), new THREE.Color(st.hemi[1]), st.hemi[2] * 0.62);
+    // 动画电影式打光：暖暖的阳光做主光，天空的冷色做补光（阴影带一点蓝紫，不是灰灰的），地面反弹一点暖色
+    const skyFill = new THREE.Color(st.hemi[0]).lerp(new THREE.Color('#9fbfff'), 0.3);
+    const bounce = new THREE.Color(st.hemi[1]).lerp(new THREE.Color(st.ground || st.hemi[1]), 0.35);
+    this.hemi = new THREE.HemisphereLight(skyFill, bounce, st.hemi[2] * 0.56);
     this.group.add(this.hemi);
-    this.amb = new THREE.AmbientLight(0xffffff, st.ambient * 0.35);
+    this.amb = new THREE.AmbientLight(0xffffff, st.ambient * 0.26);
     this.group.add(this.amb);
     // 暖色主光：从镜头这一侧（+x、+z 的斜上方）照过来，小脸亮亮的；影子落在糯糯身后（脚印的凹凸也看得清）
-    const sun = new THREE.DirectionalLight(new THREE.Color(st.sun[0]), st.sun[1] * 1.12);
+    const sun = new THREE.DirectionalLight(new THREE.Color(st.sun[0]).lerp(new THREE.Color('#ffe6c4'), 0.25), st.sun[1] * 1.22);
     sun.castShadow = true;
     const q = this.opts.shadowSize || 2048;
     sun.shadow.mapSize.set(q, q);

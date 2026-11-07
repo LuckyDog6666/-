@@ -361,51 +361,70 @@ export class BounceGimmick extends Gimmick {
 }
 
 // ======================= 3. 滑滑梯 =======================
-// 楼梯爬上去 → 在顶上对镜头挥手 → 坐着滑下来（镜头在底部迎着拍）→ 扑进球池 / 雪堆 / 落叶堆 / 面粉 / 枕头堆
+// 跳上果冻垫弹两下 → "嘣"地弹上平台 → 在顶上对镜头挥手 → 坐着滑下来（镜头在底部迎着拍）→ 扑进球池 / 雪堆 / 落叶堆 / 面粉 / 枕头堆
 export class SlideGimmick extends Gimmick {
   build() {
     const d = this.def, { M, G } = this.ctx;
     // 尺寸按糯糯的身材来（身体约 1.1 宽、1.0 深）：
-    //  - 楼梯是约 25° 的缓坡台阶（小台阶），圆肚子不会顶进前面的台阶
+    //  - 不爬楼梯：圆滚滚的肚子底下是圆的，任何台阶都会被肚子"吃"进去（穿模）。
+    //    改成一个弹弹果冻垫——跳上去弹两下蓄力，"嘣"地一下先往上、再往前弹上平台（肚子离平台前缘留着空隙）
     //  - 顶上的平台比糯糯大，站得稳
-    //  - 滑道是半径 0.66 的 U 形槽，糯糯整个身子坐在槽里滑下来，不会和槽壁、护栏穿插
+    //  - 滑道是半径 0.72 的 U 形槽，糯糯整个身子坐在槽里滑下来：脚底贴着槽底、身体顺着槽底的法线倾斜，
+    //    不会和槽壁、护栏穿插（离线几何检查：整段滑行身体和槽面零相交）
     const H = this.H = d.height || 0.9;
-    const steps = 11;
-    this.stepRun = 0.175; // 注意：不能叫 this.run，会覆盖 run() 方法
-    this.stairEnd = steps * this.stepRun; // ≈ 1.93
-    this.topEnd = this.stairEnd + 0.7;
-    const R = this.chuteR = 0.66;
+    this.entryX = -0.3; // 在果冻垫前面停下（圆肚子不会顶到垫子边）
+    this.padX = 0.62; this.padR = 0.42; this.padH = 0.15;
+    this.platX0 = 1.25;
+    this.topEnd = this.platX0 + 0.9;
+    this.landX = this.platX0 + 0.48;
+    const R = this.chuteR = 0.72;
     this.chuteDrop = 0.7 * R; // 槽底比中心线低多少
     const colA = d.color || '#7fd6ff', colB = d.color2 || '#ff8fb3';
-    // 台阶（够宽，糯糯走在上面不会悬空）
-    this.stairs = [];
-    const SW = 1.05;
-    for (let i = 0; i < steps; i++) {
-      const h = H * (i + 1) / steps;
-      const m = new THREE.Mesh(G.get(`stair|${h.toFixed(3)}|${this.stepRun}`, () => roundedBox(this.stepRun + 0.005, h, SW, 0.03, 2).translate(0, h / 2, 0)), M.soft(i % 2 ? colA : '#ffffff', { rough: 0.55, rim: 0.3 }));
-      m.position.set(this.stepRun * (i + 0.5), 0, 0);
-      m.castShadow = true; m.receiveShadow = true;
-      this.group.add(m);
-      this.stairs.push({ x0: this.stepRun * i, x1: this.stepRun * (i + 1), h });
+    // 果冻垫：半透明、亮晶晶、一压就"duang"
+    const pc = new THREE.Color(colB);
+    const padCol = d.padColor || (pc.getHSL({ h: 0, s: 0, l: 0 }).s < 0.25 ? colA : colB);
+    const padMat = M.track(new THREE.MeshPhysicalMaterial({ color: new THREE.Color(padCol), roughness: 0.08, clearcoat: 1, clearcoatRoughness: 0.1, transparent: true, opacity: 0.86, emissive: new THREE.Color(padCol), emissiveIntensity: 0.14 }));
+    this.padJu = addJiggle(padMat);
+    const pad = new THREE.Group();
+    pad.position.set(this.padX, 0, 0);
+    const dome = new THREE.Mesh(G.get('slidepad|dome', () => { const g = new THREE.SphereGeometry(this.padR, 36, 12, 0, TAU, 0, Math.PI / 2); g.scale(1, this.padH / this.padR, 1); return g; }), padMat);
+    dome.castShadow = true; dome.receiveShadow = true;
+    pad.add(dome);
+    const ring = new THREE.Mesh(G.get('slidepad|ring', () => new THREE.TorusGeometry(this.padR, 0.035, 10, 44).rotateX(Math.PI / 2).translate(0, 0.02, 0)), M.soft('#ffffff', { rough: 0.4, rim: 0.4 }));
+    pad.add(ring);
+    // 果冻里的小气泡
+    for (let k = 0; k < 6; k++) {
+      const a = (k / 6) * TAU + 0.4, rr = k % 2 ? 0.2 : 0.29;
+      const b = new THREE.Mesh(G.get('slidepad|bub', () => new THREE.SphereGeometry(0.022, 10, 8)), M.soft('#ffffff', { rough: 0.2, rim: 0.6 }));
+      b.position.set(Math.cos(a) * rr, 0.05 + (k % 3) * 0.015, Math.sin(a) * rr);
+      pad.add(b);
     }
-    const plat = new THREE.Mesh(G.track(roundedBox(this.topEnd - this.stairEnd + 0.06, 0.08, 1.2, 0.03, 2).translate((this.stairEnd + this.topEnd) / 2, H - 0.04, 0)), M.soft(colB, { rough: 0.5, rim: 0.35 }));
+    this.group.add(pad);
+    this.padObj = pad;
+    this.padSq = new Spring(220, 7, 1);
+    this.padSy = 1;
+    // 平台：圆角厚台面 + 四根粗粗的糖果柱
+    const plat = new THREE.Mesh(G.track(roundedBox(this.topEnd - this.platX0, 0.1, 1.2, 0.045, 3).translate((this.platX0 + this.topEnd) / 2, H - 0.05, 0)), M.soft(colB, { rough: 0.5, rim: 0.35 }));
     plat.castShadow = true; plat.receiveShadow = true;
     this.group.add(plat);
-    // 平台下面的柱子
-    for (const zz of [-0.5, 0.5]) {
-      const leg = new THREE.Mesh(G.get('slide|platleg', () => new THREE.CylinderGeometry(0.05, 0.06, H - 0.08, 10).translate(0, (H - 0.08) / 2, 0)), M.soft(colB, { rough: 0.5 }));
-      leg.position.set(this.topEnd - 0.06, 0, zz); leg.castShadow = true; this.group.add(leg);
+    const trim = new THREE.Mesh(G.track(roundedBox(this.topEnd - this.platX0 + 0.02, 0.035, 1.22, 0.016, 2).translate((this.platX0 + this.topEnd) / 2, H - 0.105, 0)), M.soft('#ffffff', { rough: 0.45, rim: 0.3 }));
+    this.group.add(trim);
+    for (const xx of [this.platX0 + 0.1, this.topEnd - 0.08]) for (const zz of [-0.48, 0.48]) {
+      const leg = new THREE.Mesh(G.get('slide|platleg|' + H.toFixed(2), () => new THREE.CylinderGeometry(0.055, 0.07, H - 0.12, 12).translate(0, (H - 0.12) / 2, 0)), M.soft(colA, { rough: 0.5, rim: 0.3 }));
+      leg.position.set(xx, 0, zz); leg.castShadow = true; this.group.add(leg);
+      const foot = new THREE.Mesh(G.get('slide|platfoot', () => new THREE.SphereGeometry(0.085, 12, 8, 0, TAU, 0, Math.PI / 2)), M.soft('#ffffff', { rough: 0.5 }));
+      foot.position.set(xx, 0, zz); this.group.add(foot);
     }
     // 扶手只做在背向镜头的一侧，离糯糯身体留出空隙
     const zz = -0.64;
-    for (const xx of [this.stairEnd + 0.06, this.topEnd - 0.04]) {
+    for (const xx of [this.platX0 + 0.06, this.topEnd - 0.04]) {
       const post = new THREE.Mesh(G.get('slide|post', () => new THREE.CylinderGeometry(0.035, 0.035, 0.42, 10).translate(0, 0.21, 0)), M.soft('#ffd166', { rough: 0.45, rim: 0.3 }));
       post.position.set(xx, H, zz); post.castShadow = true; this.group.add(post);
       const ball = new THREE.Mesh(G.get('slide|postball', () => new THREE.SphereGeometry(0.05, 12, 8)), M.soft('#ffd166', { rough: 0.4, rim: 0.4 }));
       ball.position.set(xx, H + 0.44, zz); this.group.add(ball);
     }
-    const rail = new THREE.Mesh(G.track(new THREE.CylinderGeometry(0.025, 0.025, this.topEnd - this.stairEnd - 0.1, 8).rotateZ(Math.PI / 2)), M.soft('#ffd166', { rough: 0.45 }));
-    rail.position.set((this.stairEnd + this.topEnd) / 2 + 0.01, H + 0.4, zz);
+    const rail = new THREE.Mesh(G.track(new THREE.CylinderGeometry(0.025, 0.025, this.topEnd - this.platX0 - 0.1, 8).rotateZ(Math.PI / 2)), M.soft('#ffd166', { rough: 0.45 }));
+    rail.position.set((this.platX0 + this.topEnd) / 2 + 0.01, H + 0.4, zz);
     this.group.add(rail);
     // 滑道：一条 S 形的 U 形槽（开口朝上），槽底的起点和平台一样高
     const lift = this.chuteDrop;
@@ -484,9 +503,19 @@ export class SlideGimmick extends Gimmick {
     this.pileIM.instanceMatrix.needsUpdate = true;
   }
   topY(x, z) {
-    if (x < this.stairEnd) { const s = this.stairs.find((q) => x >= q.x0 && x < q.x1); return s ? s.h : 0; }
-    if (x < this.topEnd && Math.abs(z) < 0.6) return this.H;
+    const dp = Math.hypot(x - this.padX, z);
+    if (dp < this.padR) { const k = dp / this.padR; return this.padH * this.padSy * Math.sqrt(Math.max(0, 1 - k * k)); }
+    if (x >= this.platX0 && x < this.topEnd && Math.abs(z) < 0.6) return this.H;
     return 0;
+  }
+  // 果冻垫被压一下 / 弹一下
+  _boing(G, power, sound = true) {
+    this.padSq.x = Math.min(this.padSq.x, 1 - 0.28 * power);
+    this.padSq.v -= 1.2 * power;
+    kickJiggle(this.padJu, V(0, this.padH, 0), 0.7 + power * 0.6);
+    const p = this.W(this.padX, this.padH, 0);
+    if (sound) G.sfx(this.def.padSound || 'bounce', p, { gain: -5 + power * 3 });
+    G.burst('sparkles', p, { colors: ['#ffffff', '#fff2a8', '#ffd6e8'], count: 3 + Math.round(power * 5), scale: 0.5 });
   }
   update(dt) {
     super.update(dt);
@@ -509,6 +538,12 @@ export class SlideGimmick extends Gimmick {
       if (!any) this.pileLive = false;
     }
     if (this.mound && this.moundSq) { const s = this.moundSq.update(dt); this.mound.scale.set(1 + (1 - s) * 0.3, s, 1 + (1 - s) * 0.3); }
+    if (this.padObj) {
+      const s = clamp(this.padSq.update(dt), 0.6, 1.3);
+      this.padSy = s;
+      this.padObj.scale.set(1 + (1 - s) * 0.3, s, 1 + (1 - s) * 0.3);
+      this.padJu.uJT.value += dt;
+    }
   }
   _splash(G, p) {
     const d = this.def;
@@ -532,31 +567,73 @@ export class SlideGimmick extends Gimmick {
     const pet = G.pet, d = this.def;
     const H = this.H;
     G.label(this.label);
-    // 爬台阶：侧前方稍高的机位，糯糯迎着镜头往上走
-    G.cam('follow', { off: V(2.4, 1.7, 1.5), lookY: 0.5, lookFromPet: true, lambda: 1.3 });
+    // 侧前方的机位：果冻垫、平台、滑梯口都在画面里，糯糯迎着镜头
+    const far = G.portrait ? 1.25 : 1;
+    G.cam('point', { pos: () => this.W(1.3, 1.55, 4.3 * far), look: () => V(lerp(this.x0 + 1.2, pet.root.position.x, 0.35), lerp(this.group.position.y + 0.9, pet.root.position.y + 0.55, 0.6), 0), lambda: 3.2 });
     pet.expr('wide', 'open', 1.2, 'up');
     G.say(d.say || '哇，滑滑梯！');
     await pet.idleAction('peek', 0.6);
     G.unsay();
-    const topPos = this.W(this.stairEnd + 0.22, H, 0);
-    await G.walkTo(topPos, { stepDur: 0.4, stride: this.stepRun, sound: d.stepSound || 'wood_step', gain: -3 });
+    // 跳上果冻垫（脚微微陷进果冻里，垫子一压一弹，脚一直贴着垫面）
+    const padTop = () => this.W(this.padX, this.padH, 0);
+    await pet.hop(padTop(), { height: 0.36, dur: 0.5 });
+    pet.setGround(padTop().y);
+    pet.sinkTarget = 0.03;
+    this._boing(G, 0.55);
+    G.countStep();
+    // 原地弹两下蓄力（对着镜头）
+    pet.faceTowards(G.camPos().x, G.camPos().z);
+    pet.expr('happy', 'open', 1.0);
+    for (const h of [0.28, 0.48]) {
+      await pet.hop(padTop(), { height: h, dur: 0.4 + h * 0.3, anticipation: 0.05, keepFacing: true, onTakeoff: () => this._boing(G, 0.25, false) });
+      pet.setGround(padTop().y);
+      this._boing(G, 0.45 + h);
+    }
+    // 嘣！先往上、再往前（水平方向缓入），肚子从平台前缘上方越过去
+    G.say(d.boing || '弹——上去！');
+    this.padSq.x = 0.72; // 蓄力时把果冻压扁
+    const landP = this.W(this.landX, H, 0);
+    G.sfx('whoosh', padTop(), { gain: -6, main: false, delay: 0.1 });
+    // 侧着身子往上弹（3/4 正脸一直对着镜头，不露后背）
+    pet.face(0.55);
+    await pet.hop(landP, { height: 0.62, dur: 0.8, anticipation: 0.14, keepFacing: true, hEase: (u) => Math.pow(u, 1.6), onTakeoff: () => { pet.sinkTarget = 0; this.padSq.v += 3.5; this._boing(G, 1.0); } });
+    pet.setGround(landP.y);
+    G.sfx(d.stepSound || 'wood_step', landP, { gain: 0 });
+    G.sfx('land_soft', landP, { gain: -6, main: false });
+    G.unsay();
     // 在顶上转身对镜头挥挥手
-    G.cam('point', { pos: () => this.W(this.stairEnd + 2.1, H + 0.75, 2.1), look: () => V(pet.root.position.x, pet.root.position.y + 0.5, pet.root.position.z), lambda: 1.6 });
-    pet.faceTowards(this.x0 + this.stairEnd + 2.1, 2.1);
+    // 镜头在平台左前方偏高（滑道口在糯糯身后，不会挡住她）
+    const waveCam = this.W(this.landX - 1.05, H + 0.95, 2.3 * far);
+    G.cam('point', { pos: () => waveCam, look: () => V(pet.root.position.x + 0.15, pet.root.position.y + 0.45, pet.root.position.z), lambda: 1.8 });
+    pet.faceTowards(waveCam.x, waveCam.z);
     pet.expr('happy', 'open', 1.4);
     G.say(d.ready || '准备好啦～');
     await pet.idleAction('wave', 1.0);
     G.unsay();
-    await G.walkTo(this.W(this.topEnd - 0.12, H, 0), { stepDur: 0.32, stride: 0.15, sound: d.stepSound || 'wood_step', gain: -4, facing: true });
+    // 小跳一下到滑道口（不在滑道旁边慢慢走：那样会被滑道的边挡住）
+    const lip = this.W(this.topEnd - 0.12, H, 0);
+    await pet.hop(lip, { height: 0.22, dur: 0.36, anticipation: 0.06 });
+    pet.setGround(lip.y);
+    G.sfx(d.stepSound || 'wood_step', lip, { gain: -4 });
     // 滑！镜头切到滑梯底部，迎着糯糯拍（Crash Bandicoot 式正面）
     G.cam('point', { pos: () => this.W(this.pileX + 1.9, 0.95, 1.7), look: () => V(pet.root.position.x, pet.root.position.y + 0.38, pet.root.position.z * 0.6), lambda: 3.0, cut: true });
     // 糯糯坐在 U 形槽的槽底滑下来（脚底贴着槽底，身体在槽里，不会悬空也不会穿过槽壁）
+    // 滑行路线 = 槽底（沿槽的横截面法线往下，而不是竖直往下：陡的地方横截面是斜的）再抬高 3 厘米
     const drop = this.chuteDrop - 0.03;
-    const curveW = new THREE.CatmullRomCurve3(this.curveLocal.points.map((q) => this.W(q.x, q.y - drop, q.z)).concat([this.W(this.pileX - 0.15, 0.2, 0)]), false, 'centripetal');
+    const ridePts = [];
+    for (let i = 0; i <= 40; i++) {
+      const u = i / 40, p = this.curveLocal.getPointAt(u), t = this.curveLocal.getTangentAt(u);
+      const side = new THREE.Vector3().crossVectors(t, V(0, 1, 0)).normalize();
+      const nrm = new THREE.Vector3().crossVectors(side, t).normalize();
+      p.addScaledVector(nrm, -drop);
+      ridePts.push(this.W(p.x, p.y, p.z));
+    }
+    ridePts.push(this.W(this.pileX - 0.15, 0.2, 0));
+    const curveW = new THREE.CatmullRomCurve3(ridePts, false, 'centripetal');
     G.sfx('whoosh', this.W(this.topEnd, H, 0), { gain: -2, main: false });
     G.sfx('slide_roll', this.W(this.topEnd, H, 0), { gain: -3, maxDur: 1.7 });
     G.say(d.wee || '呜呼～～');
-    await pet.ride(curveW, d.slideDur || 2.0, { faceTo: () => G.camPos(), bank: 0.4 });
+    await pet.ride(curveW, d.slideDur || 2.0, { faceTo: () => G.camPos(), faceK: 0.35, align: true, bank: 0 });
     G.unsay();
     // 扑进软软的落地堆
     const land = this.W(this.pileX, 0.22, 0);
