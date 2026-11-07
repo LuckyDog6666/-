@@ -113,7 +113,8 @@ export function buildTool(type, M) {
       const cols = ['#ff8fb3', '#7fd6ff', '#ffd166'];
       for (let i = 0; i < 3; i++) {
         const a = (i - 1) * 0.42;
-        const top = V(Math.sin(a) * 0.32, 0.78 + (i === 1 ? 0.12 : 0), Math.cos(a) * 0.05);
+        // 整串气球往身体外侧偏一点：绳子从小手往上、往外散开，不会贴着身体侧面穿过去
+        const top = V(Math.sin(a) * 0.32 + 0.22, 0.78 + (i === 1 ? 0.12 : 0), Math.cos(a) * 0.05);
         const b = new THREE.SphereGeometry(0.17, 20, 16); b.scale(1, 1.15, 1);
         add(b, M.soft(cols[i], { rough: 0.25, rim: 0.7, rimColor: '#ffffff' }), top);
         add(new THREE.ConeGeometry(0.03, 0.04, 8), M.soft(cols[i], { rough: 0.3 }), top.clone().add(V(0, -0.2, 0)), [Math.PI, 0, 0]);
