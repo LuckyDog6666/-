@@ -245,7 +245,9 @@ export class Game {
         // 走到这一段的入口（闯关元素在入口前停一下，先"看一眼"前面的挑战）
         this.cam.set('front');
         // 一块块跳上去玩的（果冻、面包）：在更前面停下，圆肚子不会顶到第一块
-        const entryX = s.entryX != null ? s.x0 + s.entryX : s.kind === 'gimmick' ? s.x0 - 0.12 : (s.blocks || s.items) ? s.x0 - 0.62 : s.x0 - 0.32;
+        // 高出地面的终点大物件（雪蛋糕等）也在更前面停下，再跳上去：圆肚子不会顶到它的边
+        const raised = s.finale && !s.blocks && !s.items && s.topY(Math.min(0.3, s.length / 2), 0) > 0.12;
+        const entryX = s.entryX != null ? s.x0 + s.entryX : s.kind === 'gimmick' ? s.x0 - 0.12 : (s.blocks || s.items || raised) ? s.x0 - 0.62 : s.x0 - 0.32;
         await this.walkTo(V(entryX, 0, 0), { stepDur: 0.42, stride: 0.3 });
         if (s.kind === 'gimmick') await s.run(this.api);
         else if (s.finale) await this.runFinale(s);

@@ -208,7 +208,13 @@ export class SoftSlab extends Station {
       api.sink(0);
     }
   }
-  update(dt) { super.update(dt); this.hf.update(dt); }
+  update(dt) {
+    super.update(dt);
+    this.hf.update(dt);
+    // 肚子压着表面的时候，闪粉跟着凹下去的表面走
+    if (this.hf.capIdx.length || this._capWas) this._refreshGlitter();
+    this._capWas = this.hf.capIdx.length > 0;
+  }
 }
 
 // ================= 2. 史莱姆：踩下去黏黏的，抬脚会拉出丝 =================
