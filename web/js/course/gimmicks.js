@@ -494,6 +494,7 @@ export class SlideGimmick extends Gimmick {
       const mat = M.track(new THREE.ShaderMaterial({ uniforms: u, vertexShader: LIQ_VERT, fragmentShader: LIQ_FRAG, transparent: true, depthWrite: false }));
       const w = new THREE.Mesh(G.track(new THREE.CircleGeometry(0.7, 40).rotateX(-Math.PI / 2).translate(x, 0.1, 0)), mat);
       w.renderOrder = 2;
+      w.userData.liquid = true; // 水面：坐进水池里，身体下半截在水里是对的
       this.group.add(w);
       this.liq = u;
     }
