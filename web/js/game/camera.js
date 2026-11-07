@@ -86,7 +86,8 @@ export class CameraDirector {
       case 'task': { // 任务台（切菜、煎饼、叠衣服……）：像美食节目，在操作台正前方
         const c = o.at || p;
         const s = o.dist || 1;
-        return { look: V(c.x, (c.y ?? g) + (o.lookY ?? 0.32), c.z ?? 0), off: (P ? V(0.8, 1.4, 2.95) : V(0.92, 1.08, 2.5)).multiplyScalar(s * big), lambda: 1.5 };
+        const base = o.off ? o.off.clone().multiplyScalar(P ? 1.18 : 1) : (P ? V(0.8, 1.4, 2.95) : V(0.92, 1.08, 2.5));
+        return { look: V(c.x, (c.y ?? g) + (o.lookY ?? 0.32), c.z ?? 0), off: base.multiplyScalar(s * big), lambda: 1.5 };
       }
       case 'point': { // 任意固定机位：o.pos 机位，o.look 看向（滑梯底部仰拍等）
         const look = typeof o.look === 'function' ? o.look() : o.look || p;

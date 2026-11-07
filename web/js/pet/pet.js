@@ -5,7 +5,7 @@
 import * as THREE from 'three';
 import { outlineMaterial } from '../render/materials.js';
 import { Tex } from '../render/textures.js';
-import { buildTool } from './tools.js';
+import { buildTool, toolQuat } from './tools.js';
 import { Spring, clamp, lerp, damp, dampAngle, TAU, ease, rand, smoothstep } from '../core/util.js';
 
 const C = {
@@ -23,7 +23,7 @@ const C = {
   nose: '#ff9eb8',
   pad: '#ffa9c2',
   sprout: '#72cc6e',
-  outline: '#6a4656',
+  outline: '#8a5c6e', // 柔和的玫瑰棕描边：细细一圈，手机小屏也认得出轮廓，又不像贴纸那样"描黑边"
 };
 
 // 椭球体（把缩放烘焙进几何体，描边粗细才一致）
@@ -103,12 +103,17 @@ export class Pet {
     this.extraAccessory = null;
     this.tool = null;
     this.toolType = null;
+    // 两只小手"够到目标"（IK）：任务里刀尖、打蛋器、扫帚头、抹布真正接触到要处理的东西
+    this.reach = { L: { get: null, w: 0, target: 0, speed: 8 }, R: { get: null, w: 0, target: 0, speed: 8 } };
+    this.held = { L: null, R: null }; // 小手里抓着的物件（玩具、衣服……）
+    this.work = { lean: 0, leanT: 0, crouch: 0, crouchT: 0 }; // 干活时身体前倾、蹲下（平滑过渡）
+    this.gaze = null; // 视线跟着手里的活儿（世界坐标点，或返回点的函数）
   }
 
   // ---------------- 建模 ----------------
   _build() {
     const M = this.mats;
-    const OL = outlineMaterial(C.outline, 0.016);
+    const OL = outlineMaterial(C.outline, 0.011);
     this.disposables.push(OL);
     const addOutline = (mesh, w) => {
       const o = new THREE.Mesh(mesh.geometry, w ? (() => { const m = outlineMaterial(C.outline, w); this.disposables.push(m); return m; })() : OL);
@@ -150,7 +155,7 @@ export class Pet {
     this.body = new THREE.Mesh(bg, bodyMat);
     this.body.castShadow = true;
     this.lean.add(this.body);
-    addOutline(this.body, 0.018);
+    addOutline(this.body, 0.012);
 
     const bodyCenterY = R * 0.9 * 0.86;
     this.headY = bodyCenterY + R * 0.9; // 头顶
@@ -311,15 +316,16 @@ export class Pet {
       pivot.position.set(0.47 * s, 0.44, 0.1);
       const arm = new THREE.Mesh(armGeo, earMat);
       arm.castShadow = true;
-      addOutline(arm, 0.012);
+      addOutline(arm, 0.009);
       pivot.add(arm);
       const hand = new THREE.Group();
       hand.position.set(0, -0.24, 0.02);
       pivot.add(hand);
       this.lean.add(pivot);
-      this.arms.push({ pivot, arm, hand, side: s });
+      this.arms.push({ pivot, arm, hand, side: s, base: pivot.position.clone() });
     }
     this.handR = this.arms[1].hand;
+    this.handL = this.arms[0].hand;
 
     // ---- 小脚（脚底有粉色肉垫：一颗掌垫 + 三颗脚趾豆） ----
     const footGeo = ellipsoid(0.12, 0.065, 0.14, 16, 12); this.disposables.push(footGeo);
@@ -332,7 +338,7 @@ export class Pet {
       const f = new THREE.Mesh(footGeo, footMat);
       f.position.set(0.19 * s, 0.05, 0.12);
       f.castShadow = true;
-      addOutline(f, 0.012);
+      addOutline(f, 0.009);
       const pad = new THREE.Mesh(padG, padMat); pad.position.set(0, -0.058, -0.012); f.add(pad);
       for (const k of [-1, 0, 1]) { const toe = new THREE.Mesh(toeG, padMat); toe.position.set(k * 0.042, -0.05, 0.072 - Math.abs(k) * 0.012); f.add(toe); }
       this.bodyPivot.add(f);
@@ -343,7 +349,7 @@ export class Pet {
     const tailGeo = new THREE.IcosahedronGeometry(0.1, 2); this.disposables.push(tailGeo);
     this.tail = new THREE.Mesh(tailGeo, earMat);
     this.tail.position.set(0, 0.2, -0.47);
-    addOutline(this.tail, 0.012);
+    addOutline(this.tail, 0.009);
     this.lean.add(this.tail);
 
     // ---- 配饰挂点 ----
@@ -385,15 +391,15 @@ export class Pet {
     if (this.extraAccessory) this.extraAccessory.position.y = 0.02 + (this.accessory && !this.accessory.userData.neck && this.accessory.userData.tall ? 0.16 : 0);
   }
   // 拿起 / 放下道具（刀、打蛋器、锅铲、扫帚、抹布、气球……）
-  hold(type) {
+  hold(type, o = {}) {
     if (this.toolType === type) return this.tool;
     if (this.tool) { this.handR.remove(this.tool); this._disposeObj(this.tool); this.tool = null; this.toolType = null; }
     if (!type) return null;
     const t = buildTool(type, this.mats);
     if (!t) return null;
-    t.scale.setScalar(0.001);
+    t.scale.setScalar(o.instant ? (t.userData.scale || 1) : 0.001);
     this.handR.add(t);
-    this.tool = t; this.toolType = type; this.toolPop = 0;
+    this.tool = t; this.toolType = type; this.toolPop = o.instant ? 1 : 0;
     return t;
   }
   // 道具尖端在世界坐标中的位置（切菜刀口、扫帚头、抹布……）
@@ -402,7 +408,46 @@ export class Pet {
     this.root.updateMatrixWorld(true);
     return this.tool.localToWorld((this.tool.userData.tip || new THREE.Vector3()).clone());
   }
-  handWorld() { this.root.updateMatrixWorld(true); return this.handR.localToWorld(new THREE.Vector3()); }
+  handWorld(side = 'R') { this.root.updateMatrixWorld(true); return (side === 'L' ? this.handL : this.handR).localToWorld(new THREE.Vector3()); }
+
+  /**
+   * 让一只小手去够一个目标（每帧求解，目标可以是会动的）。
+   * get() 返回 { pos }（手的位置），或 { tip, dir, side }（右手拿道具时：道具尖端要到的位置、
+   * 握把→尖端的方向、道具局部 +x 朝向），都是世界坐标。手臂会像麻薯一样适当拉长来够到。
+   */
+  reachTo(side, get, o = {}) {
+    const r = this.reach[side];
+    r.get = typeof get === 'function' ? get : () => ({ pos: get });
+    r.target = o.weight ?? 1;
+    r.speed = o.speed ?? 8;
+    if (o.snap) r.w = r.target;
+  }
+  release(side, o = {}) {
+    const sides = side ? [side] : ['L', 'R'];
+    for (const k of sides) { const r = this.reach[k]; r.target = 0; r.speed = o.speed ?? 6; }
+  }
+  // 干活时身体前倾（弧度）、蹲下（0..1）、视线看着手上的活儿
+  setLean(v) { this.work.leanT = v; }
+  setCrouch(v) { this.work.crouchT = clamp(v, 0, 1); }
+  gazeAt(p) { this.gaze = p || null; }
+
+  // 抓起 / 放下一个物件（保持世界位置不跳变）
+  grab(side, obj, o = {}) {
+    const hand = side === 'L' ? this.handL : this.handR;
+    this.root.updateMatrixWorld(true);
+    if (o.upright) obj.userData.fixedQ = obj.getWorldQuaternion(new THREE.Quaternion());
+    hand.attach(obj);
+    this.held[side] = obj;
+  }
+  drop(side, parent) {
+    const obj = this.held[side];
+    if (!obj) return null;
+    this.root.updateMatrixWorld(true);
+    parent.attach(obj);
+    delete obj.userData.fixedQ;
+    this.held[side] = null;
+    return obj;
+  }
   _disposeObj(o) { o.traverse((c) => { if (c.geometry) c.geometry.dispose(); }); }
 
   // ---------------- 表情 ----------------
@@ -751,6 +796,13 @@ export class Pet {
       if (a.t >= a.seconds) { this.action = null; a.resolve(); }
     }
 
+    // 干活：前倾看着手上的东西；蹲下去捡地上的东西
+    const W = this.work;
+    W.lean = damp(W.lean, W.leanT, 7, dt);
+    W.crouch = damp(W.crouch, W.crouchT, 9, dt);
+    P.rx += W.lean;
+    P.sy *= 1 - 0.22 * W.crouch;
+
     // 陷入软物体（棉花糖/云朵）
     this.sink = damp(this.sink, airborne ? 0 : this.sinkTarget, 10, dt);
 
@@ -783,12 +835,28 @@ export class Pet {
     this.sproutPivot.rotation.x = Math.sin(t * 1.3 + 1) * 0.04;
 
     // 手脚
-    this.arms[0].pivot.rotation.z = -P.armL.z; this.arms[0].pivot.rotation.x = -P.armL.x;
-    this.arms[1].pivot.rotation.z = -P.armR.z; this.arms[1].pivot.rotation.x = -P.armR.x;
-    // 卡通式"伸长"：手举得越高越长，动作更好认
+    // 卡通式"伸长"：手举得越高越长，动作更好认（只拉长手臂本身，手里的道具不变形）
     const stretch = (z) => 1 + clamp((Math.abs(z) - 1.1) / 1.4, 0, 1) * 0.4;
-    this.arms[0].pivot.scale.set(1, stretch(P.armL.z), 1);
-    this.arms[1].pivot.scale.set(1, stretch(P.armR.z), 1);
+    for (const [arm, pa, key] of [[this.arms[0], P.armL, 'L'], [this.arms[1], P.armR, 'R']]) {
+      _e1.set(-pa.x, 0, -pa.z);
+      arm.pivot.quaternion.setFromEuler(_e1);
+      arm.stretch = stretch(pa.z);
+      arm.pivot.position.copy(arm.base);
+      const r = this.reach[key];
+      r.w = damp(r.w, r.get ? r.target : 0, r.speed, dt);
+      if (r.w < 0.002 && r.target === 0) { r.w = 0; r.get = null; }
+    }
+    this._toolQ = null; this._toolW = 0;
+    if (this.reach.L.w > 0 || this.reach.R.w > 0) this._solveReach();
+    for (const arm of this.arms) {
+      arm.arm.scale.set(1, arm.stretch, 1);
+      arm.hand.position.y = -0.24 * arm.stretch;
+    }
+    // 端着/拎着的东西保持原来的世界朝向
+    for (const [k, hand] of [['L', this.handL], ['R', this.handR]]) {
+      const o = this.held[k];
+      if (o && o.userData.fixedQ) { this.root.updateMatrixWorld(true); o.quaternion.copy(hand.getWorldQuaternion(_q1).invert().multiply(o.userData.fixedQ)); }
+    }
     for (const [ft, fp] of [[this.feet[0], P.footL], [this.feet[1], P.footR]]) {
       ft.m.position.set(ft.baseX + fp.x, 0.05 + fp.y, ft.baseZ + fp.z);
       ft.m.rotation.x = fp.rx || 0;
@@ -806,7 +874,18 @@ export class Pet {
       // 道具朝向：气球/雨伞永远朝上；刀、打蛋器、裱花袋永远朝下（刀口垂直落到砧板上）；扫帚、拖把斜着靠向前方。
       // 握把始终在小手里，只是朝向不跟着手臂转，画面更自然
       const aim = this.tool.userData.aim;
-      if (this.tool.userData.up || aim != null) {
+      if (this._toolQ) {
+        // 任务控制道具朝向（刀刃竖直落到砧板、打蛋器插进碗里……）：在默认朝向和任务朝向之间混合
+        this.root.updateMatrixWorld(true);
+        const hq = this.handR.getWorldQuaternion(_q1).invert();
+        _q3.copy(this._toolQ);
+        if (this._toolW < 1) {
+          _q2.copy(this.root.getWorldQuaternion(_q4));
+          if (aim != null) _q2.multiply(_q5.setFromAxisAngle(_X, -aim));
+          _q3.slerpQuaternions(_q2, this._toolQ, this._toolW);
+        }
+        this.tool.quaternion.copy(hq.multiply(_q3));
+      } else if (this.tool.userData.up || aim != null) {
         this.root.updateMatrixWorld(true);
         const hq = this.handR.getWorldQuaternion(_q1).invert();
         this.tool.quaternion.copy(hq.multiply(this.root.getWorldQuaternion(_q2)));
@@ -819,9 +898,19 @@ export class Pet {
     }
 
     // 视线
+    if (this.gaze) {
+      // 眼睛看着手上的活儿（刀口、碗里、拖把头……）：把注视点换到头部局部坐标，映射成瞳孔偏移
+      const gp = typeof this.gaze === 'function' ? this.gaze() : this.gaze;
+      if (gp) {
+        this.root.updateMatrixWorld(true);
+        const lp = this.lean.worldToLocal(_v1.copy(gp));
+        const ex = lp.x, ey = lp.y - 0.53, ez = Math.max(0.15, lp.z - 0.3);
+        this.lookTX = clamp(ex / ez * 1.6, -1, 1);
+        this.lookTY = clamp(ey / ez * 1.8, -1, 0.8);
+      }
+    } else if (Math.random() < dt * 0.4) { this.lookTX = rand(-0.6, 0.6); this.lookTY = rand(-0.3, 0.4); }
     this.lookX = damp(this.lookX, this.lookTX, 6, dt);
     this.lookY = damp(this.lookY, this.lookTY, 6, dt);
-    if (Math.random() < dt * 0.4) { this.lookTX = rand(-0.6, 0.6); this.lookTY = rand(-0.3, 0.4); }
 
     this._applyExpr(dt, P);
     if (this.extraAccessory) {
@@ -838,6 +927,42 @@ export class Pet {
     this.shadow.material.opacity = clamp(1 - h * 0.4, 0.3, 1);
   }
 
+  // 两只小手的 IK：手臂从肩膀指向目标，必要时像麻薯一样拉长（最多约 1.9 倍）
+  _solveReach() {
+    this.root.updateMatrixWorld(true);
+    for (const [key, arm] of [['L', this.arms[0]], ['R', this.arms[1]]]) {
+      const r = this.reach[key];
+      if (!(r.w > 0) || !r.get) continue;
+      let goal;
+      try { goal = r.get(); } catch (e) { console.error(e); goal = null; }
+      if (!goal) continue;
+      let hand;
+      if (goal.tip && key === 'R' && this.tool) {
+        // 道具：尖端落在 tip，朝向由 quat 或（dir 握把→尖端, side 局部 +x）给出。先定道具的世界朝向，再反推小手应该在哪
+        const q = goal.quat ? goal.quat.clone() : toolQuat(goal.dir || _DOWN, goal.side);
+        this._toolQ = q; this._toolW = r.w;
+        const sc = this.tool.userData.scale || 1;
+        const tipLocal = (this.tool.userData.tip || new THREE.Vector3(0, -0.2, 0)).clone().multiplyScalar(sc);
+        hand = goal.tip.clone().sub(tipLocal.applyQuaternion(q));
+      } else {
+        hand = (goal.pos || goal.tip).clone();
+      }
+      // 转到 lean 的局部坐标（含身体的倾斜、挤压）
+      const local = this.lean.worldToLocal(hand);
+      // 伸手时肩膀往前挪一点（手臂根部仍藏在身体侧面里，看不出来），够得更远
+      arm.pivot.position.z = arm.base.z + 0.15 * r.w;
+      arm.pivot.position.x = arm.base.x * (1 - 0.05 * r.w);
+      const d = local.sub(arm.pivot.position);
+      const dist = d.length();
+      if (dist < 1e-4) continue;
+      const qIK = _q4.setFromUnitVectors(_DOWN, d.multiplyScalar(1 / dist));
+      arm.pivot.quaternion.slerp(qIK, r.w);
+      const want = clamp(dist / 0.24, 0.75, 2.0);
+      arm.stretch = lerp(arm.stretch, want, r.w);
+      arm.reachErr = Math.max(0, dist - 0.24 * want) * r.w; // 够不到的距离（调试/自检用）
+    }
+  }
+
   dispose() {
     for (const d of this.disposables) d.dispose && d.dispose();
     this.setAccessory(null);
@@ -846,7 +971,11 @@ export class Pet {
   }
 }
 
-const _q1 = new THREE.Quaternion(), _q2 = new THREE.Quaternion();
+const _q1 = new THREE.Quaternion(), _q2 = new THREE.Quaternion(), _q3 = new THREE.Quaternion(), _q4 = new THREE.Quaternion(), _q5 = new THREE.Quaternion();
+const _e1 = new THREE.Euler();
+const _X = new THREE.Vector3(1, 0, 0), _DOWN = new THREE.Vector3(0, -1, 0);
+const _v1 = new THREE.Vector3(), _v2 = new THREE.Vector3(), _v3 = new THREE.Vector3();
+const _m1 = new THREE.Matrix4();
 
 // 每种道具动作"接触"的相位（0~1）：声音和特效在这一帧触发
 const ACT_HIT = { chop: 0.55, whisk: 0.5, sweep: 0.55, wipe: 0.5, flip: 0.35, pipe: 0.6, tap: 0.5, fold: 0.6, push: 0.55, pour: 0.4, scrub: 0.5, crack: 0.5 };

@@ -6,6 +6,20 @@ import { TAU } from '../core/util.js';
 
 const V = (x, y, z) => new THREE.Vector3(x, y, z);
 
+/**
+ * 道具的世界朝向：dir = 握把→尖端的方向（道具局部 -y），side = 道具局部 +x 大致朝向。
+ * 手上拿着的道具（IK）和放在台面上的道具共用同一种描述，拿起/放下时位置朝向完全衔接。
+ */
+export function toolQuat(dir, side, out = new THREE.Quaternion()) {
+  const y = dir.clone().normalize().negate();
+  const x = (side ? side.clone() : V(1, 0, 0));
+  x.addScaledVector(y, -x.dot(y));
+  if (x.lengthSq() < 1e-6) { x.set(0, 0, 1).addScaledVector(y, -y.z); if (x.lengthSq() < 1e-6) x.set(1, 0, 0); }
+  x.normalize();
+  const z = V(0, 0, 0).crossVectors(x, y).normalize();
+  return out.setFromRotationMatrix(new THREE.Matrix4().makeBasis(x, y, z));
+}
+
 export function buildTool(type, M) {
   const g = new THREE.Group();
   g.name = 'tool:' + type;
@@ -21,10 +35,11 @@ export function buildTool(type, M) {
       handle('#ff8fb8', 0.1);
       const s = new THREE.Shape();
       s.moveTo(0, 0); s.lineTo(0.05, 0); s.quadraticCurveTo(0.075, -0.14, 0.035, -0.2); s.quadraticCurveTo(0.0, -0.215, -0.012, -0.18); s.lineTo(0, 0);
-      const blade = new THREE.ExtrudeGeometry(s, { depth: 0.012, bevelEnabled: true, bevelSize: 0.006, bevelThickness: 0.004, bevelSegments: 2, curveSegments: 10 });
-      blade.translate(-0.02, -0.12, -0.006);
-      add(blade, M.soft('#dbe9ff', { rough: 0.22, rim: 0.6, rimColor: '#ffffff' }));
-      g.userData.tip = V(0.01, -0.3, 0);
+      // 胖乎乎的玩具刀身（够厚，正面看过去也认得出来）
+      const blade = new THREE.ExtrudeGeometry(s, { depth: 0.024, bevelEnabled: true, bevelSize: 0.008, bevelThickness: 0.006, bevelSegments: 3, curveSegments: 10 });
+      blade.translate(-0.02, -0.12, -0.012);
+      add(blade, M.soft('#a9d8ff', { rough: 0.25, rim: 0.7, rimColor: '#ffffff' }));
+      g.userData.tip = V(0.012, -0.33, 0); // 刀刃最下面（落到砧板上的那一点）
       break;
     }
     case 'whisk': { // 打蛋器
@@ -38,19 +53,23 @@ export function buildTool(type, M) {
       g.userData.tip = V(0, -0.24, 0);
       break;
     }
-    case 'spatula': { // 锅铲
+    case 'spatula': { // 锅铲：铲面和把手成 45°——把手斜着朝下前方时，铲面正好是平的，可以铲到松饼底下
       handle('#7fd6ff', 0.12);
-      add(roundedBox(0.1, 0.012, 0.12, 0.006, 2).translate(0, 0, 0), M.soft('#fff4e6', { rough: 0.4, rim: 0.4 }), V(0, -0.2, 0.03), [0.25, 0, 0]);
-      add(new THREE.CylinderGeometry(0.008, 0.008, 0.07, 6), M.soft('#fff4e6', { rough: 0.4 }), V(0, -0.15, 0.01), [0.25, 0, 0]);
-      g.userData.tip = V(0, -0.22, 0.05);
+      add(new THREE.CylinderGeometry(0.008, 0.008, 0.05, 6), M.soft('#fff4e6', { rough: 0.4 }), V(0, -0.165, 0));
+      const blade = roundedBox(0.11, 0.01, 0.12, 0.005, 2);
+      add(blade, M.soft('#fff4e6', { rough: 0.4, rim: 0.4 }), V(0, -0.2025, 0.042), [Math.PI / 4, 0, 0]);
+      g.userData.tip = V(0, -0.245, 0.085); // 铲面前缘
+      g.userData.blade = V(0, -0.2025, 0.042); // 铲面中心
       break;
     }
-    case 'broom': { // 小扫帚：握在中间，上面露出一截把手，刷头正好贴着地面
-      add(new THREE.CylinderGeometry(0.014, 0.014, 0.66, 8), M.soft('#e8b07a', { rough: 0.6 }), V(0, 0.1, 0));
-      add(new THREE.CylinderGeometry(0.03, 0.08, 0.14, 12), M.soft('#ffd98a', { rough: 0.9, rim: 0.2 }), V(0, -0.27, 0));
-      add(new THREE.TorusGeometry(0.032, 0.008, 6, 14), M.soft('#ff7fae', { rough: 0.5 }), V(0, -0.2, 0), [Math.PI / 2, 0, 0]);
-      add(new THREE.SphereGeometry(0.022, 8, 6), M.soft('#ff7fae', { rough: 0.5 }), V(0, 0.44, 0));
-      g.userData.tip = V(0, -0.34, 0);
+    case 'broom': { // 小扫帚：握在把手上端，刷头（扁扁的一排软毛）在最下面贴着地面
+      add(new THREE.CylinderGeometry(0.014, 0.014, 0.56, 8).translate(0, -0.22, 0), M.soft('#e8b07a', { rough: 0.6 }));
+      add(new THREE.SphereGeometry(0.024, 10, 8), M.soft('#ff7fae', { rough: 0.5 }), V(0, 0.07, 0));
+      add(roundedBox(0.05, 0.04, 0.05, 0.015, 2), M.soft('#ff7fae', { rough: 0.5, rim: 0.3 }), V(0, -0.5, 0));
+      // 刷毛：底部扁平、略呈扇形
+      const bristle = new THREE.CylinderGeometry(0.035, 0.07, 0.11, 16, 1); bristle.scale(1, 1, 0.45);
+      add(bristle, M.soft('#ffd98a', { rough: 0.95, rim: 0.2 }), V(0, -0.575, 0));
+      g.userData.tip = V(0, -0.63, 0);
       break;
     }
     case 'cloth': { // 软软的小抹布 / 拖把头
@@ -80,12 +99,14 @@ export function buildTool(type, M) {
       g.userData.tip = V(0, -0.1, 0.03);
       break;
     }
-    case 'jug': { // 装面糊的小量杯
-      const cup = new THREE.CylinderGeometry(0.06, 0.05, 0.12, 18, 1, true);
-      add(cup, M.soft('#c9e8ff', { rough: 0.25, rim: 0.6, side: THREE.DoubleSide }), V(0, -0.1, 0.05));
-      add(new THREE.CircleGeometry(0.055, 18).rotateX(-Math.PI / 2), M.soft('#ffe8b8', { rough: 0.5 }), V(0, -0.07, 0.05));
-      add(new THREE.TorusGeometry(0.035, 0.01, 6, 12, Math.PI), M.soft('#c9e8ff', { rough: 0.3 }), V(0, -0.1, -0.01), [0, Math.PI / 2, Math.PI / 2]);
-      g.userData.tip = V(0, -0.04, 0.1);
+    case 'jug': { // 装面糊的小量杯：杯口朝上（局部 +y），握把在杯子后面，杯嘴朝前（局部 +z）
+      const glass = M.soft('#c9e8ff', { rough: 0.2, rim: 0.6, side: THREE.DoubleSide });
+      add(new THREE.CylinderGeometry(0.062, 0.052, 0.13, 20, 1, true), glass, V(0, -0.02, 0.075));
+      add(new THREE.CircleGeometry(0.052, 20).rotateX(-Math.PI / 2), glass, V(0, -0.085, 0.075));
+      g.userData.batter = add(new THREE.CircleGeometry(0.058, 20).rotateX(-Math.PI / 2), M.soft('#ffe2a6', { rough: 0.35 }), V(0, 0.02, 0.075));
+      add(new THREE.ConeGeometry(0.022, 0.04, 10, 1, true).rotateX(Math.PI / 2), glass, V(0, 0.04, 0.142));
+      add(new THREE.TorusGeometry(0.035, 0.011, 8, 14, Math.PI), M.soft('#9fd0f5', { rough: 0.3 }), V(0, -0.02, 0.008), [0, Math.PI / 2, Math.PI / 2]);
+      g.userData.tip = V(0, 0.045, 0.15); // 杯嘴
       break;
     }
     case 'balloon': { // 三个气球（飘飘）
@@ -115,14 +136,15 @@ export function buildTool(type, M) {
       g.userData.up = true;
       break;
     }
-    case 'mop': { // 小拖把：握在中间，拖把头正好贴着地面
-      add(new THREE.CylinderGeometry(0.013, 0.013, 0.62, 8), M.soft('#7fd6ff', { rough: 0.5 }), V(0, 0.08, 0));
-      add(new THREE.SphereGeometry(0.02, 8, 6), M.soft('#ff7fae', { rough: 0.5 }), V(0, 0.4, 0));
-      for (let i = 0; i < 9; i++) {
-        const a = (i / 9) * TAU;
-        add(new THREE.CapsuleGeometry(0.014, 0.07, 3, 6), M.soft('#ffffff', { rough: 0.95 }), V(Math.cos(a) * 0.035, -0.28, Math.sin(a) * 0.035), [Math.sin(a) * 0.4, 0, -Math.cos(a) * 0.4]);
+    case 'mop': { // 小拖把：握在把手上端，软软的拖把头在最下面贴着地面
+      add(new THREE.CylinderGeometry(0.013, 0.013, 0.54, 8).translate(0, -0.21, 0), M.soft('#7fd6ff', { rough: 0.5 }));
+      add(new THREE.SphereGeometry(0.022, 10, 8), M.soft('#ff7fae', { rough: 0.5 }), V(0, 0.07, 0));
+      add(new THREE.CylinderGeometry(0.03, 0.03, 0.03, 12), M.soft('#7fd6ff', { rough: 0.5 }), V(0, -0.49, 0));
+      for (let i = 0; i < 11; i++) {
+        const a = (i / 11) * TAU;
+        add(new THREE.CapsuleGeometry(0.015, 0.075, 3, 6), M.soft('#ffffff', { rough: 0.95 }), V(Math.cos(a) * 0.04, -0.55, Math.sin(a) * 0.04), [Math.sin(a) * 0.55, 0, -Math.cos(a) * 0.55]);
       }
-      g.userData.tip = V(0, -0.33, 0);
+      g.userData.tip = V(0, -0.6, 0);
       break;
     }
     default:
@@ -130,7 +152,6 @@ export function buildTool(type, M) {
   }
   const AIM = { knife: 0, whisk: 0.1, piping: 0.15, spatula: 0.65, broom: 0.55, mop: 0.5, jug: 0.9, egg: 0.2, cloth: 0.3, sponge: 0.3 };
   if (AIM[type] != null) g.userData.aim = AIM[type];
-  if (type === 'knife') g.userData.scale = 1.35;
-  if (type === 'broom' || type === 'mop') g.userData.scale = 1.1;
+  if (type === 'knife') g.userData.scale = 1.15;
   return g;
 }

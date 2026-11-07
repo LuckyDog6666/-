@@ -11,18 +11,35 @@ const RAINBOW = ['#ff7f9e', '#ffa86b', '#ffd95c', '#8fe07a', '#6fd0ff', '#8f9bff
 // 零件：{ geo, color, pos, rot, scale }
 function part(geo, color, pos = V(0, 0, 0), rot = [0, 0, 0], scale = null) { return { geo, color, pos, rot, scale }; }
 
-export function bake(parts) {
+// 动画电影式的"手绘体积感"：每个零件底部（贴近地面、缝隙里）暗一点、偏冷，
+// 朝上被阳光照到的地方亮一点、偏暖。简单的圆润造型这样一画就很有分量，所有世界的质感统一。
+const _cool = new THREE.Color('#8a7fb8'), _warm = new THREE.Color('#fff1d6');
+export function shadeColor(out, base, y, ny, o = {}) {
+  const ao = o.ao ?? 0.3;
+  const k = 1 - ao * (1 - THREE.MathUtils.smoothstep(y - (o.aoBase || 0), 0, o.aoH ?? 0.45));   // 贴地的地方暗一点
+  out.copy(base).multiplyScalar(k);
+  out.lerp(_cool, (1 - k) * 0.35);                                            // 暗部带一点冷紫，阴影更通透
+  const top = THREE.MathUtils.clamp(ny, 0, 1) * (o.light ?? 0.1);              // 朝上的面带一点暖色高光
+  out.lerp(_warm, top);
+  return out;
+}
+export function bake(parts, o = {}) {
   const geos = [];
-  const col = new THREE.Color();
+  const col = new THREE.Color(), tmp = new THREE.Color();
   for (const p of parts) {
     let g = p.geo.index ? p.geo.toNonIndexed() : p.geo.clone();
     for (const n of Object.keys(g.attributes)) if (!['position', 'normal', 'uv'].includes(n)) g.deleteAttribute(n);
     if (!g.attributes.uv) g.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(g.attributes.position.count * 2), 2));
     const s = p.scale == null ? V(1, 1, 1) : typeof p.scale === 'number' ? V(p.scale, p.scale, p.scale) : p.scale;
     g.applyMatrix4(new THREE.Matrix4().compose(p.pos, new THREE.Quaternion().setFromEuler(new THREE.Euler(...p.rot)), s));
+    if (!g.attributes.normal) g.computeVertexNormals();
     col.set(p.color);
-    const c = new Float32Array(g.attributes.position.count * 3);
-    for (let i = 0; i < c.length; i += 3) { c[i] = col.r; c[i + 1] = col.g; c[i + 2] = col.b; }
+    const pa = g.attributes.position, na = g.attributes.normal;
+    const c = new Float32Array(pa.count * 3);
+    for (let i = 0; i < pa.count; i++) {
+      if (o.flat) tmp.copy(col); else shadeColor(tmp, col, pa.getY(i), na.getY(i), o);
+      c[i * 3] = tmp.r; c[i * 3 + 1] = tmp.g; c[i * 3 + 2] = tmp.b;
+    }
     g.setAttribute('color', new THREE.BufferAttribute(c, 3));
     geos.push(g);
     p.geo.dispose();
@@ -100,8 +117,15 @@ export function buildProp(type, rng) {
       for (const [x, y, z] of [[0.3, 0.8, 0], [-0.3, 0.82, 0.08], [0, 0.9, -0.3], [0, 0.65, 0]]) P.push(part(sph(0.08, 10, 8), c, V(x, y, z)));
       break;
     }
-    case 'kelp': {
-      for (let i = 0; i < 3; i++) P.push(part(new THREE.BoxGeometry(0.1, 1.6, 0.03, 1, 8, 1), pick(['#3fbf7f', '#5fd38f', '#2fa86f']), V((i - 1) * 0.15, 0.8, 0), [0, i * 0.8, 0]));
+    case 'kelp': { // 软软弯弯的海草（胶囊状叶片，一根根往上卷）
+      for (let i = 0; i < 3; i++) {
+        const c = pick(['#3fbf7f', '#5fd38f', '#2fa86f']);
+        const pts = [V(0, 0, 0), V(0.05, 0.5, 0), V(-0.06, 1.0, 0.02), V(0.04, 1.45, 0)];
+        const tube = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 16, 0.05, 8, false);
+        tube.scale(1, 1, 0.55);
+        P.push(part(tube, c, V((i - 1) * 0.16, 0, 0), [0, i * 0.8, 0]));
+        P.push(part(sph(0.06, 10, 8), c, V((i - 1) * 0.16 + 0.04, 1.45, 0), [0, 0, 0], V(1, 1.3, 0.6)));
+      }
       anim = 'sway';
       break;
     }
@@ -120,19 +144,30 @@ export function buildProp(type, rng) {
       P.push(part(sph(0.1, 16, 12), '#ffffff', V(0, 0.1, 0.3)));
       break;
     }
-    case 'coral_fan': {
+    case 'coral_fan': { // 胖乎乎的扇形珊瑚（一圈小圆球组成，有厚度）
       const c = pick(['#c38bff', '#ff8fa3', '#6fd0ff']);
-      P.push(part(new THREE.CircleGeometry(0.5, 20, 0, Math.PI), c, V(0, 0.15, 0)));
-      P.push(part(cyl(0.04, 0.05, 0.3, 6), c, V(0, 0.15, 0)));
+      P.push(part(cyl(0.05, 0.07, 0.3, 10), c, V(0, 0.15, 0)));
+      for (let ring = 0; ring < 3; ring++) {
+        const r = 0.18 + ring * 0.14, n = 5 + ring * 3;
+        for (let i = 0; i < n; i++) { const a = Math.PI * (0.08 + 0.84 * (i / (n - 1))); P.push(part(sph(0.075 - ring * 0.01, 12, 8), c, V(Math.cos(a) * r, 0.3 + Math.sin(a) * r, 0), [0, 0, 0], V(1, 1, 0.7))); }
+      }
       break;
     }
     // ---------- 雪国 ----------
-    case 'pine_snow': {
-      P.push(part(cyl(0.08, 0.1, 0.4, 8), '#8a5a36', V(0, 0.2, 0)));
+    case 'pine_snow': { // 圆润的雪松：一层层鼓鼓的"裙摆"，每层顶上盖着软软下垂的雪
+      P.push(part(cyl(0.08, 0.11, 0.4, 10), '#8a5a36', V(0, 0.2, 0)));
+      const green = pick(['#4fa86f', '#58b07a', '#479e6a']);
       for (let i = 0; i < 3; i++) {
-        P.push(part(cone(0.62 - i * 0.15, 0.6, 14), '#4fa86f', V(0, 0.55 + i * 0.38, 0)));
-        P.push(part(cone(0.5 - i * 0.13, 0.25, 14), '#ffffff', V(0, 0.75 + i * 0.38, 0)));
+        const r = 0.6 - i * 0.15, h = 0.62 - i * 0.08, y = 0.42 + i * 0.36;
+        // 外轮廓是向外鼓的曲线（不是直直的圆锥）
+        const prof = [];
+        for (let k = 0; k <= 8; k++) { const t = k / 8; prof.push(new THREE.Vector2(Math.max(0.001, r * (1 - t) * (1 + 0.18 * Math.sin(t * Math.PI))), h * t)); }
+        P.push(part(new THREE.LatheGeometry(prof, 18), green, V(0, y, 0)));
+        // 雪：一圈圆鼓鼓的雪团，边缘往下垂
+        const snow = blobGeometry(r * 0.78, 3 + i, 0.06, 2); snow.scale(1, 0.32, 1);
+        P.push(part(snow, '#ffffff', V(0, y + h * 0.48, 0)));
       }
+      P.push(part(sph(0.07, 10, 8), '#ffffff', V(0, 0.42 + 2 * 0.36 + 0.5, 0)));
       break;
     }
     case 'snowman': {
@@ -144,10 +179,12 @@ export function buildProp(type, rng) {
       P.push(part(cyl(0.18, 0.18, 0.25, 16), '#4a6bff', V(0, 1.3, 0)));
       break;
     }
-    case 'ice_crystal': {
-      const geo = new THREE.OctahedronGeometry(0.25, 0); geo.scale(0.6, 2.4, 0.6);
-      for (let i = 0; i < 3; i++) GS.push({ geo: geo.clone().rotateZ((i - 1) * 0.4).translate((i - 1) * 0.25, 0.5 + (i === 1 ? 0.2 : 0), 0), color: '#bfe8ff' });
-      geo.dispose();
+    case 'ice_crystal': { // 圆润的冰晶（像冰糖一样光滑的胶囊形，不再是尖锐的八面体）
+      for (let i = 0; i < 3; i++) {
+        const g = new THREE.CapsuleGeometry(0.11 - Math.abs(i - 1) * 0.02, 0.5 + (i === 1 ? 0.25 : 0), 4, 10);
+        GS.push({ geo: g.rotateZ((i - 1) * 0.35).translate((i - 1) * 0.2, 0.42 + (i === 1 ? 0.14 : 0), 0), color: '#bfe8ff' });
+      }
+      P.push(part(blobGeometry(0.32, 5, 0.08, 2), '#ffffff', V(0, 0.05, 0), [0, 0, 0], V(1.1, 0.3, 0.9)));
       break;
     }
     case 'snow_rock': {

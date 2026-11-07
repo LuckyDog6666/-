@@ -73,7 +73,14 @@ export class Course {
       if (this.segments.length) x += d.finale ? GAP + 0.4 : s.kind === 'gimmick' || this.segments[this.segments.length - 1].kind === 'gimmick' ? 0.55 : GAP;
       s.x0 = x;
       s.x1 = x + s.length;
-      s.group.position.set(x, s.kind === 'gimmick' ? PATH_Y : PATH_Y - 0.02, 0);
+      // 走上去的解压站（沙子、雪、史莱姆、泥巴、冰面、泡泡……）表面和小路基本齐平（像嵌在地上的一池）：
+      // 圆滚滚的糯糯走上走下时，肚子不会被高出来的托盘边缘切到。跳上去玩的（果冻、面包块）和终点大物件保持原样
+      let y = s.kind === 'gimmick' ? PATH_Y : PATH_Y - 0.02;
+      if (s.kind === 'station' && !s.blocks && !s.items && !d.finale) {
+        const top = s.topY(s.length / 2, 0);
+        if (top > 0.03) y = PATH_Y + 0.02 - top;
+      }
+      s.group.position.set(x, y, 0);
       this.group.add(s.group);
       this.segments.push(s);
       if (s.kind === 'gimmick') this.gimmicks.push(s); else this.stations.push(s);

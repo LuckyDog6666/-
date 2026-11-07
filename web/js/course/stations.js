@@ -122,11 +122,12 @@ export class SoftSlab extends Station {
       const x = clamp(p.x, 0.4, this.length - 0.4), z = clamp(p.z, -this.width / 2 + 0.3, this.width / 2 - 0.3);
       const pose = api.pose('sit', 2.3);
       await api.wait(0.3);
-      this.hf.stamp(x - 0.05, z, { rx: 0.3, rz: 0.26, depth: (d.depth ?? 0.06) * 1.6, shape: 'round' });
+      // 屁股印和身体底部一样大（挤出来的一圈在身体外面），身体只陷进坑里一点点，不会被表面"切"到
+      this.hf.stamp(x, z, { rx: 0.47, rz: 0.43, depth: (d.depth ?? 0.06) * 1.25, shape: 'round' });
       this._refreshGlitter();
       api.sfx(this.sound.special || this.sound.step, { gain: 2, maxDur: 3 });
       if (d.fx) api.burst(d.fx, x, this.hf.heightAt(x, z), z, { colors: d.fxColors || [d.color], count: 18 });
-      api.sink(0.06);
+      api.sink(Math.min(0.05, (d.depth ?? 0.06) * 0.8));
       await pose;
       api.sink(0);
     } else if (name === 'press') {
@@ -234,9 +235,9 @@ export class SlimeStation extends Station {
       // 坐进史莱姆：慢慢陷下去，起身时拉出好多丝
       const pose = api.pose('sit', 2.6);
       await api.wait(0.3);
-      this.hf.stamp(x, z0, { rx: 0.32, rz: 0.27, depth: 0.12, shape: 'round', rim: 0.8 });
+      this.hf.stamp(x, z0, { rx: 0.47, rz: 0.43, depth: 0.1, shape: 'round', rim: 0.8 });
       api.sfx(this.sound.special || this.sound.step, { gain: 1, maxDur: 2.6 });
-      api.sink(0.09);
+      api.sink(0.07);
       await api.wait(1.6);
       api.sfx(this.sound.pull || this.sound.special || this.sound.step, { gain: 0, maxDur: 3.4 });
       api.sink(0);

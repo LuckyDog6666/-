@@ -365,59 +365,72 @@ export class BounceGimmick extends Gimmick {
 export class SlideGimmick extends Gimmick {
   build() {
     const d = this.def, { M, G } = this.ctx;
-    const H = this.H = d.height || 1.05;
-    // 楼梯坡度约 38°（6 级、每级 0.22）：比镜头俯角缓，正前方偏高的机位能越过台阶看到往上爬的糯糯
-    const steps = 6, run = 0.22;
-    this.stepRun = run; // 注意：不能叫 this.run，会覆盖 run() 方法
-    this.stairEnd = steps * run; // 1.32
-    this.topEnd = this.stairEnd + 0.38;
-    this.length = this.topEnd + 3.67; // 滑道 + 落地堆（半径 0.72）
+    // 尺寸按糯糯的身材来（身体约 1.1 宽、1.0 深）：
+    //  - 楼梯是约 25° 的缓坡台阶（小台阶），圆肚子不会顶进前面的台阶
+    //  - 顶上的平台比糯糯大，站得稳
+    //  - 滑道是半径 0.66 的 U 形槽，糯糯整个身子坐在槽里滑下来，不会和槽壁、护栏穿插
+    const H = this.H = d.height || 0.9;
+    const steps = 11;
+    this.stepRun = 0.175; // 注意：不能叫 this.run，会覆盖 run() 方法
+    this.stairEnd = steps * this.stepRun; // ≈ 1.93
+    this.topEnd = this.stairEnd + 0.7;
+    const R = this.chuteR = 0.66;
+    this.chuteDrop = 0.7 * R; // 槽底比中心线低多少
     const colA = d.color || '#7fd6ff', colB = d.color2 || '#ff8fb3';
-    // 楼梯 + 扶手
+    // 台阶（够宽，糯糯走在上面不会悬空）
     this.stairs = [];
+    const SW = 1.05;
     for (let i = 0; i < steps; i++) {
       const h = H * (i + 1) / steps;
-      const m = new THREE.Mesh(G.get(`stair|${h.toFixed(2)}|${run}`, () => roundedBox(run + 0.005, h, 0.62, 0.03, 2).translate(0, h / 2, 0)), M.soft(i % 2 ? colA : '#ffffff', { rough: 0.55, rim: 0.3 }));
-      m.position.set(run * (i + 0.5), 0, 0);
+      const m = new THREE.Mesh(G.get(`stair|${h.toFixed(3)}|${this.stepRun}`, () => roundedBox(this.stepRun + 0.005, h, SW, 0.03, 2).translate(0, h / 2, 0)), M.soft(i % 2 ? colA : '#ffffff', { rough: 0.55, rim: 0.3 }));
+      m.position.set(this.stepRun * (i + 0.5), 0, 0);
       m.castShadow = true; m.receiveShadow = true;
       this.group.add(m);
-      this.stairs.push({ x0: run * i, x1: run * (i + 1), h });
+      this.stairs.push({ x0: this.stepRun * i, x1: this.stepRun * (i + 1), h });
     }
-    const plat = new THREE.Mesh(G.track(roundedBox(this.topEnd - this.stairEnd + 0.04, 0.08, 0.7, 0.03, 2).translate((this.stairEnd + this.topEnd) / 2, H - 0.04, 0)), M.soft(colB, { rough: 0.5, rim: 0.35 }));
+    const plat = new THREE.Mesh(G.track(roundedBox(this.topEnd - this.stairEnd + 0.06, 0.08, 1.2, 0.03, 2).translate((this.stairEnd + this.topEnd) / 2, H - 0.04, 0)), M.soft(colB, { rough: 0.5, rim: 0.35 }));
     plat.castShadow = true; plat.receiveShadow = true;
     this.group.add(plat);
-    // 扶手只做在背向镜头的一侧（靠镜头一侧的扶手会挡住糯糯）
-    for (const zz of [-0.36]) {
-      for (const xx of [this.stairEnd + 0.04, this.topEnd - 0.02]) {
-        const post = new THREE.Mesh(G.get('slide|post', () => new THREE.CylinderGeometry(0.035, 0.035, H + 0.3, 10).translate(0, (H + 0.3) / 2, 0)), M.soft('#ffd166', { rough: 0.45, rim: 0.3 }));
-        post.position.set(xx, 0, zz); post.castShadow = true; this.group.add(post);
-      }
-      const rail = new THREE.Mesh(G.track(new THREE.CylinderGeometry(0.025, 0.025, Math.hypot(this.stairEnd, H) + 0.1, 8)), M.soft('#ffd166', { rough: 0.45 }));
-      rail.position.set(this.stairEnd / 2, H / 2 + 0.3, zz);
-      rail.rotation.z = -Math.atan2(H, this.stairEnd) + Math.PI / 2;
-      this.group.add(rail);
+    // 平台下面的柱子
+    for (const zz of [-0.5, 0.5]) {
+      const leg = new THREE.Mesh(G.get('slide|platleg', () => new THREE.CylinderGeometry(0.05, 0.06, H - 0.08, 10).translate(0, (H - 0.08) / 2, 0)), M.soft(colB, { rough: 0.5 }));
+      leg.position.set(this.topEnd - 0.06, 0, zz); leg.castShadow = true; this.group.add(leg);
     }
-    // 滑道：一条 S 形的半圆管（开口朝上），两边有圆润的护栏
-    const pts = [V(this.topEnd - 0.04, H + 0.02, 0), V(this.topEnd + 0.55, H * 0.82, 0.42), V(this.topEnd + 1.35, H * 0.45, -0.32), V(this.topEnd + 2.05, H * 0.16, 0.05), V(this.topEnd + 2.55, 0.1, 0)];
+    // 扶手只做在背向镜头的一侧，离糯糯身体留出空隙
+    const zz = -0.64;
+    for (const xx of [this.stairEnd + 0.06, this.topEnd - 0.04]) {
+      const post = new THREE.Mesh(G.get('slide|post', () => new THREE.CylinderGeometry(0.035, 0.035, 0.42, 10).translate(0, 0.21, 0)), M.soft('#ffd166', { rough: 0.45, rim: 0.3 }));
+      post.position.set(xx, H, zz); post.castShadow = true; this.group.add(post);
+      const ball = new THREE.Mesh(G.get('slide|postball', () => new THREE.SphereGeometry(0.05, 12, 8)), M.soft('#ffd166', { rough: 0.4, rim: 0.4 }));
+      ball.position.set(xx, H + 0.44, zz); this.group.add(ball);
+    }
+    const rail = new THREE.Mesh(G.track(new THREE.CylinderGeometry(0.025, 0.025, this.topEnd - this.stairEnd - 0.1, 8).rotateZ(Math.PI / 2)), M.soft('#ffd166', { rough: 0.45 }));
+    rail.position.set((this.stairEnd + this.topEnd) / 2 + 0.01, H + 0.4, zz);
+    this.group.add(rail);
+    // 滑道：一条 S 形的 U 形槽（开口朝上），槽底的起点和平台一样高
+    const lift = this.chuteDrop;
+    const pts = [V(this.topEnd - 0.04, H + lift, 0), V(this.topEnd + 0.7, H * 0.8 + lift, 0.3), V(this.topEnd + 1.55, H * 0.45 + lift, -0.25), V(this.topEnd + 2.3, H * 0.15 + lift, 0.05), V(this.topEnd + 2.85, 0.08 + lift, 0)];
     this.curveLocal = new THREE.CatmullRomCurve3(pts, false, 'centripetal');
-    const chute = new THREE.Mesh(G.track(halfPipe(this.curveLocal, 0.3, 80, 14)), M.soft(colA, { rough: 0.25, rim: 0.5, rimColor: '#ffffff', side: THREE.DoubleSide }));
+    const chute = new THREE.Mesh(G.track(halfPipe(this.curveLocal, R, 90, 16)), M.soft(colA, { rough: 0.25, rim: 0.5, rimColor: '#ffffff', side: THREE.DoubleSide }));
     chute.castShadow = true; chute.receiveShadow = true;
     this.group.add(chute);
     for (const side of [-1, 1]) {
-      const rim = new THREE.Mesh(G.track(new THREE.TubeGeometry(offsetCurve(this.curveLocal, side * 0.3, 0.0), 80, 0.035, 8, false)), M.soft('#ffffff', { rough: 0.4, rim: 0.4 }));
+      const rim = new THREE.Mesh(G.track(new THREE.TubeGeometry(offsetCurve(this.curveLocal, side * R, R * 0.05 - 0.05), 90, 0.04, 8, false)), M.soft('#ffffff', { rough: 0.4, rim: 0.4 }));
       rim.castShadow = true;
       this.group.add(rim);
     }
-    // 支柱
-    for (const u of [0.25, 0.55, 0.8]) {
+    // 支柱：撑在槽底下面
+    for (const u of [0.22, 0.5, 0.75]) {
       const p = this.curveLocal.getPointAt(u);
-      const post = new THREE.Mesh(G.get('slide|leg|' + u, () => new THREE.CylinderGeometry(0.04, 0.05, p.y - 0.05, 10).translate(0, (p.y - 0.05) / 2, 0)), M.soft(colB, { rough: 0.5 }));
+      const hgt = Math.max(0.05, p.y - lift - 0.02);
+      const post = new THREE.Mesh(G.get('slide|leg|' + u + '|' + hgt.toFixed(2), () => new THREE.CylinderGeometry(0.05, 0.06, hgt, 10).translate(0, hgt / 2, 0)), M.soft(colB, { rough: 0.5 }));
       post.position.set(p.x, 0, p.z);
       post.castShadow = true;
       this.group.add(post);
     }
     // 落地堆
-    this.pileX = this.topEnd + 2.95;
+    this.pileX = this.topEnd + 3.3;
+    this.length = this.pileX + 0.85;
     this._pile(d.pile || 'balls', this.pileX);
     return this;
   }
@@ -472,7 +485,7 @@ export class SlideGimmick extends Gimmick {
   }
   topY(x, z) {
     if (x < this.stairEnd) { const s = this.stairs.find((q) => x >= q.x0 && x < q.x1); return s ? s.h : 0; }
-    if (x < this.topEnd && Math.abs(z) < 0.4) return this.H;
+    if (x < this.topEnd && Math.abs(z) < 0.6) return this.H;
     return 0;
   }
   update(dt) {
@@ -519,13 +532,13 @@ export class SlideGimmick extends Gimmick {
     const pet = G.pet, d = this.def;
     const H = this.H;
     G.label(this.label);
-    // 爬楼梯：正前方偏一点、较高的机位往下看（俯角比楼梯坡度大，视线越过台阶和平台），糯糯迎着镜头往上爬
-    G.cam('follow', { off: V(2.4, 2.25, 1.2), lookY: 0.5, lookFromPet: true, lambda: 1.3 });
+    // 爬台阶：侧前方稍高的机位，糯糯迎着镜头往上走
+    G.cam('follow', { off: V(2.4, 1.7, 1.5), lookY: 0.5, lookFromPet: true, lambda: 1.3 });
     pet.expr('wide', 'open', 1.2, 'up');
     G.say(d.say || '哇，滑滑梯！');
     await pet.idleAction('peek', 0.6);
     G.unsay();
-    const topPos = this.W(this.stairEnd + 0.18, H, 0);
+    const topPos = this.W(this.stairEnd + 0.22, H, 0);
     await G.walkTo(topPos, { stepDur: 0.4, stride: this.stepRun, sound: d.stepSound || 'wood_step', gain: -3 });
     // 在顶上转身对镜头挥挥手
     G.cam('point', { pos: () => this.W(this.stairEnd + 2.1, H + 0.75, 2.1), look: () => V(pet.root.position.x, pet.root.position.y + 0.5, pet.root.position.z), lambda: 1.6 });
@@ -534,15 +547,16 @@ export class SlideGimmick extends Gimmick {
     G.say(d.ready || '准备好啦～');
     await pet.idleAction('wave', 1.0);
     G.unsay();
-    await G.walkTo(this.W(this.topEnd - 0.05, H, 0), { stepDur: 0.32, stride: 0.15, sound: d.stepSound || 'wood_step', gain: -4, facing: true });
+    await G.walkTo(this.W(this.topEnd - 0.12, H, 0), { stepDur: 0.32, stride: 0.15, sound: d.stepSound || 'wood_step', gain: -4, facing: true });
     // 滑！镜头切到滑梯底部，迎着糯糯拍（Crash Bandicoot 式正面）
     G.cam('point', { pos: () => this.W(this.pileX + 1.9, 0.95, 1.7), look: () => V(pet.root.position.x, pet.root.position.y + 0.38, pet.root.position.z * 0.6), lambda: 3.0, cut: true });
-    // 滑道是 U 形截面，底部比中心线低约 0.2：糯糯贴着滑道底部滑下来（不会悬空）
-    const curveW = new THREE.CatmullRomCurve3(this.curveLocal.points.map((q) => this.W(q.x, q.y - 0.17, q.z)).concat([this.W(this.pileX - 0.15, 0.2, 0)]), false, 'centripetal');
+    // 糯糯坐在 U 形槽的槽底滑下来（脚底贴着槽底，身体在槽里，不会悬空也不会穿过槽壁）
+    const drop = this.chuteDrop - 0.03;
+    const curveW = new THREE.CatmullRomCurve3(this.curveLocal.points.map((q) => this.W(q.x, q.y - drop, q.z)).concat([this.W(this.pileX - 0.15, 0.2, 0)]), false, 'centripetal');
     G.sfx('whoosh', this.W(this.topEnd, H, 0), { gain: -2, main: false });
     G.sfx('slide_roll', this.W(this.topEnd, H, 0), { gain: -3, maxDur: 1.7 });
     G.say(d.wee || '呜呼～～');
-    await pet.ride(curveW, d.slideDur || 1.9, { faceTo: () => G.camPos() });
+    await pet.ride(curveW, d.slideDur || 2.0, { faceTo: () => G.camPos(), bank: 0.4 });
     G.unsay();
     // 扑进软软的落地堆
     const land = this.W(this.pileX, 0.22, 0);
@@ -687,7 +701,8 @@ export class BridgeGimmick extends Gimmick {
     this._channel(d);
     this._banks(d.bank || '#f4e8dc');
     this.planks = [];
-    const geo = d.skin === 'jelly' ? G.get('br|jelly', () => roundedBox(pw, 0.1, 0.78, 0.04, 3)) : d.skin === 'cloud' ? G.get('br|cloud', () => blobGeometry(0.2, 3, 0.1, 2).scale(0.75, 0.35, 2.0)) : G.get('br|plank', () => roundedBox(pw, 0.07, 0.8, 0.025, 2));
+    // 桥面比糯糯宽（身体约 1.1 宽），两边的绳子在身体外面：走过去时小手正好扶着绳子
+    const geo = d.skin === 'jelly' ? G.get('br|jelly2', () => roundedBox(pw, 0.1, 1.08, 0.04, 3)) : d.skin === 'cloud' ? G.get('br|cloud2', () => blobGeometry(0.2, 3, 0.1, 2).scale(0.75, 0.35, 2.7)) : G.get('br|plank2', () => roundedBox(pw, 0.07, 1.1, 0.025, 2));
     for (let i = 0; i < n; i++) {
       const x = 0.35 + pw / 2 + i * (pw + 0.04);
       const col = d.skin === 'jelly' || d.skin === 'block' ? RAINBOW[i % RAINBOW.length] : d.skin === 'cloud' ? '#ffffff' : r.pick(['#e8b07a', '#d99a62', '#f0c08a']);
@@ -699,14 +714,14 @@ export class BridgeGimmick extends Gimmick {
       this.planks.push({ m, x, sp: new Spring(130, 6, 0), rs: new Spring(90, 4, 0) });
     }
     // 两边的绳子和桩
-    for (const zz of [-0.45, 0.45]) {
+    for (const zz of [-0.74, 0.74]) {
       for (const xx of [0.2, this.length - 0.2]) {
         const post = new THREE.Mesh(G.get('br|post', () => new THREE.CylinderGeometry(0.045, 0.05, 0.5, 10).translate(0, 0.2, 0)), M.soft(d.postColor || '#ffd166', { rough: 0.5, rim: 0.3 }));
         post.position.set(xx, 0, zz); post.castShadow = true; this.group.add(post);
         const ball = new THREE.Mesh(G.get('br|ball', () => new THREE.SphereGeometry(0.065, 12, 10)), M.soft(d.postColor2 || '#ff8fb3', { rough: 0.4 }));
         ball.position.set(xx, 0.47, zz); this.group.add(ball);
       }
-      const rope = new THREE.Mesh(G.track(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([V(0.2, 0.42, zz), V(this.length / 2, 0.32, zz), V(this.length - 0.2, 0.42, zz)]), 30, 0.018, 6, false)), M.soft('#ffffff', { rough: 0.8 }));
+      const rope = new THREE.Mesh(G.track(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([V(0.2, 0.46, zz), V(this.length / 2, 0.4, zz), V(this.length - 0.2, 0.46, zz)]), 30, 0.02, 6, false)), M.soft('#ffffff', { rough: 0.8 }));
       this.group.add(rope);
     }
     return this;

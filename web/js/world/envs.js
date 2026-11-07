@@ -37,7 +37,7 @@ export function buildEnvironment(course) {
 // 把一组带颜色的零件合并成一个网格
 function addBaked(course, parts, opts = {}) {
   if (!parts.length) return null;
-  const geo = course.G.track(bake(parts));
+  const geo = course.G.track(bake(parts, opts));
   const m = new THREE.Mesh(geo, course.vcMat(opts));
   m.castShadow = opts.shadow !== false; m.receiveShadow = true;
   course.group.add(m);
@@ -137,6 +137,7 @@ function buildOutdoor(course) {
     if (x < 0 && rng.next() < 0.8) list.push({ type: rng.pick(st.props), x: x + rng.range(-1, 1), z: rng.range(-2.2, 2.2), s: rng.range(0.8, 1.4), rot: rng.range(0, TAU) });
   }
   placeProps(course, list);
+  dressGround(course);
   if (st.sea) {
     // 彩虹沙滩：远处一片会动的大海
     const sea = new THREE.Mesh(course.G.track(new THREE.PlaneGeometry(220, 60).rotateX(-Math.PI / 2)), course.M.soft('#5cc8e8', { rough: 0.2, rim: 0.6, rimColor: '#e8fbff' }));
@@ -147,8 +148,110 @@ function buildOutdoor(course) {
   course.scene.background = new THREE.Color(st.sky[1]);
 }
 
+// 每种装饰物大致占地半径（scale = 1 时）：用来避免装饰物互相穿插
+const PROP_R = {
+  tree: 0.75, pine_snow: 0.65, big_mushroom: 0.62, igloo: 0.95, snowman: 0.45, cake: 0.62, big_donut: 0.62, cookie_stack: 0.4,
+  rainbow_arch: 1.1, cloud_big: 0.9, candy_tree: 0.6, coral_fan: 0.5, big_shell: 0.58, sea_rock: 0.55, rock: 0.42, snow_rock: 0.48,
+  bush: 0.5, flowers: 0.35, stump: 0.4, teddy: 0.45, toy_chest: 0.5, floor_lamp: 0.35, plant: 0.35, cushion_pile: 0.5,
+};
+// 去掉互相穿插的装饰物：和已经放好的离得太近就往旁边挪一挪，挪不开就不放；也不能挡在赛道上
+function declutter(course, list) {
+  const L = course.length;
+  const keep = [];
+  const r = (p) => (PROP_R[p.type] ?? 0.45) * p.s;
+  for (const p of list) {
+    if (p.y && p.y > 0.2) { keep.push(p); continue; } // 架子上的小摆件
+    const inCourse = (q) => q.x > -0.8 && q.x < L + 0.8 && Math.abs(q.z) < 1.45 + r(q);
+    let ok = false;
+    for (let k = 0; k < 4 && !ok; k++) {
+      if (k) p.x += (k % 2 ? 1 : -1) * k * 0.45;
+      ok = !inCourse(p) && keep.every((q) => (q.y && q.y > 0.2) || Math.hypot(q.x - p.x, q.z - p.z) > r(p) + r(q) + 0.05);
+    }
+    if (ok) keep.push(p);
+  }
+  return keep;
+}
+
+// ---------- 地面小细节（草丛、落叶、小石子、贝壳、糖粒……）：让地面像动画电影的布景一样丰富 ----------
+const DRESS = {
+  snow: [['mound', ['#ffffff', '#f2f7ff'], 70], ['pebble', ['#b9c8dc', '#a8b9d0', '#cfdcec'], 60], ['sparkle', ['#e6f4ff', '#ffffff'], 50]],
+  forest: [['leaf', ['#f29b4b', '#e9603b', '#f7c548', '#d77a3a'], 170], ['tuft', ['#8fbf5a', '#a4c96a', '#7cae4f'], 90], ['pebble', ['#c4b4a0', '#b3a28e'], 40]],
+  slime: [['sprinkle', ['#ff8fb3', '#7fd6ff', '#ffd166', '#9be89b', '#c9a0ff', '#ffffff'], 200], ['gumdrop', ['#ffb3d1', '#c9a0ff', '#9fe0ff', '#ffe08a'], 45]],
+  rain: [['tuft', ['#7cc46a', '#8fd47a', '#6ab35a'], 130], ['flower', ['#ffffff', '#ffb3d1', '#ffe066', '#c9b3ff'], 70], ['pebble', ['#b8c4b0', '#a9b7a2'], 40]],
+  beach: [['shell', ['#ffd6e0', '#ffe8c9', '#f0dcff', '#ffffff'], 70], ['pebble', ['#e8d4b4', '#d9c39e', '#f2e2c4'], 80], ['starfish', ['#ff9e7a', '#ffb3c7', '#ffcf6b'], 22]],
+  toy: [['marble', ['#ff8fb3', '#7fd6ff', '#ffd166', '#9be89b', '#c9a0ff'], 70], ['tinyblock', ['#ffb3d1', '#9fe0ff', '#ffe08a', '#b8f0b0'], 45], ['sprinkle', ['#ff8fb3', '#7fd6ff', '#ffd166', '#ffffff'], 80]],
+};
+function dressGeo(type) {
+  switch (type) {
+    case 'tuft': { // 一小撮草：几片细细的叶子
+      const parts = [];
+      for (let i = 0; i < 5; i++) { const a = (i / 5) * TAU; const c = new THREE.ConeGeometry(0.018, 0.16 + (i % 2) * 0.05, 5); c.translate(0, 0.08, 0); c.rotateZ(Math.cos(a) * 0.35); c.rotateX(Math.sin(a) * 0.35); c.translate(Math.cos(a) * 0.03, 0, Math.sin(a) * 0.03); parts.push(c); }
+      return mergeOr(parts);
+    }
+    case 'leaf': { const g = new THREE.SphereGeometry(0.06, 10, 6); g.scale(1, 0.14, 0.55); g.translate(0, 0.01, 0); return g; }
+    case 'pebble': { const g = new THREE.IcosahedronGeometry(0.05, 1); g.scale(1.2, 0.55, 1); g.translate(0, 0.02, 0); return g; }
+    case 'mound': { const g = new THREE.SphereGeometry(0.2, 14, 8, 0, TAU, 0, Math.PI / 2); g.scale(1, 0.35, 0.8); return g; }
+    case 'sparkle': { const g = new THREE.OctahedronGeometry(0.03, 0); g.scale(1, 1.6, 1); g.translate(0, 0.05, 0); return g; }
+    case 'sprinkle': { const g = new THREE.CapsuleGeometry(0.011, 0.04, 2, 6); g.rotateZ(Math.PI / 2); g.translate(0, 0.012, 0); return g; }
+    case 'gumdrop': { const g = new THREE.SphereGeometry(0.06, 12, 8, 0, TAU, 0, Math.PI / 2); g.scale(1, 1.25, 1); return g; }
+    case 'flower': {
+      const parts = [new THREE.CylinderGeometry(0.006, 0.008, 0.12, 5).translate(0, 0.06, 0)];
+      for (let i = 0; i < 5; i++) { const a = (i / 5) * TAU; parts.push(new THREE.SphereGeometry(0.022, 8, 6).scale(1, 0.45, 1).translate(Math.cos(a) * 0.024, 0.125, Math.sin(a) * 0.024)); }
+      return mergeOr(parts);
+    }
+    case 'shell': { const g = new THREE.SphereGeometry(0.05, 12, 6, 0, TAU, 0, Math.PI / 2); g.scale(1, 0.4, 0.85); return g; }
+    case 'starfish': {
+      const parts = [];
+      for (let i = 0; i < 5; i++) { const a = (i / 5) * TAU; parts.push(new THREE.CapsuleGeometry(0.016, 0.05, 2, 6).rotateZ(Math.PI / 2).rotateY(-a).translate(Math.cos(a) * 0.035, 0.012, Math.sin(a) * 0.035)); }
+      return mergeOr(parts);
+    }
+    case 'marble': return new THREE.SphereGeometry(0.035, 12, 8).translate(0, 0.035, 0);
+    case 'tinyblock': return roundedBox(0.07, 0.07, 0.07, 0.015, 2).translate(0, 0.035, 0);
+    default: return new THREE.SphereGeometry(0.04, 8, 6);
+  }
+}
+function mergeOr(parts) {
+  for (const g of parts) { for (const n of Object.keys(g.attributes)) if (!['position', 'normal'].includes(n)) g.deleteAttribute(n); }
+  const m = mergeGeometries(parts.map((g) => (g.index ? g.toNonIndexed() : g)), false);
+  for (const g of parts) g.dispose();
+  return m;
+}
+function dressGround(course) {
+  const st = course.stage, rng = course.rng, L = course.length;
+  const spec = DRESS[st.id];
+  if (!spec) return;
+  const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), col = new THREE.Color();
+  for (const [type, colors, perLen] of spec) {
+    const n = Math.round(perLen * (L + 16) / 22);
+    const geo = course.G.track(dressGeo(type));
+    const mat = course.M.soft('#ffffff', { rough: type === 'marble' || type === 'gumdrop' ? 0.3 : 0.85, rim: 0.25 });
+    const im = new THREE.InstancedMesh(geo, mat, n);
+    im.receiveShadow = true;
+    let k = 0;
+    for (let i = 0; i < n * 3 && k < n; i++) {
+      const x = rng.range(-8, L + 8);
+      // 主要撒在赛道两侧（不挡路）：背景一侧多、镜头一侧少一点
+      const side = rng.next() < 0.68 ? -1 : 1;
+      const z = side * rng.range(1.55, side < 0 ? 7.5 : 5.5);
+      if (x > -0.6 && x < L + 0.6 && Math.abs(z) < 1.55) continue;
+      const s = rng.range(0.7, 1.35) * (type === 'mound' ? rng.range(0.8, 1.8) : 1);
+      q.setFromEuler(new THREE.Euler(0, rng.range(0, TAU), 0));
+      m4.compose(new THREE.Vector3(x, -0.01, z), q, new THREE.Vector3(s, s, s));
+      im.setMatrixAt(k, m4);
+      col.set(rng.pick(colors));
+      im.setColorAt(k, col);
+      k++;
+    }
+    im.count = k;
+    im.instanceMatrix.needsUpdate = true;
+    if (im.instanceColor) im.instanceColor.needsUpdate = true;
+    course.group.add(im);
+  }
+}
+
 function placeProps(course, list) {
   const rng = course.rng;
+  list = declutter(course, list);
   const buckets = { vc: [], glow: [], glossy: [] };
   const m4 = new THREE.Matrix4();
   const col = new THREE.Color();
@@ -246,7 +349,7 @@ function buildKitchen(course) {
   for (const s of [-1, 1]) cab.push(part(roundedBox(0.42, 1.5, 0.06, 0.03, 3), '#ff9ec4', V(wx + s * 1.15, 1.85, BACK + 0.2)));
   // 架子 + 罐子
   cab.push(part(roundedBox(2.4, 0.05, 0.3, 0.02, 2), '#f2c99c', V(wx + 2.8, 1.3, BACK + 0.15)));
-  addBaked(course, cab, { rough: 0.6, rim: 0.2 });
+  addBaked(course, cab, { rough: 0.6, rim: 0.2, aoBase: FLOOR - 0.05 });
   const glass = new THREE.Mesh(course.G.track(new THREE.PlaneGeometry(1.8, 1.25)), course.M.soft('#bfe6ff', { rough: 0.1, rim: 0.4, emissive: '#dff3ff', ei: 0.65 }));
   glass.position.set(wx, 1.83, BACK + 0.01);
   course.group.add(glass);
@@ -265,7 +368,7 @@ function buildKitchen(course) {
   fr.push(part(roundedBox(1.3, 3.0, 1.2, 0.15, 3), '#c9f0ff', V(x0 + 1.0, 0.55, BACK + 1.0)));
   fr.push(part(roundedBox(0.06, 0.6, 0.06, 0.03, 2), '#ffffff', V(x0 + 1.6, 0.9, BACK + 1.62)));
   for (let i = 0; i < 6; i++) fr.push(part(new THREE.CylinderGeometry(0.06, 0.06, 0.03, 14).rotateX(Math.PI / 2), ['#ff8fb3', '#ffd166', '#9be89b', '#7fd6ff', '#c9a0ff', '#ffb37a'][i], V(x0 + 0.7 + (i % 3) * 0.22, 1.2 + Math.floor(i / 3) * 0.3, BACK + 1.61)));
-  addBaked(course, fr, { rough: 0.35, rim: 0.4 });
+  addBaked(course, fr, { rough: 0.35, rim: 0.4, aoBase: FLOOR - 0.05 });
   // 台面后侧的小物件
   const list = [];
   for (let x = x0 + 2.2; x < x1 - 0.5; x += rng.range(0.9, 1.5)) list.push({ type: rng.pick(st.props), x, y: 0.035, z: BACK + rng.range(0.32, 0.6), s: rng.range(0.42, 0.62), rot: rng.range(-0.6, 0.6) });
@@ -366,6 +469,6 @@ function buildRoom(course) {
   placeProps(course, list);
   const rugs = [];
   for (let x = x0 + 1; x < x1; x += rng.range(3, 5)) rugs.push(part(new THREE.CylinderGeometry(1, 1, 0.012, 36), rng.pick(['#ffe1ec', '#e1f3ff', '#fff6cc', '#eae1ff']), V(x, 0.006, rng.range(-1.9, -1.2)), [0, 0, 0], V(rng.range(0.9, 1.4), 1, rng.range(0.6, 0.9))));
-  addBaked(course, rugs, { rough: 1, rim: 0.2, shadow: false });
+  addBaked(course, rugs, { rough: 1, rim: 0.2, shadow: false, flat: true });
   course.scene.fog = new THREE.Fog(new THREE.Color(st.fog), st.fogRange[0], st.fogRange[1]);
 }
