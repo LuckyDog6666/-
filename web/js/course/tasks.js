@@ -1412,7 +1412,7 @@ export class TidyStation extends TaskStation {
     // 玩具箱（开口朝上，正面有颗爱心）：在这一段的尽头、小路旁边（走过去不会碰到）
     const bx = L - 0.42;
     this.box = new THREE.Group();
-    this.box.position.set(bx, 0, 0.68);
+    this.box.position.set(bx, 0, 0.78);
     this.group.add(this.box);
     const bm = M.soft(this.def.boxColor || '#ffc2d8', { rough: 0.55, rim: 0.35 });
     this.mesh(G.track(roundedBox(0.5, 0.04, 0.38, 0.015, 2).translate(0, 0.02, 0)), bm, 0, 0, 0, this.box);

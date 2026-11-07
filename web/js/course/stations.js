@@ -327,7 +327,8 @@ export class SlimeStation extends Station {
   update(dt) {
     super.update(dt);
     this.hf.update(dt);
-    if (Math.floor(this.t * 10) !== Math.floor((this.t - dt) * 10)) this._glit();
+    // 亮片贴着表面（肚子压着的时候每帧都更新，不会有亮片留在肚子里）
+    if (this.hf.capIdx.length || Math.floor(this.t * 10) !== Math.floor((this.t - dt) * 10)) this._glit();
     for (const s of this.strands) {
       if (s.life <= 0) { s.m.visible = false; continue; }
       s.life -= dt;
