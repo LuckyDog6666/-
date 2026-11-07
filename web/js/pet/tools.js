@@ -127,12 +127,15 @@ export function buildTool(type, M) {
       g.userData.up = true; // 往上举着
       break;
     }
-    case 'umbrella': { // 小雨伞（伞面朝上）
-      add(new THREE.CylinderGeometry(0.01, 0.01, 0.6, 6), M.soft('#ffffff', { rough: 0.5 }), V(0, 0.3, 0));
+    case 'umbrella': { // 小雨伞（伞面朝上）：伞杆略微向外斜，伞面在头顶外侧、比耳朵高（不会压到头和耳朵）
+      const C = V(0.14, 0.72, 0); // 伞面中心（相对小手）
+      const shaft = new THREE.CylinderGeometry(0.01, 0.01, C.length() + 0.12, 6).translate(0, (C.length() + 0.12) / 2, 0);
+      const sm = add(shaft, M.soft('#ffffff', { rough: 0.5 }));
+      sm.quaternion.setFromUnitVectors(V(0, 1, 0), C.clone().normalize());
       const canopy = new THREE.SphereGeometry(0.36, 24, 8, 0, TAU, 0, Math.PI * 0.42);
-      add(canopy, M.soft('#ff8fb3', { rough: 0.45, rim: 0.5, side: THREE.DoubleSide, map: null }), V(0, 0.48, 0));
-      for (let i = 0; i < 8; i++) { const a = (i / 8) * TAU; add(new THREE.SphereGeometry(0.02, 8, 6), M.soft('#ffffff'), V(Math.cos(a) * 0.33, 0.55, Math.sin(a) * 0.33)); }
-      add(new THREE.SphereGeometry(0.025, 8, 6), M.soft('#ffd166'), V(0, 0.84, 0));
+      add(canopy, M.soft('#ff8fb3', { rough: 0.45, rim: 0.5, side: THREE.DoubleSide, map: null }), C);
+      for (let i = 0; i < 8; i++) { const a = (i / 8) * TAU; add(new THREE.SphereGeometry(0.02, 8, 6), M.soft('#ffffff'), V(C.x + Math.cos(a) * 0.33, C.y + 0.07, Math.sin(a) * 0.33)); }
+      add(new THREE.SphereGeometry(0.025, 8, 6), M.soft('#ffd166'), V(C.x, C.y + 0.36, 0));
       add(new THREE.TorusGeometry(0.03, 0.008, 6, 12, Math.PI), M.soft('#ffffff'), V(0.03, 0.0, 0), [0, 0, Math.PI]);
       g.userData.up = true;
       break;

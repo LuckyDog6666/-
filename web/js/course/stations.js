@@ -659,6 +659,9 @@ export class CrunchStation extends Station {
     this.footstep(t.x, t.z, 1, 1); this.footstep(t.x, clamp(t.z + 0.12, -this.width / 2, this.width / 2), -1, 1); this.footstep(t.x, clamp(t.z - 0.12, -this.width / 2, this.width / 2), 1, 1);
     api.sfx(this.sound.heavy || this.sound.special || this.sound.step, { gain: 2, maxDur: 2.5 });
     api.burst('crumbs', t.x, 0.1, t.z, { colors: this.def.colors || [this.def.color], count: 26 });
+    // 一屁股压下去：身体底下这一圈全被压扁（接下来坐着享受时，叶子 / 饼干不会从身体里冒出来）
+    this.pieces.forEach((p, k) => { if (Math.hypot(p.x - t.x, p.z - t.z) < 0.52 && p.crushed < 1) { p.crushed = 1; this._mat(k); } });
+    this.im.instanceMatrix.needsUpdate = true;
     await api.wait(0.8);
   }
 }
