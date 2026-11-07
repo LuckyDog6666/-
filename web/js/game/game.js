@@ -139,7 +139,7 @@ export class Game {
     this.voted = pickNext.votes;
     this.lastStage = stage.id;
     this.stage = stage;
-    this._bellyHF = null; this._bellySeg = null; // 上一关的软材料已经释放了
+    this._bellySegs = []; // 上一关的站点已经释放了
     this.course = new Course(this.scene, stage, { seed: this.rng.int(1, 1e9), shadowSize: this.cfg.shadowSize || 2048, forceGimmick: this.cfg.forceGimmick }).build();
     this.renderer.toneMappingExposure = (stage.exposure ?? 1.0) * 1.05;
     this.director.beginStage(stage, this.course.segments);
@@ -976,18 +976,26 @@ export class Game {
     const pet = this.pet, course = this.course;
     if (!course) return;
     const p = pet.root.position;
-    const s = course.segmentAt(p.x, p.z);
-    const hf = s && s.hf && typeof s.hf.conform === 'function' ? s.hf : null;
-    if (this._bellyHF && this._bellyHF !== hf) { this._bellyHF.conform(null); this._bellyHF = null; }
-    if (this._bellySeg && this._bellySeg !== s) { this._bellySeg.insideBody = null; this._bellySeg = null; }
-    if (!hf) return;
+    // 身体碰得到的那几段（不只是脚下这一段：站在边上时，肚子已经伸到下一段上面了）
+    const reach = 0.62 * pet.root.scale.x;
+    const near = course.segments.filter((sg) => sg.kind !== 'gimmick' && p.x > sg.x0 - reach && p.x < sg.x1 + reach && Math.abs(p.z) < sg.width / 2 + reach);
+    for (const sg of this._bellySegs || []) {
+      if (near.includes(sg)) continue;
+      if (sg.hf && sg.hf.conform) sg.hf.conform(null);
+      sg.insideBody = null; sg.bodyAt = null;
+    }
+    this._bellySegs = near;
+    if (!near.length) return;
     pet.refreshBodyInverse();
-    const gx = s.x0, gy = s.group.position.y, w = this._bellyV || (this._bellyV = new THREE.Vector3());
-    // 0.515：身体半径再加上描边的厚度
-    const inside = (x, y, z) => pet.bodyInside(w.set(gx + x, gy + y, z), 0.515);
-    hf.conform(inside, p.x - gx, p.z, 0.62 * pet.root.scale.x);
-    s.insideBody = inside; // 站点自己的小东西（史莱姆拉丝等）也可以用它避开身体
-    this._bellyHF = hf; this._bellySeg = s;
+    const w = this._bellyV || (this._bellyV = new THREE.Vector3());
+    for (const sg of near) {
+      const gx = sg.x0, gy = sg.group.position.y;
+      // 0.515：身体半径再加上描边的厚度
+      const inside = (x, y, z) => pet.bodyInside(w.set(gx + x, gy + y, z), 0.515);
+      if (sg.hf && sg.hf.conform) sg.hf.conform(inside, p.x - gx, p.z, reach);
+      sg.insideBody = inside; // 站点自己的小东西（史莱姆拉丝、落叶堆……）也用它避开身体
+      sg.bodyAt = { x: p.x - gx, y: p.y - gy, z: p.z };
+    }
   }
 
   status() {

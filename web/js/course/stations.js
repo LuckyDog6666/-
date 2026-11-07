@@ -642,10 +642,29 @@ export class CrunchStation extends Station {
     for (const p of this.pieces) if (Math.abs(p.x - x) < 0.08 && Math.abs(p.z - z) < 0.08) h = Math.max(h, p.y * (1 - p.crushed * 0.7) + 0.03);
     return h;
   }
+  update(dt) {
+    super.update(dt);
+    // 碰到身体的那几片（高高堆起的落叶 / 饼干）被身体压扁：不会从肚子里冒出来
+    if (!this.insideBody || !this.bodyAt) return;
+    const b = this.bodyAt;
+    let changed = false;
+    this.pieces.forEach((p, k) => {
+      if (p.crushed >= 1 || Math.abs(p.x - b.x) > 0.6 || Math.abs(p.z - b.z) > 0.6) return;
+      const h = p.y * (1 - p.crushed * 0.7);
+      if (h < 0.05) return;
+      if (this.insideBody(p.x, h + 0.02, p.z) < 1) { p.crushed = Math.min(1, p.crushed + 0.35); this._mat(k); changed = true; }
+    });
+    if (changed) this.im.instanceMatrix.needsUpdate = true;
+  }
   footstep(x, z, side, power = 0.5) {
     this.stepsTaken++;
     let n = 0;
-    this.pieces.forEach((p, k) => { const dd = Math.hypot(p.x - x, p.z - z); if (dd < 0.13 + power * 0.04 && p.crushed < 1) { p.crushed = Math.min(1, p.crushed + 0.7 + power * 0.3); this._mat(k); n++; } });
+    this.pieces.forEach((p, k) => {
+      const dd = Math.hypot(p.x - x, p.z - z);
+      if (dd < 0.13 + power * 0.04 && p.crushed < 1) { p.crushed = Math.min(1, p.crushed + 0.7 + power * 0.3); this._mat(k); n++; }
+      // 堆得高高的（巨型落叶山）：身体走过的这一圈也被压低，叶子不会从肚子里冒出来
+      else if (dd < 0.42 && p.y * (1 - p.crushed * 0.7) > 0.11) { p.crushed = Math.max(p.crushed, Math.min(1, (1 - 0.11 / p.y) / 0.7)); this._mat(k); }
+    });
     this.im.instanceMatrix.needsUpdate = true;
     this._addCrumbs(x, z, 4 + n * 2);
     return { sound: this.stepSound(power), gain: (power - 0.5) * 3 + Math.min(1.5, n * 0.3), maxDur: 1.8, fx: [{ preset: 'crumbs', x, y: 0.08, z, colors: this.def.colors || [this.def.color], count: 8 + n * 2, scale: 0.6 }] };
@@ -941,7 +960,9 @@ export class SquishyStation extends Station {
   update(dt) {
     super.update(dt);
     for (const it of this.items) {
-      it.s += (1 - it.s) * (1 - Math.exp(-0.9 * dt)); // 慢慢回弹
+      // 慢慢回弹；糯糯站在上面的时候被压着，不回弹（不然鼓起来的表面会顶进身体里）
+      const onTop = this.bodyAt && Math.abs(this.bodyAt.x - it.x) < it.size / 2 + 0.1 && this.bodyAt.y < it.top * it.s + 0.04; // 跳在空中时照样回弹
+      if (!onTop) it.s += (1 - it.s) * (1 - Math.exp(-0.9 * dt));
       it.m.scale.set(1 + (1 - it.s) * 0.25, it.s, 1 + (1 - it.s) * 0.2);
     }
   }
