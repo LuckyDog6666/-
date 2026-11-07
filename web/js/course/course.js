@@ -74,7 +74,10 @@ export class Course {
         const prevG = this.segments[this.segments.length - 1].kind === 'gimmick';
         // 闯关元素落地点在下一段起点前 0.43：下一段是要跳上去的一块块（果冻、面包）时多留一点，
         // 落地时圆肚子不会顶到第一块
-        x += d.finale ? GAP + 0.4 : prevG && (s.blocks || s.items) ? 0.95 : s.kind === 'gimmick' || prevG ? 0.55 : GAP;
+        let gap = d.finale ? GAP + 0.4 : prevG && (s.blocks || s.items) ? 0.95 : s.kind === 'gimmick' || prevG ? 0.55 : GAP;
+        // 闯关元素的起跳点（entryX）离起点越远，前面留的空就要越大：站在起跳点时圆肚子的后背不会碰到上一段的东西
+        if (s.kind === 'gimmick' && s.entryX != null) gap = Math.max(gap, 0.45 - s.entryX);
+        x += gap;
       }
       s.x0 = x;
       s.x1 = x + s.length;

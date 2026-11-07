@@ -578,8 +578,9 @@ export class Game {
   async hopLocal(s, lx, lz, o = {}) {
     const to = this.course.world(s, lx, lz);
     to.y = this.course.yAt(to.x, to.z);
-    await this.pet.hop(to, { height: o.height ?? 0.35, dur: o.dur ?? 0.5, anticipation: 0.12, keepFacing: o.keepFacing });
-    this.pet.setGround(to.y);
+    const liveY = () => this.course.yAt(to.x, to.z); // 落点（捏捏、果冻）在空中这段时间里会回弹：落在真实的表面上
+    await this.pet.hop(to, { height: o.height ?? 0.35, dur: o.dur ?? 0.5, anticipation: 0.12, keepFacing: o.keepFacing, liveY });
+    this.pet.setGround(liveY());
   }
 
   async doSpecial(s, name, plan = {}) {

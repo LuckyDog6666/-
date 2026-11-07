@@ -529,7 +529,7 @@ export class Pet {
     const dur = o.dur ?? 0.46 + dist * 0.06;
     if (dist > 0.05 && !o.keepFacing) this.faceTowards(to.x, to.z);
     return new Promise((resolve) => {
-      this._start({ kind: 'hop', t: 0, from, to: to.clone(), height, dur, ant: o.anticipation ?? 0.11, spin: o.spin || 0, flip: o.flip || 0, resolve, onTakeoff: o.onTakeoff, launched: false, tuck: o.tuck ?? 0, hEase: o.hEase });
+      this._start({ kind: 'hop', t: 0, from, to: to.clone(), height, dur, ant: o.anticipation ?? 0.11, spin: o.spin || 0, flip: o.flip || 0, resolve, onTakeoff: o.onTakeoff, launched: false, tuck: o.tuck ?? 0, hEase: o.hEase, liveY: o.liveY });
     });
   }
 
@@ -658,6 +658,8 @@ export class Pet {
         }
         const u = clamp((a.t - ant) / a.dur, 0, 1);
         airborne = u < 1;
+        // liveY：落点的表面在空中这段时间里会动（捏捏慢慢鼓回来）：跟着真实表面落下去，不会落进物体里面
+        if (a.liveY) { const y = a.liveY(); if (Number.isFinite(y)) a.to.y = y; }
         // hEase：水平方向的缓动（例如先往上、再往前，越过高台的边缘）
         const uh = a.hEase ? a.hEase(u) : u;
         pos.x = lerp(a.from.x, a.to.x, uh);
