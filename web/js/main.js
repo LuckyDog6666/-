@@ -144,16 +144,19 @@ async function main() {
   // ?manual：自检 / 截图用的逐帧模式——游戏不自己走，由 window.__advance(秒) 推进（每一小步之间让出微任务，
   // 保证 await 链能接上），画面照常渲染。正常直播不会用到。
   const MANUAL = params.has('manual');
+  let filmStage = null; // 当前后期参数对应的世界（换世界时按世界微调柔光）
   if (MANUAL) {
-    window.__advance = async (sec, step = 1 / 60) => {
+    window.__advance = async (sec, step = 1 / 60, render = true) => {
       const n = Math.max(1, Math.round(sec / step));
       for (let i = 0; i < n; i++) {
         game.update(step);
         for (let k = 0; k < 12; k++) await null;
       }
-      film.render(scene, camera);
+      if (game.stage !== filmStage) { filmStage = game.stage; film.configure(filmStage && filmStage.film); }
+      if (render) film.render(scene, camera);
       return game.time;
     };
+    window.__render = () => film.render(scene, camera);
   }
   let last = performance.now();
   let fpsAcc = 0, fpsN = 0, fps = 60, lowSince = 0, highSince = 0, cheapShadows = false;
@@ -163,8 +166,9 @@ async function main() {
     last = now;
     if (!(dt > 0)) return;
     dt = Math.min(dt, 0.1); // 卡顿时不要"瞬移"
+    if (game.stage !== filmStage) { filmStage = game.stage; film.configure(filmStage && filmStage.film); }
     try {
-      if (MANUAL) { film.render(scene, camera); return; }
+      if (MANUAL) return; // 逐帧模式：只在 __advance 之后渲染（省 CPU）
       if (SIM > 1) for (let i = 0; i < SIM; i++) game.update(1 / 30); // 自检用：快进模拟
       else game.update(dt);
       try { film.render(scene, camera); } catch (e) { film.setEnabled(false); report('error', 'film look disabled: ' + (e && e.message || e)); renderer.render(scene, camera); }

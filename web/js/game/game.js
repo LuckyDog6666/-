@@ -139,6 +139,7 @@ export class Game {
     this.voted = pickNext.votes;
     this.lastStage = stage.id;
     this.stage = stage;
+    this._bellyHF = null; this._bellySeg = null; // 上一关的软材料已经释放了
     this.course = new Course(this.scene, stage, { seed: this.rng.int(1, 1e9), shadowSize: this.cfg.shadowSize || 2048, forceGimmick: this.cfg.forceGimmick }).build();
     this.renderer.toneMappingExposure = (stage.exposure ?? 1.0) * 1.05;
     this.director.beginStage(stage, this.course.segments);

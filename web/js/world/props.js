@@ -200,9 +200,10 @@ export function buildProp(type, rng) {
       break;
     }
     // ---------- 森林 ----------
-    case 'tree': {
+    case 'tree': case 'tree_autumn': {
       P.push(part(cyl(0.12, 0.18, 1.0, 10), '#a8754a', V(0, 0.5, 0)));
-      const c = pick(['#6fcf6a', '#8fdc6a', '#5fbf7a', '#a8e06a']);
+      // 秋天的树：橙、金、枫红为主，偶尔一棵还带点绿（动画电影里秋天的配色）
+      const c = type === 'tree_autumn' ? pick(['#f29b4b', '#e9783b', '#f7c548', '#e2593f', '#f0a84a', '#b8c95a']) : pick(['#6fcf6a', '#8fdc6a', '#5fbf7a', '#a8e06a']);
       P.push(part(blobGeometry(0.62, rng.int(1, 9), 0.08, 2), c, V(0, 1.45, 0)));
       P.push(part(blobGeometry(0.42, 3, 0.08, 2), c, V(0.35, 1.2, 0.15)));
       P.push(part(blobGeometry(0.4, 5, 0.08, 2), c, V(-0.32, 1.25, -0.1)));
@@ -217,8 +218,8 @@ export function buildProp(type, rng) {
       for (let i = 0; i < 7; i++) { const a = (i / 7) * TAU; P.push(part(sph(0.08, 8, 6), '#ffffff', V(Math.cos(a) * 0.35, 0.92, Math.sin(a) * 0.35), [0, 0, 0], V(1, 0.4, 1))); }
       break;
     }
-    case 'bush': {
-      const c = pick(['#6fcf6a', '#5fbf7a', '#7fd77a']);
+    case 'bush': case 'bush_autumn': {
+      const c = type === 'bush_autumn' ? pick(['#e9783b', '#f2a54b', '#d9573b', '#c9b04a']) : pick(['#6fcf6a', '#5fbf7a', '#7fd77a']);
       for (let i = 0; i < 4; i++) P.push(part(blobGeometry(0.3, i, 0.1, 2), c, V(Math.cos(i * 1.6) * 0.25, 0.22, Math.sin(i * 1.6) * 0.2)));
       for (let i = 0; i < 3; i++) P.push(part(sph(0.06, 8, 6), pick(['#ff8fb3', '#ffffff', '#ffd166']), V(Math.cos(i * 2) * 0.3, 0.42, Math.sin(i * 2) * 0.3)));
       break;

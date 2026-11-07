@@ -1304,19 +1304,43 @@ export class FoldStation extends TaskStation {
       await this.shuffle(G, -SH, 0.5);
       const spot = this.B(this.foldC.x, this.foldC.y, this.foldC.z);
       pet.gazeAt(spot);
-      await this.moveR(spot.clone().add(V(0, 0.12, -0.04)), 0.25, ease.inOutQuad);
+      // 拎着领口把衣服提起来、抖两下，再像铺毛巾一样往前一甩铺平在台面上
+      const Hs = s.H;
+      const holdPt = spot.clone().add(V(0, Hs + 0.16, -Hs / 2 - 0.02));
+      await this.moveR(holdPt, 0.25, ease.inOutQuad);
       pet.drop('R', this.bench);
       s.blob.visible = false;
+      const hanger = new THREE.Group();
+      this.bench.add(hanger);
+      this.group.updateMatrixWorld(true);
+      hanger.position.copy(this.bench.worldToLocal(pet.handWorld('R')));
+      const pivot = new THREE.Group(); // 绕领口转：竖着挂 ↔ 平铺
+      pivot.position.y = -0.04;
+      hanger.add(pivot);
+      pivot.add(s.root);
+      s.root.position.set(0, 0, Hs / 2); s.root.rotation.set(0, 0, 0); s.root.scale.set(1, 1, 1);
+      pivot.rotation.x = Math.PI / 2;
       s.root.visible = true;
-      s.root.position.copy(this.foldC);
-      G.sfx('cloth', spot, { gain: -3 });
-      await this.tween(0.35, (u) => {
-        const e = ease.outBack(u);
-        s.root.scale.set(0.35 + 0.65 * e, 1, 0.35 + 0.65 * e);
-        s.root.position.y = this.foldC.y + 0.04 * Math.sin(u * Math.PI);
-        s.root.rotation.y = (1 - u) * 0.5;
-        this.rp.copy(spot).add(V(0, 0.1 - 0.06 * u, -0.06 + 0.04 * Math.sin(u * Math.PI)));
+      pet.grab('R', hanger, { upright: true });
+      G.sfx('cloth', holdPt, { gain: -3 });
+      const h0 = this.rp.clone();
+      let shk = false;
+      await this.tween(0.6, (u) => {
+        const w = Math.sin(u * TAU * 2);
+        pivot.rotation.x = Math.PI / 2 + 0.38 * w * (1 - u * 0.5);
+        this.rp.copy(h0).add(V(0, 0.03 * Math.abs(w), 0));
+        if (Math.abs(w) > 0.97 && !shk) { shk = true; G.sfx('cloth', holdPt, { gain: -9, main: false }); } else if (Math.abs(w) < 0.5) shk = false;
       });
+      const p0 = this.rp.clone(), layHand = spot.clone().add(V(0, 0.006 + 0.04, -Hs / 2));
+      await this.tween(0.5, (u) => {
+        pivot.rotation.x = (Math.PI / 2) * (1 - ease.outQuad(u));
+        this.rp.lerpVectors(p0, layHand, ease.inQuad(u));
+      });
+      G.sfx('cloth', spot, { gain: -4 });
+      pet.drop('R', this.bench);
+      this.bench.attach(s.root);
+      s.root.position.copy(this.foldC); s.root.rotation.set(0, 0, 0);
+      this.bench.remove(hanger);
       // 3) 叠左右两边：右手捏住外边缘，翻起来、过了顶点就松手，布"啪"地落下
       for (const sideS of [-1, 1]) {
         const flapsS = s.flaps.filter((f) => f.s === sideS);

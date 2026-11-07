@@ -12,7 +12,7 @@ const SNOW = '#f8fbff', SNOW_P = '#b4c7e6';
 export const STAGES = [
   {
     id: 'snow', env: 'outdoor', voteKeys: ['雪', '冰'], name: '雪国棉花糖谷', subtitle: '咯吱咯吱，每一脚都是新鲜的雪',
-    sky: ['#7fb2ea', '#cfe3f8', '#f2f8ff'], fog: '#dde9f8', fogRange: [18, 60], exposure: 0.95,
+    sky: ['#7fb2ea', '#cfe3f8', '#f2f8ff'], fog: '#dde9f8', fogRange: [18, 60], exposure: 0.95, film: { glow: 0.3, threshold: 0.92, saturation: 1.12 },
     hemi: ['#ffffff', '#a9c2ea', 1.0], sun: ['#fff1e0', 2.4], ambient: 0.35,
     ground: '#e6effb', groundAlt: '#d3e2f6', hills: ['#eaf2fd', '#d9e6f8', '#c9dbf3'], path: '#d7e6f8', pathSide: '#a9c2e4',
     props: ['pine_snow', 'snowman', 'ice_crystal', 'snow_rock', 'pine_snow', 'igloo'], archColors: ['#ffffff', '#9fd8ff', '#ff8fb3'],
@@ -39,7 +39,7 @@ export const STAGES = [
     sky: ['#f6b67a', '#fbd9a8', '#fff2dc'], fog: '#f8dfba', fogRange: [16, 55], exposure: 1.02,
     hemi: ['#fff1dc', '#c98b5a', 0.95], sun: ['#ffdcb0', 2.5], ambient: 0.32,
     ground: '#ecc890', groundAlt: '#dcae73', hills: ['#e9a25a', '#c8763a', '#9fbf6a', '#f2c46a'], path: '#f4dab0', pathSide: '#c99b62',
-    props: ['tree', 'big_mushroom', 'bush', 'stump', 'tree', 'rock', 'flowers'], archColors: ['#f29b4b', '#ffd34d', '#ffffff', '#e9603b'],
+    props: ['tree_autumn', 'big_mushroom', 'bush_autumn', 'stump', 'tree_autumn', 'rock', 'flowers'], archColors: ['#f29b4b', '#ffd34d', '#ffffff', '#e9603b'],
     particles: { type: 'leaves', rate: 4, colors: ['#f29b4b', '#e9603b', '#f7c548', '#c8763a'] },
     ambience: 'amb_forest', ambienceGain: -2, pathSound: 'grass_step', pathGain: -2,
     accessory: 'flower',

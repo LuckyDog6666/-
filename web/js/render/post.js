@@ -47,6 +47,7 @@ export class FilmLook {
       uniforms: { tScene: { value: null }, tSmall: { value: null }, uGlow: { value: o.glow ?? 0.55 }, uThresh: { value: o.threshold ?? 0.82 }, uSat: { value: o.saturation ?? 1.07 } },
       vertexShader: VERT, fragmentShader: COMPOSITE, depthTest: false, depthWrite: false,
     });
+    this.base = { glow: o.glow ?? 0.55, threshold: o.threshold ?? 0.82, saturation: o.saturation ?? 1.07 };
     this.quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), this.copyMat);
     this.quad.frustumCulled = false;
     this.scene = new THREE.Scene();
@@ -61,6 +62,13 @@ export class FilmLook {
     this.small.setSize(Math.max(4, w >> 2), Math.max(4, h >> 2));
   }
   setEnabled(v) { this.enabled = !!v; }
+  // 每个世界可以微调：雪地这种本来就很亮的场景少晕一点，不然发灰
+  configure(o = {}) {
+    const u = this.compMat.uniforms;
+    u.uGlow.value = o.glow ?? this.base.glow;
+    u.uThresh.value = o.threshold ?? this.base.threshold;
+    u.uSat.value = o.saturation ?? this.base.saturation;
+  }
   render(scene, camera) {
     const r = this.renderer;
     if (!this.enabled) { r.render(scene, camera); return; }

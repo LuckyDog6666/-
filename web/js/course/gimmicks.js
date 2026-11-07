@@ -429,7 +429,8 @@ export class SlideGimmick extends Gimmick {
     // 滑道：一条 S 形的 U 形槽（开口朝上），槽底的起点和平台一样高
     const lift = this.chuteDrop;
     // 滑道末端微微翘起、悬在落地盆上方（比盆沿高）：糯糯从盆沿上方飞进去，不会擦着盆沿 / 雪堆的边冲进去
-    const pts = [V(this.topEnd - 0.04, H + lift, 0), V(this.topEnd + 0.7, H * 0.8 + lift, 0.3), V(this.topEnd + 1.55, H * 0.5 + lift, -0.25), V(this.topEnd + 2.3, Math.max(0.3, H * 0.3) + lift, 0.05), V(this.topEnd + 2.85, 0.3 + lift, 0)];
+    // 末端停在落地盆的边上（不伸到盆中间：糯糯坐在盆里时，背后不会碰到滑道）
+    const pts = [V(this.topEnd - 0.04, H + lift, 0), V(this.topEnd + 0.7, H * 0.8 + lift, 0.3), V(this.topEnd + 1.5, H * 0.5 + lift, -0.22), V(this.topEnd + 2.2, Math.max(0.3, H * 0.3) + lift, 0.04), V(this.topEnd + 2.55, 0.3 + lift, 0)];
     this.curveLocal = new THREE.CatmullRomCurve3(pts, false, 'centripetal');
     const chute = new THREE.Mesh(G.track(halfPipe(this.curveLocal, R, 90, 16)), M.soft(colA, { rough: 0.25, rim: 0.5, rimColor: '#ffffff', side: THREE.DoubleSide }));
     chute.castShadow = true; chute.receiveShadow = true;
