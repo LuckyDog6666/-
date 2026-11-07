@@ -2,6 +2,7 @@
 // 顶面是细分网格，在 CPU 上"盖章"压出脚印（带隆起的边缘），并用顶点色把压过的地方变深；
 // 黏稠材质（史莱姆、慢回弹海绵）会慢慢恢复原状。
 import * as THREE from 'three';
+import { mergeGeometries } from '../../vendor/addons/BufferGeometryUtils.js';
 
 export class Heightfield {
   /**
@@ -122,10 +123,18 @@ export class Heightfield {
     g.restore();
   }
 
+  // 侧面裙边：只有四面薄墙（不是实心的盒子）——表面被压出坑时，坑底下不会冒出一块平平的盒子顶
   _skirt() {
     const { length: L, width: W, thickness: T } = this.o;
-    const g = new THREE.BoxGeometry(L - 0.02, T * 0.9, W - 0.02);
-    g.translate(L / 2, T * 0.45, 0);
+    const h = T * 0.9, t = 0.012;
+    const walls = [
+      new THREE.BoxGeometry(L - 0.02, h, t).translate(L / 2, h / 2, W / 2 - 0.01 - t / 2),
+      new THREE.BoxGeometry(L - 0.02, h, t).translate(L / 2, h / 2, -W / 2 + 0.01 + t / 2),
+      new THREE.BoxGeometry(t, h, W - 0.02).translate(0.01 + t / 2, h / 2, 0),
+      new THREE.BoxGeometry(t, h, W - 0.02).translate(L - 0.01 - t / 2, h / 2, 0),
+    ];
+    const g = mergeGeometries(walls, false);
+    for (const w of walls) w.dispose();
     return g;
   }
 

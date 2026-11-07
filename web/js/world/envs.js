@@ -277,7 +277,7 @@ function buildOutdoor(course) {
 // 每种装饰物大致占地半径（scale = 1 时）：用来避免装饰物互相穿插
 const PROP_R = {
   cottage: 1.7, cottage_snow: 1.7, cottage_forest: 1.7, lighthouse: 1.2, candy_castle: 1.8, windmill: 1.6, toy_castle: 1.8,
-  tree: 0.75, tree_autumn: 0.75, bush_autumn: 0.5, pine_snow: 0.65, big_mushroom: 0.62, igloo: 0.95, snowman: 0.45, cake: 0.62, big_donut: 0.62, cookie_stack: 0.4,
+  tree: 0.75, tree_autumn: 0.75, bush_autumn: 0.5, palm: 0.75, sand_castle: 0.65, beach_umbrella: 0.85, beach_ball: 0.3, pine_snow: 0.65, big_mushroom: 0.62, igloo: 0.95, snowman: 0.45, cake: 0.62, big_donut: 0.62, cookie_stack: 0.4,
   rainbow_arch: 1.1, cloud_big: 0.9, candy_tree: 0.6, coral_fan: 0.5, big_shell: 0.58, sea_rock: 0.55, rock: 0.42, snow_rock: 0.48,
   bush: 0.5, flowers: 0.35, stump: 0.4, teddy: 0.45, toy_chest: 0.5, floor_lamp: 0.35, plant: 0.35, cushion_pile: 0.5,
 };

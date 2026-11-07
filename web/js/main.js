@@ -150,6 +150,8 @@ async function main() {
       const n = Math.max(1, Math.round(sec / step));
       for (let i = 0; i < n; i++) {
         game.update(step);
+        // 正常运行时渲染会顺便更新所有物体的世界矩阵；不渲染的快进也要更新，不然有的逻辑读到旧矩阵会卡住
+        if (!render) { scene.updateMatrixWorld(); camera.updateMatrixWorld(); }
         for (let k = 0; k < 12; k++) await null;
       }
       if (game.stage !== filmStage) { filmStage = game.stage; film.configure(filmStage && filmStage.film); }

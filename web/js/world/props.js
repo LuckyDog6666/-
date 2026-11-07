@@ -449,6 +449,57 @@ export function buildProp(type, rng) {
       for (let i = 0; i < 5; i++) GL.push({ geo: new THREE.OctahedronGeometry(0.1, 0).translate(Math.cos(i * 1.3) * 0.18, 0.1, Math.sin(i * 1.3) * 0.18), color: RAINBOW[(i * 3) % 7] });
       break;
     }
+    // ---------- 沙滩 ----------
+    case 'palm': { // 弯弯的椰子树：一节一节的树干、垂下来的大叶子、一串椰子
+      const lean = rng.range(0.1, 0.18) * (rng.chance(0.5) ? 1 : -1);
+      let x = 0, y = 0;
+      for (let k = 0; k < 7; k++) {
+        const r0 = 0.13 - k * 0.006;
+        P.push(part(cyl(r0 - 0.012, r0, 0.32, 10), k % 2 ? '#c8955f' : '#b9844f', V(x, y + 0.16, 0), [0, 0, -lean * k * 0.25]));
+        x += Math.sin(lean * k * 0.25) * 0.32; y += Math.cos(lean * k * 0.25) * 0.31;
+      }
+      const top = V(x, y, 0);
+      for (let k = 0; k < 7; k++) {
+        const a = (k / 7) * TAU + rng.range(-0.2, 0.2);
+        const leaf = new THREE.SphereGeometry(1, 14, 8); leaf.scale(0.62, 0.05, 0.15); leaf.translate(0.55, 0, 0);
+        leaf.rotateZ(-0.55 - rng.range(0, 0.25)); leaf.rotateY(a);
+        P.push(part(leaf, pick(['#5fbf6a', '#6fcf6a', '#4fae63']), top.clone().add(V(0, 0.04, 0))));
+      }
+      for (let k = 0; k < 3; k++) P.push(part(sph(0.085, 10, 8), '#8a5a3c', top.clone().add(V(Math.cos(k * 2.1) * 0.09, -0.09, Math.sin(k * 2.1) * 0.09))));
+      break;
+    }
+    case 'sand_castle': {
+      const sand = '#f2d39b', dark = '#e2bd7f';
+      P.push(part(roundedBox(0.95, 0.32, 0.95, 0.08, 2), sand, V(0, 0.16, 0)));
+      for (const [x, z] of [[-0.42, -0.42], [0.42, -0.42], [-0.42, 0.42], [0.42, 0.42]]) {
+        P.push(part(cyl(0.14, 0.16, 0.55, 14), sand, V(x, 0.27, z)));
+        for (let k = 0; k < 4; k++) { const a = (k / 4) * TAU; P.push(part(roundedBox(0.07, 0.08, 0.07, 0.02, 1), dark, V(x + Math.cos(a) * 0.1, 0.58, z + Math.sin(a) * 0.1))); }
+      }
+      P.push(part(cyl(0.2, 0.24, 0.8, 16), sand, V(0, 0.4, 0)));
+      P.push(part(cyl(0.21, 0.21, 0.05, 16), dark, V(0, 0.82, 0)));
+      P.push(part(cyl(0.012, 0.012, 0.35, 6), '#ffffff', V(0, 1.0, 0)));
+      P.push(part(cone(0.07, 0.16, 3).rotateZ(-Math.PI / 2), '#ff8fb3', V(0.08, 1.12, 0)));
+      P.push(part(roundedBox(0.18, 0.22, 0.05, 0.06, 2), dark, V(0, 0.15, 0.48)));
+      for (let k = 0; k < 3; k++) P.push(part(new THREE.SphereGeometry(0.05, 10, 6, 0, TAU, 0, Math.PI / 2).scale(1, 0.4, 0.85), pick(['#ffd6e0', '#ffffff', '#f0dcff']), V(-0.3 + k * 0.3, 0.32, 0.47)));
+      break;
+    }
+    case 'beach_umbrella': { // 彩色条纹的沙滩伞
+      const tilt = rng.range(-0.25, 0.25);
+      P.push(part(cyl(0.025, 0.025, 1.6, 8), '#ffffff', V(0, 0.8, 0), [tilt, 0, 0]));
+      const c1 = pick(['#ff8fb3', '#7fd6ff', '#ffb37a', '#9be89b']);
+      const top = V(0, 1.6 * Math.cos(tilt), 1.6 * Math.sin(tilt));
+      for (let k = 0; k < 8; k++) {
+        const w = new THREE.SphereGeometry(0.85, 6, 6, (k / 8) * TAU, TAU / 8, 0, Math.PI / 2.4); w.scale(1, 0.45, 1);
+        P.push(part(w, k % 2 ? '#ffffff' : c1, top.clone().add(V(0, -0.3, 0)), [tilt, 0, 0]));
+      }
+      P.push(part(sph(0.06, 8, 6), c1, top.clone().add(V(0, 0.1, 0))));
+      break;
+    }
+    case 'beach_ball': {
+      for (let k = 0; k < 6; k++) P.push(part(new THREE.SphereGeometry(0.28, 8, 12, (k / 6) * TAU, TAU / 6), RAINBOW[k], V(0, 0.27, 0)));
+      P.push(part(sph(0.05, 8, 6), '#ffffff', V(0, 0.55, 0)));
+      break;
+    }
     // ---------- 远景地标（每个世界一个"故事书里的房子"：暖暖发光的窗户是冷暖对比的焦点） ----------
     case 'cottage': case 'cottage_snow': case 'cottage_forest': {
       const snow = type === 'cottage_snow', forest = type === 'cottage_forest';
