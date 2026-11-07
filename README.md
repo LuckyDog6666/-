@@ -21,7 +21,9 @@
 - **7×24 无人值守**：看门狗自动重启卡死/关闭的画面、监听断线自动重连、程序崩溃自动重启、定时释放内存、断线期间的礼物自动补发；每关结束彻底释放显存。
 - **零依赖、一键启动**：双击 `启动糯糯.bat`，自动准备运行环境（便携 Node.js，SHA256 校验）。横屏、竖屏都支持。
 
+![果冻弹弹垫弹上平台](docs/images/v31-bounce.jpg)
 ![冰雪滑梯](docs/images/v3-slide.jpg)
+![煎松饼：左手握锅柄、右手倒面糊](docs/images/v3-kitchen.jpg)
 ![八个世界](docs/images/v3-worlds.jpg)
 
 ## 🚀 快速开始（Windows）

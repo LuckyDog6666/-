@@ -1306,7 +1306,8 @@ export class FoldStation extends TaskStation {
       pet.gazeAt(spot);
       // 拎着领口把衣服提起来、抖两下，再像铺毛巾一样往前一甩铺平在台面上
       const Hs = s.H;
-      const holdPt = spot.clone().add(V(0, Hs + 0.16, -Hs / 2 - 0.02));
+      // 提在右前方、比脸低一点（挡不住小脸）
+      const holdPt = spot.clone().add(this.BD(0.07, 0, 0)).add(V(0, Hs + 0.1, 0)).add(this.BD(0, 0, -Hs / 2 + 0.02));
       await this.moveR(holdPt, 0.25, ease.inOutQuad);
       pet.drop('R', this.bench);
       s.blob.visible = false;
