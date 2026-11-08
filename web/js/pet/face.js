@@ -78,8 +78,9 @@ vec3 eyeColor(vec2 uv) {
   vec2 p = uv * 2.0 - 1.0;                 // 眼睛的椭圆轮廓 = 半径 1
   float e = length(p);
   vec2 pa = vec2(p.x * uAspect, p.y);      // 换成"圆"的坐标（单位：眼睛半高）
-  // ---- 上眼皮：睁开时是向上拱的弧线，闭上时变成向下弯的弧线（︶） ----
-  float k = mix(-0.32, 0.22, smoothstep(-0.6, 0.6, uLid));
+  // ---- 上眼皮：睁开、半睁时都是向上拱的圆弧（眼皮圆圆地盖下来，困困的也可爱；
+  //      平直的眼皮线会显得"无语 / 不耐烦"），快合上时才变成向下弯的弧线（︶） ----
+  float k = mix(-0.3, 0.2, smoothstep(-0.8, -0.15, uLid));
   float lidY = uLid - k * p.x * p.x;
   float skin = smoothstep(lidY - 0.025, lidY + 0.025, p.y);
   // ---- 眼白：上方被眼皮投下阴影，越靠边越偏冷一点 ----
@@ -87,8 +88,8 @@ vec3 eyeColor(vec2 uv) {
   col *= 1.0 - 0.22 * smoothstep(0.38, 0.0, lidY - p.y);
   col = mix(col, col * vec3(0.94, 0.96, 1.0), smoothstep(0.6, 1.0, e));
   // ---- 虹膜（物体空间里是正圆）----
-  float IR = 0.72;
-  vec2 q = pa - vec2(uLook.x * uAspect, uLook.y) * 0.5 - vec2(0.0, -0.06);  // 虹膜平时略靠下（眼神更软萌）
+  float IR = 0.75;
+  vec2 q = pa - vec2(uLook.x * uAspect, uLook.y) * 0.5 - vec2(0.0, -0.08);  // 虹膜大一点、平时略靠下（像小宝宝的眼睛，眼神更软萌）
   float r = length(q) / IR;
   vec3 iris = texture2D(map, clamp(q / IR * 0.5 + 0.5, 0.0, 1.0)).rgb;
   float glow = smoothstep(0.05, 0.9, -q.y / IR) * smoothstep(1.02, 0.42, r);   // 眼底透出来的暖光
@@ -129,7 +130,7 @@ export function eyeMaterial({ side, aspect, skin, sclera = '#fbf8f6', lash = '#3
     uLid: { value: 0.82 },
     uSide: { value: side },
     uAspect: { value: aspect },
-    uPupil: { value: 0.47 },
+    uPupil: { value: 0.5 },
     uTw: { value: 1 },
     uSkin: { value: new THREE.Color(skin) },
     uSclera: { value: new THREE.Color(sclera) },
@@ -145,9 +146,15 @@ export function eyeMaterial({ side, aspect, skin, sclera = '#fbf8f6', lash = '#3
       .replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\ntotalEmissiveRadiance += eyeEmit;')
       .replace('#include <lights_physical_fragment>', '#include <lights_physical_fragment>\n#ifdef USE_CLEARCOAT\nmaterial.clearcoat *= 1.0 - eyeSkin;\n#endif');
   };
-  mat.customProgramCacheKey = () => 'nuonuo-eye-v2';
+  mat.customProgramCacheKey = () => 'nuonuo-eye-v3';
   mat.userData.eye = u;
   return mat;
+}
+
+// 手绘线条的材质（睫毛线、闭眼线、眉毛、嘴巴）：哑光、几乎不反射环境，像一笔墨线。
+// 有光泽的线条在雪地 / 阳光下会反出一道白光——闭着眼时那道白光像是露出了一排牙齿
+export function inkMaterial(color, o = {}) {
+  return new THREE.MeshStandardMaterial({ color: new THREE.Color(color), roughness: o.rough ?? 0.92, metalness: 0, envMapIntensity: o.env ?? 0.1 });
 }
 
 // 粗细变化的线（中间粗、两头细）：眉毛、嘴巴、闭眼线、睫毛都用它，像手绘的线条
@@ -164,9 +171,11 @@ export function taperedTube(points, radius, taper = (u) => Math.sin(Math.PI * u)
       pos.push(P.x + r * (Math.cos(a) * N.x + Math.sin(a) * B.x), P.y + r * (Math.cos(a) * N.y + Math.sin(a) * B.y), P.z + r * (Math.cos(a) * N.z + Math.sin(a) * B.z));
     }
   }
+  // 三角形的绕序要让法线朝外（T × B = −N 朝里，所以这里是 a → a+1 → b）。
+  // 绕反了的话看到的是管子"里面"的后壁：贴着脸的那一段后壁埋进皮肤里，线条中间就会透出一道肤色
   for (let i = 0; i < segs; i++) for (let j = 0; j < radial; j++) {
     const a = i * (radial + 1) + j, b = a + radial + 1;
-    idx.push(a, b, a + 1, b, b + 1, a + 1);
+    idx.push(a, a + 1, b, b, a + 1, b + 1);
   }
   const g = new THREE.BufferGeometry();
   g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
