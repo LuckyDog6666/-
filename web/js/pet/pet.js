@@ -503,7 +503,10 @@ export class Pet {
       e.eye.scale.z = 0.3 + 0.7 * smoothstep(-0.95, 0.6, lid);
       u.uTw.value = 0.7 + 0.3 * Math.sin(this.t * 3.1 + e.side); // 小星光一闪一闪
       const sc = mode === 'wide' ? 1.06 : 1;
-      e.g.scale.set(sc, sc * (mode === 'wide' ? 1.03 : 1), 1);
+      // 身体被压扁 / 拉长时，眼睛只跟着变一点点，大致保持圆圆的
+      // （整只眼睛跟着身体压扁，看起来像在眯着眼斜看人，不可爱）
+      const bs = this.bodyPivot.scale;
+      e.g.scale.set(sc * Math.pow(bs.x, -0.7), sc * (mode === 'wide' ? 1.03 : 1) * Math.pow(bs.y, -0.7), 1);
       // 外眼角的小睫毛跟着眼皮的边走
       const R = this.eyeR;
       if (shut) {
