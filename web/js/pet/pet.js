@@ -490,13 +490,14 @@ export class Pet {
       e.closed.visible = shut;
       e.lashes.visible = !happy;
       let lidT = mode === 'wide' ? 1.15 : mode === 'half' ? 0.22 : mode === 'closed' ? -0.95 : 0.82;
-      // 眼皮跟着视线走：往上看抬一点、往下看只跟一点点（干活时常低头看手里的东西，眼皮压太多会显得没精神 / 不耐烦）
-      if (mode !== 'closed' && mode !== 'wide') lidT += this.lookY * (this.lookY < 0 ? 0.05 : 0.12);
+      // 眼皮跟着视线走（Disney 动画的老办法）：往下看时虹膜少往下走一点、眼皮跟着低一点，
+      // 虹膜上方不会露出一大块眼白（那样像在斜眼看人）；也不压太多（不然像没精神）
+      if (mode !== 'closed' && mode !== 'wide') lidT += this.lookY * (this.lookY < 0 ? 0.09 : 0.12);
       e.lid = damp(e.lid, Math.min(1.15, lidT), 16, dt);
       const lid = lerp(e.lid, -1.0, blinkAmt);
       const u = e.u;
       u.uLid.value = lid;
-      u.uLook.value.set(this.lookX * 0.42, this.lookY * 0.36);
+      u.uLook.value.set(this.lookX * 0.42, this.lookY * (this.lookY < 0 ? 0.24 : 0.36));
       u.uPupil.value = damp(u.uPupil.value, mode === 'wide' ? 0.42 : 0.5, 10, dt); // 大瞳孔显得天真；惊讶时缩小一点
       // 眼皮合上时眼珠也收平：闭着眼是脸上一道弯弯的睫毛线，而不是鼓起来的一大块
       e.eye.scale.z = 0.3 + 0.7 * smoothstep(-0.95, 0.6, lid);
