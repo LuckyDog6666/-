@@ -19,10 +19,10 @@ export function irisTexture(pal = {}) {
   c.width = c.height = s;
   const g = c.getContext('2d');
   const base = g.createRadialGradient(cx, cy, R * 0.1, cx, cy, R);
-  base.addColorStop(0, pal.inner || '#5a2c16');
-  base.addColorStop(0.45, pal.mid || '#9c5a2c');
-  base.addColorStop(0.8, pal.outer || '#7a401d');
-  base.addColorStop(1, pal.rim || '#40200f');
+  base.addColorStop(0, pal.inner || '#6a3e28');
+  base.addColorStop(0.45, pal.mid || '#a5744b');
+  base.addColorStop(0.8, pal.outer || '#855439');
+  base.addColorStop(1, pal.rim || '#4c3028');
   g.fillStyle = base; g.fillRect(0, 0, s, s);
   // 放射状的细纹（亮的焦糖色 + 暗的深棕色交替）
   let seed = 7;
@@ -57,7 +57,7 @@ export function irisTexture(pal = {}) {
 
 const EYE_GLSL = /* glsl */`
 uniform vec2 uLook;      // 视线：虹膜中心相对眼睛中心的偏移（眼睛半高为 1）
-uniform float uLid;      // 上眼皮边缘的高度：1.15 全睁开，0.82 自然，0.2 困了，-0.9 闭上
+uniform float uLid;      // 上眼皮边缘的高度：1.15 全睁开，0.94 自然，0.2 困了，-0.9 闭上
 uniform float uSide;     // -1 左眼 / +1 右眼（外眼角方向）
 uniform float uAspect;   // 眼睛宽高比（半宽 / 半高）
 uniform float uPupil;    // 瞳孔半径（占虹膜半径的比例）
@@ -85,25 +85,25 @@ vec3 eyeColor(vec2 uv) {
   float skin = smoothstep(lidY - 0.025, lidY + 0.025, p.y);
   // ---- 眼白：上方被眼皮投下阴影，越靠边越偏冷一点 ----
   vec3 col = uSclera;
-  col *= 1.0 - 0.22 * smoothstep(0.38, 0.0, lidY - p.y);
+  col *= 1.0 - 0.14 * smoothstep(0.38, 0.0, lidY - p.y);
   col = mix(col, col * vec3(0.94, 0.96, 1.0), smoothstep(0.6, 1.0, e));
   // ---- 虹膜（物体空间里是正圆）----
-  float IR = 0.75;
+  float IR = 0.83;
   vec2 q = pa - vec2(uLook.x * uAspect, uLook.y) * 0.5 - vec2(0.0, -0.08);  // 虹膜大一点、平时略靠下（像小宝宝的眼睛，眼神更软萌）
   float r = length(q) / IR;
   vec3 iris = texture2D(map, clamp(q / IR * 0.5 + 0.5, 0.0, 1.0)).rgb;
   float glow = smoothstep(0.05, 0.9, -q.y / IR) * smoothstep(1.02, 0.42, r);   // 眼底透出来的暖光
-  iris = iris * (1.0 + glow * 1.1) + uGlow * glow * 0.32;
-  iris *= 1.0 - 0.55 * smoothstep(0.74, 1.0, r);                                // 角膜缘：外圈一圈深色
+  iris = iris * (1.0 + glow * 0.7) + uGlow * glow * 0.2;
+  iris *= 1.0 - 0.4 * smoothstep(0.8, 1.0, r);                                 // 柔和的可可色外圈
   float pupil = smoothstep(uPupil + 0.03, uPupil - 0.03, r);
   iris = mix(iris, vec3(0.018, 0.010, 0.008), pupil);
   iris *= 1.0 - 0.4 * smoothstep(0.42, 0.0, lidY - p.y);                        // 眼皮的阴影也落在虹膜上
   col = mix(col, iris, smoothstep(1.0, 0.95, r));
   // ---- 眼眶的描线：上面粗（像睫毛），下面细 ----
-  float w = mix(0.035, 0.14, smoothstep(-0.4, 0.8, p.y));
-  col = mix(col, uLash, smoothstep(1.0 - w, 1.0 - w + 0.05, e) * mix(0.28, 1.0, smoothstep(-0.5, 0.5, p.y)));
+  float w = mix(0.02, 0.075, smoothstep(-0.4, 0.8, p.y));
+  col = mix(col, uLash, smoothstep(1.0 - w, 1.0 - w + 0.05, e) * mix(0.16, 0.85, smoothstep(-0.5, 0.5, p.y)));
   // ---- 眼皮边缘的睫毛线（外眼角更粗）----
-  float lw = 0.065 + 0.07 * smoothstep(0.15, 0.95, p.x * uSide);
+  float lw = 0.045 + 0.035 * smoothstep(0.15, 0.95, p.x * uSide);
   float lash = 1.0 - smoothstep(lw * 0.45, lw, abs(p.y - (lidY + lw * 0.25)));
   // ---- 眼皮（皮肤）----
   // 眼皮：贴近睫毛线的地方带一点粉色的褶子阴影，眼皮看起来是圆鼓鼓地盖下来的
@@ -123,14 +123,14 @@ vec3 eyeColor(vec2 uv) {
 `;
 
 // 眼睛材质：MeshPhysicalMaterial（清漆层让眼珠水汪汪的）+ 程序化眼睛
-export function eyeMaterial({ side, aspect, skin, sclera = '#fbf8f6', lash = '#3b2229', glow = '#ffb46b', map }) {
+export function eyeMaterial({ side, aspect, skin, sclera = '#fff7ee', lash = '#513238', glow = '#ffd29a', map }) {
   const mat = new THREE.MeshPhysicalMaterial({ map, color: '#ffffff', roughness: 0.28, clearcoat: 1, clearcoatRoughness: 0.05, envMapIntensity: 0.9 });
   const u = {
     uLook: { value: new THREE.Vector2() },
-    uLid: { value: 0.82 },
+    uLid: { value: 0.94 },
     uSide: { value: side },
     uAspect: { value: aspect },
-    uPupil: { value: 0.5 },
+    uPupil: { value: 0.59 },
     uTw: { value: 1 },
     uSkin: { value: new THREE.Color(skin) },
     uSclera: { value: new THREE.Color(sclera) },
@@ -146,7 +146,7 @@ export function eyeMaterial({ side, aspect, skin, sclera = '#fbf8f6', lash = '#3
       .replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\ntotalEmissiveRadiance += eyeEmit;')
       .replace('#include <lights_physical_fragment>', '#include <lights_physical_fragment>\n#ifdef USE_CLEARCOAT\nmaterial.clearcoat *= 1.0 - eyeSkin;\n#endif');
   };
-  mat.customProgramCacheKey = () => 'nuonuo-eye-v3';
+  mat.customProgramCacheKey = () => 'nuonuo-eye-v4';
   mat.userData.eye = u;
   return mat;
 }
