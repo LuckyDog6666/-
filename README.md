@@ -6,7 +6,9 @@
 
 ![正面踩雪](docs/images/v3-snow.jpg)
 
-![糯糯的新脸：之前 / 现在（Disney 式的大眼睛）](docs/images/v32-face.jpg)
+![糯糯的新造型：圆圆的奶茶色大眼睛、短圆歪耳朵和蜜桃腮红](docs/images/nuonuo-cute-face.png)
+
+糯糯现在有更圆润的奶茶色眼睛、饱满瞳孔、轻盈眼线和短圆的小歪耳，五官稍稍下移，配上柔和蜜桃腮红。眨眼完全闭合时会露出弯弯的闭眼线。[查看表情与侧脸预览](docs/images/nuonuo-cute-expressions.png)。
 
 ## ✨ 亮点
 

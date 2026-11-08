@@ -15,13 +15,13 @@ const C = {
   belly: '#fffbf7',
   rim: '#ffc2d8',
   ear: '#fff3ea',
-  earInner: '#ffadc6',
+  earInner: '#ffbdc9',
   eye: '#2a1830',
-  lash: '#3b2229',     // 睫毛线、闭眼线：深可可色（不是纯黑，和描边一个色系）
-  lid: '#fbe2d8',      // 眼皮：比脸稍微粉一点（动画里眼皮常带一点暖粉的阴影）
-  brow: '#8a5a52',     // 眉毛：暖暖的焦糖棕
+  lash: '#513238',     // 柔和的可可色眼线
+  lid: '#fff0e5',      // 奶油色眼皮，与脸颊自然衔接
+  brow: '#a47765',     // 浅焦糖色的小豆眉
   mouthIn: '#7a2e44',  // 张嘴时嘴里：深玫瑰色
-  blush: '#ff8fb0',
+  blush: '#f49aa7',
   mouth: '#6b3247',
   tongue: '#ff7f9e',
   nose: '#ff9eb8',
@@ -168,29 +168,29 @@ export class Pet {
     const lineMat = inkMaterial(C.lash); // 哑光的墨线：闭眼线、^ ^、睫毛
     this.disposables.push(lineMat);
     this.eyes = [];
-    const ERX = 0.097, ERY = 0.115, EZ = 0.024; // 眼睛再大一点点（小宝宝比例：大眼睛、靠下、分得开）
+    const ERX = 0.11, ERY = 0.112, EZ = 0.019; // 圆润的宝宝眼，贴近脸颊，侧面也不会像凸起的玻璃珠
     this.eyeR = { x: ERX, y: ERY, z: EZ };
     // 闭眼笑 ^ ^：中间粗、两头细的弧线
-    const happyG = taperedTube([new THREE.Vector3(-0.058, -0.022, 0), new THREE.Vector3(-0.03, 0.012, 0), new THREE.Vector3(0, 0.024, 0), new THREE.Vector3(0.03, 0.012, 0), new THREE.Vector3(0.058, -0.022, 0)], 0.013, (u) => 0.35 + 0.65 * Math.sin(Math.PI * u));
+    const happyG = taperedTube([new THREE.Vector3(-0.066, -0.018, 0), new THREE.Vector3(-0.034, 0.014, 0), new THREE.Vector3(0, 0.026, 0), new THREE.Vector3(0.034, 0.014, 0), new THREE.Vector3(0.066, -0.018, 0)], 0.011, (u) => 0.35 + 0.65 * Math.sin(Math.PI * u));
     this.disposables.push(happyG);
-    const closedG = taperedTube([new THREE.Vector3(-0.06, 0.016, 0), new THREE.Vector3(-0.032, -0.008, 0), new THREE.Vector3(0, -0.016, 0), new THREE.Vector3(0.032, -0.008, 0), new THREE.Vector3(0.06, 0.016, 0)], 0.011, (u) => 0.3 + 0.7 * Math.sin(Math.PI * u));
+    const closedG = taperedTube([new THREE.Vector3(-0.067, 0.016, 0), new THREE.Vector3(-0.035, -0.008, 0), new THREE.Vector3(0, -0.016, 0), new THREE.Vector3(0.035, -0.008, 0), new THREE.Vector3(0.067, 0.016, 0)], 0.009, (u) => 0.3 + 0.7 * Math.sin(Math.PI * u));
     this.disposables.push(closedG);
     // 外眼角的两根小睫毛
     const lashG = [
-      taperedTube([new THREE.Vector3(0, 0, 0), new THREE.Vector3(0.016, 0.008, 0), new THREE.Vector3(0.03, 0.02, 0)], 0.0065, (u) => 1 - u * 0.85, 10, 6),
-      taperedTube([new THREE.Vector3(0, 0, 0), new THREE.Vector3(0.012, 0.012, 0), new THREE.Vector3(0.02, 0.028, 0)], 0.0055, (u) => 1 - u * 0.85, 10, 6),
+      taperedTube([new THREE.Vector3(0, 0, 0), new THREE.Vector3(0.011, 0.006, 0), new THREE.Vector3(0.021, 0.014, 0)], 0.0048, (u) => 1 - u * 0.85, 10, 6),
+      taperedTube([new THREE.Vector3(0, 0, 0), new THREE.Vector3(0.008, 0.008, 0), new THREE.Vector3(0.014, 0.02, 0)], 0.004, (u) => 1 - u * 0.85, 10, 6),
     ];
     this.disposables.push(...lashG);
     for (const s of [-1, 1]) {
       const g = new THREE.Group();
-      const p = surf(0.177 * s, 0.52);
+      const p = surf(0.18 * s, 0.505);
       g.position.copy(p);
       g.rotation.y = Math.atan2(p.x, p.z) * 0.8;
       g.rotation.x = -0.1;
       g.rotation.z = -0.07 * s; // 外眼角微微往下垂一点（温柔的"下垂眼"）：从上往下拍时眼角不会显得上挑、凶
       const eyeGeo = planarUV(ellipsoid(ERX, ERY, EZ, 36, 22), ERX, ERY);
       this.disposables.push(eyeGeo);
-      const mat = eyeMaterial({ side: s, aspect: ERX / ERY, skin: C.lid, map: irisTex });
+      const mat = eyeMaterial({ side: s, aspect: ERX / ERY, skin: C.lid, lash: C.lash, map: irisTex });
       this.disposables.push(mat);
       const eye = new THREE.Mesh(eyeGeo, mat);
       g.add(eye);
@@ -201,7 +201,7 @@ export class Pet {
       lashG.forEach((lg, k) => { const m = new THREE.Mesh(lg, lineMat); m.scale.x = s; m.rotation.z = s * (k ? 0.15 : -0.12); m.position.x = s * k * 0.006; lashes.add(m); });
       g.add(lashes);
       this.faceGroup.add(g);
-      this.eyes.push({ g, eye, u: mat.userData.eye, happy, closed, lashes, side: s, lid: 0.82 });
+      this.eyes.push({ g, eye, u: mat.userData.eye, happy, closed, lashes, side: s, lid: 0.94 });
     }
     // 眉毛：软软的小豆眉，靠鼻子的一端粗、往外慢慢变细（表情的灵魂：惊喜上扬、专注下压、开心弯弯）
     const browMat = inkMaterial(C.brow, { rough: 0.85, env: 0.25 });
@@ -209,35 +209,37 @@ export class Pet {
     this.brows = [];
     for (const s of [-1, 1]) {
       const pv = new THREE.Group();
-      const p = surf(0.175 * s, 0.676); // 眼睛变大了，眉毛也往上挪，留出眼皮的位置
+      const p = surf(0.178 * s, 0.655);
       pv.position.copy(p).addScaledVector(p.clone().sub(new THREE.Vector3(0, bodyCenterY, 0)).normalize(), 0.006);
       pv.rotation.y = Math.atan2(p.x, p.z) * 0.85;
       pv.rotation.x = -0.3;
       const bg = taperedTube([new THREE.Vector3(-0.042 * s, -0.004, 0), new THREE.Vector3(-0.014 * s, 0.008, 0), new THREE.Vector3(0.018 * s, 0.008, 0), new THREE.Vector3(0.046 * s, -0.006, 0)], 0.0088, (u) => (1 - 0.45 * u) * (0.4 + 0.6 * Math.sin(Math.PI * Math.min(1, u * 1.12))), 20, 8);
       this.disposables.push(bg);
       const b = new THREE.Mesh(bg, browMat);
+      b.scale.set(0.82, 0.9, 1);
       b.position.y = -0.02;
       pv.add(b);
       this.faceGroup.add(pv);
       this.brows.push({ pv, b, side: s, y: p.y });
     }
     // 腮红
-    const blushMat = M.basic(C.blush, { opacity: 0.8, map: Tex.soft() });
+    const blushMat = M.basic(C.blush, { opacity: 0.64, map: Tex.soft() });
+    this.blushScale = { x: 1.16, y: 0.78 };
     this.blush = [];
     for (const s of [-1, 1]) {
-      const p = surf(0.31 * s, 0.412); // 眼睛变大以后腮红往外下方挪一点，不盖到眼角
-      const bgeo = new THREE.CircleGeometry(0.09, 20); this.disposables.push(bgeo);
+      const p = surf(0.315 * s, 0.395);
+      const bgeo = new THREE.CircleGeometry(0.1, 24); this.disposables.push(bgeo);
       const m = new THREE.Mesh(bgeo, blushMat);
       m.position.copy(p).multiplyScalar(1.01);
       m.lookAt(p.clone().multiplyScalar(2).setY(p.y));
-      m.scale.set(1.25, 0.8, 1);
+      m.scale.set(this.blushScale.x, this.blushScale.y, 1);
       this.faceGroup.add(m);
       this.blush.push(m);
     }
     // 小鼻头：圆圆的粉色倒三角 + 一点小高光
-    const noseG = noseGeometry(0.022, 0.016, 0.01); this.disposables.push(noseG);
+    const noseG = noseGeometry(0.02, 0.014, 0.009); this.disposables.push(noseG);
     const nose = new THREE.Mesh(noseG, M.soft(C.nose, { rough: 0.35, rim: 0.2 }));
-    const np = surf(0, 0.468);
+    const np = surf(0, 0.451);
     nose.position.copy(np).add(new THREE.Vector3(0, 0, 0.002));
     nose.rotation.x = -0.18;
     this.faceGroup.add(nose);
@@ -249,7 +251,7 @@ export class Pet {
     const mouthMat = inkMaterial(C.mouth, { rough: 0.85, env: 0.2 });
     this.disposables.push(mouthMat);
     this.mouthCat = new THREE.Group();
-    this.mouthCat.position.copy(surf(0, 0.432)).add(new THREE.Vector3(0, 0, 0.004));
+    this.mouthCat.position.copy(surf(0, 0.415)).add(new THREE.Vector3(0, 0, 0.004));
     const catG = taperedTube([new THREE.Vector3(-0.046, 0.006, 0), new THREE.Vector3(-0.024, -0.011, 0.002), new THREE.Vector3(0, -0.001, 0.003), new THREE.Vector3(0.024, -0.011, 0.002), new THREE.Vector3(0.046, 0.006, 0)], 0.0068, (u) => 0.35 + 0.65 * Math.sin(Math.PI * u), 32, 6);
     this.disposables.push(catG);
     this.mouthCat.add(new THREE.Mesh(catG, mouthMat));
@@ -262,7 +264,7 @@ export class Pet {
     this.mouthSmile.visible = false;
     this.faceGroup.add(this.mouthSmile);
     this.mouthOpen = new THREE.Group();
-    this.mouthOpen.position.copy(surf(0, 0.41)).add(new THREE.Vector3(0, 0, -0.012));
+    this.mouthOpen.position.copy(surf(0, 0.393)).add(new THREE.Vector3(0, 0, -0.012));
     const moG = ellipsoid(0.05, 0.045, 0.03, 16, 12); this.disposables.push(moG);
     this.mouthOpen.add(new THREE.Mesh(moG, M.soft(C.mouthIn, { rough: 0.6, rim: 0 })));
     const tgG = ellipsoid(0.03, 0.018, 0.02, 12, 8); this.disposables.push(tgG);
@@ -276,21 +278,24 @@ export class Pet {
     const earMat = plush(C.ear, { rough: 0.62, rim: 0.5, rimColor: C.rim });
     this.disposables.push(earMat);
     const innerMat = M.soft(C.earInner, { rough: 0.7, rim: 0.2 });
-    const earGeo = ellipsoid(0.115, 0.24, 0.075, 24, 16); earGeo.translate(0, 0.2, 0); this.disposables.push(earGeo);
-    const inGeo = ellipsoid(0.065, 0.15, 0.03, 16, 12); inGeo.translate(0, 0.19, 0.05); this.disposables.push(inGeo);
+    const earGeo = ellipsoid(0.123, 0.21, 0.08, 32, 20); earGeo.translate(0, 0.175, 0); this.disposables.push(earGeo);
+    const inGeo = ellipsoid(0.068, 0.125, 0.032, 24, 16); inGeo.translate(0, 0.17, 0.052); this.disposables.push(inGeo);
     this.ears = [];
     for (const s of [-1, 1]) {
       const pivot = new THREE.Group();
       pivot.position.set(0.2 * s, this.headY - 0.12, -0.02);
-      pivot.rotation.z = -0.42 * s;
-      pivot.rotation.x = -0.12;
+      // 一边稍立、一边稍歪，像软软的手作玩偶；动画仍绕原来的耳根摆动。
+      const baseZ = s < 0 ? 0.32 : -0.5;
+      const baseX = s < 0 ? -0.1 : -0.2;
+      pivot.rotation.z = baseZ;
+      pivot.rotation.x = baseX;
       const ear = new THREE.Mesh(earGeo, earMat);
       ear.castShadow = true;
       addOutline(ear);
       ear.add(new THREE.Mesh(inGeo, innerMat));
       pivot.add(ear);
       this.lean.add(pivot);
-      this.ears.push({ pivot, ear, side: s, baseZ: -0.42 * s });
+      this.ears.push({ pivot, ear, side: s, baseZ, baseX });
     }
 
     // ---- 小豆芽 ----
@@ -483,13 +488,13 @@ export class Pet {
     for (const e of this.eyes) {
       // 眼皮：自然睁着时上眼皮稍微盖住一点虹膜（眼神温柔）；惊讶时全睁开；困了半闭；舒服地闭眼 / 眨眼时眼皮合上来
       const happy = mode === 'happy';
-      // 一直闭着（睡觉、享受）时换成一条睫毛线；眨眼仍然是眼皮快速合上
-      const shut = mode === 'closed' && e.lid < -0.6;
+      // 睡着或眨眼合拢的瞬间用一条弯弯的闭眼线，避免全闭眼皮留下两块圆斑。
+      const shut = (mode === 'closed' && e.lid < -0.6) || blinkAmt > 0.9;
       e.eye.visible = !happy && !shut;
       e.happy.visible = happy;
       e.closed.visible = shut;
       e.lashes.visible = !happy;
-      let lidT = mode === 'wide' ? 1.15 : mode === 'half' ? 0.22 : mode === 'closed' ? -0.95 : 0.82;
+      let lidT = mode === 'wide' ? 1.15 : mode === 'half' ? 0.22 : mode === 'closed' ? -0.95 : 0.94;
       // 眼皮跟着视线走（Disney 动画的老办法）：往下看时虹膜少往下走一点、眼皮跟着低一点，
       // 虹膜上方不会露出一大块眼白（那样像在斜眼看人）；也不压太多（不然像没精神）
       if (mode !== 'closed' && mode !== 'wide') lidT += this.lookY * (this.lookY < 0 ? 0.09 : 0.12);
@@ -498,7 +503,7 @@ export class Pet {
       const u = e.u;
       u.uLid.value = lid;
       u.uLook.value.set(this.lookX * 0.42, this.lookY * (this.lookY < 0 ? 0.24 : 0.36));
-      u.uPupil.value = damp(u.uPupil.value, mode === 'wide' ? 0.42 : 0.5, 10, dt); // 大瞳孔显得天真；惊讶时缩小一点
+      u.uPupil.value = damp(u.uPupil.value, mode === 'wide' ? 0.5 : 0.59, 10, dt); // 饱满的大瞳孔，惊讶时也保留柔软的眼神
       // 眼皮合上时眼珠也收平：闭着眼是脸上一道弯弯的睫毛线，而不是鼓起来的一大块
       e.eye.scale.z = 0.3 + 0.7 * smoothstep(-0.95, 0.6, lid);
       u.uTw.value = 0.7 + 0.3 * Math.sin(this.t * 3.1 + e.side); // 小星光一闪一闪
@@ -511,7 +516,7 @@ export class Pet {
       const R = this.eyeR;
       if (shut) {
         // 闭眼线的外眼角
-        e.lashes.position.set(e.side * 0.058, -0.016, R.z * 0.5);
+        e.lashes.position.set(e.side * 0.065, -0.016, R.z * 0.5);
       } else {
         const k = lerp(-0.3, 0.2, smoothstep(-0.8, -0.15, lid)); // 和着色器里眼皮弧线的形状一致
         const ly = Math.max(-0.62, Math.min(0.6, lid - k * 0.64));
@@ -870,7 +875,7 @@ export class Pet {
     this.lean.rotation.set(P.rx, P.ry, P.rz);
     this._poseHappy = !!P.happy;
     const bl = 1 + (P.blush || 0) * 0.35;
-    for (const m of this.blush) m.scale.set(1.25 * bl, 0.8 * bl, 1);
+    for (const m of this.blush) m.scale.set(this.blushScale.x * bl, this.blushScale.y * bl, 1);
 
     // 朝向
     if (!(a && a.kind === 'ride')) this.facing = dampAngle(this.facing, this.targetFacing, 10, dt);
@@ -881,8 +886,8 @@ export class Pet {
     const el = this.earL.update(dt), er = this.earR.update(dt);
     this.ears[0].pivot.rotation.z = this.ears[0].baseZ - el * 0.08;
     this.ears[1].pivot.rotation.z = this.ears[1].baseZ + er * 0.08;
-    this.ears[0].pivot.rotation.x = -0.12 - Math.abs(el) * 0.02;
-    this.ears[1].pivot.rotation.x = -0.12 - Math.abs(er) * 0.02;
+    this.ears[0].pivot.rotation.x = this.ears[0].baseX - Math.abs(el) * 0.02;
+    this.ears[1].pivot.rotation.x = this.ears[1].baseX - Math.abs(er) * 0.02;
     this.sprout.target = 0;
     const sp = this.sprout.update(dt);
     this.sproutPivot.rotation.z = clamp(sp * 0.05, -0.6, 0.6) + Math.sin(t * 1.7) * 0.05;
