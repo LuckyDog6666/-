@@ -187,6 +187,7 @@ export class Pet {
       g.position.copy(p);
       g.rotation.y = Math.atan2(p.x, p.z) * 0.8;
       g.rotation.x = -0.1;
+      g.rotation.z = -0.07 * s; // 外眼角微微往下垂一点（温柔的"下垂眼"）：从上往下拍时眼角不会显得上挑、凶
       const eyeGeo = planarUV(ellipsoid(ERX, ERY, EZ, 36, 22), ERX, ERY);
       this.disposables.push(eyeGeo);
       const mat = eyeMaterial({ side: s, aspect: ERX / ERY, skin: C.lid, map: irisTex });
@@ -516,7 +517,10 @@ export class Pet {
     // 眉毛
     const bm = P.brows || this.browMode;
     const by = bm === 'up' ? 0.03 : bm === 'down' ? -0.012 : bm === 'happy' ? 0.014 : 0;
-    const tilt = bm === 'down' ? 0.3 : bm === 'worried' ? -0.3 : bm === 'happy' ? -0.06 : 0; // 正：靠鼻子的一端往下（专注 / 用力）；负：往上（担心 / 开心）
+    // 正：靠鼻子的一端往下（专注 / 用力）；负：往上（担心 / 开心）。
+    // 平时眉头就微微往上（天真、软萌）；专注时也只压一点点——镜头多是从上往下拍圆脸，
+    // 五官两头会往上翘，眉头压太多看起来就像在生气
+    const tilt = bm === 'down' ? 0.12 : bm === 'worried' ? -0.3 : bm === 'happy' ? -0.14 : -0.08;
     for (const b of this.brows) {
       b.pv.position.y = damp(b.pv.position.y, b.y + by, 12, dt);
       b.b.rotation.z = damp(b.b.rotation.z, tilt * b.side, 12, dt);
