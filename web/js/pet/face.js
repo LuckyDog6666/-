@@ -152,7 +152,7 @@ export function eyeMaterial({ side, aspect, skin, sclera = '#fbf8f6', lash = '#3
 }
 
 // 手绘线条的材质（睫毛线、闭眼线、眉毛、嘴巴）：哑光、几乎不反射环境，像一笔墨线。
-// 有光泽的线条在雪地 / 阳光下会反出一道白光——闭着眼时那道白光像是露出了一排牙齿
+// 有光泽的细管子在雪地 / 阳光下会反出一道亮边，看起来像塑料，不像画出来的线条
 export function inkMaterial(color, o = {}) {
   return new THREE.MeshStandardMaterial({ color: new THREE.Color(color), roughness: o.rough ?? 0.92, metalness: 0, envMapIntensity: o.env ?? 0.1 });
 }
