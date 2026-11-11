@@ -2,7 +2,8 @@
 // 检查：协议解码、礼物去重/连击、BarrageGrab 解析、配置解析、闯关世界与闯关元素、AI 导演、弹幕互动、全部声音素材（授权、刺耳度、声画同步数据）。
 import zlib from 'node:zlib';
 import { encode } from '../server/douyin/proto.js';
-import { decodePushFrame, decodeFetchBody, messagesToEvents, GiftDeduper } from '../server/douyin/decode.js';
+import { decodePushFrame, decodeFetchBody, messagesToEvents, looksLikeWebcast, GiftDeduper } from '../server/douyin/decode.js';
+import { normalizeRoom, parseDomLine, classifyPage } from '../server/providers/douyin.js';
 import { BarrageGrabProvider } from '../server/providers/barragegrab.js';
 import { stripComments, deepMerge, DEFAULTS } from '../server/config.js';
 import fs from 'node:fs';
@@ -67,6 +68,32 @@ section('抖音协议解码');
   let threw = false;
   try { messagesToEvents({ messages: [{ method: 'WebcastGiftMessage', payload: Buffer.from([0xff, 0xff, 0xff]) }] }); } catch { threw = true; }
   ok(!threw, '损坏的数据不会让程序崩溃');
+}
+
+section('直播间监听：按内容识别、页面体检、备用通道');
+{
+  const resp = response([
+    ['WebcastFansclubMessage', encode([[1, 'msg', [[2, 'varint', 9]]], [2, 'varint', 2], [4, 'msg', user(11, '新团员')]])],
+    ['WebcastEmojiChatMessage', encode([[1, 'msg', [[2, 'varint', 10]]], [2, 'msg', user(12, '表情包')], [5, 'string', '[比心]']])],
+    ['WebcastBrandNewMessage', Buffer.from([8, 1])],
+  ]);
+  const { response: r } = decodePushFrame(pushFrame(resp));
+  const unknown = [];
+  const evs = messagesToEvents(r, (m) => unknown.push(m));
+  ok(evs.some((e) => e.type === 'fansclub' && e.user.name === '新团员'), '加入粉丝团解码');
+  ok(evs.some((e) => e.type === 'chat' && e.text === '[比心]' && e.user.name === '表情包'), '表情弹幕解码');
+  ok(unknown.join() === 'WebcastBrandNewMessage', '没见过的消息类型会被记下来（诊断用）', unknown.join());
+  const junkBody = () => { try { return looksLikeWebcast(decodeFetchBody(Buffer.from([1, 2, 3, 4, 5, 6, 7, 8]))); } catch { return false; } };
+  ok(looksLikeWebcast(r) && !junkBody() && !looksLikeWebcast(null), '按内容认弹幕通道（不看网址）');
+  let junkOk = true;
+  for (let i = 0; i < 200; i++) { try { const j = decodePushFrame(Buffer.from(Array.from({ length: 30 + (i % 50) }, (_, k) => (k * 37 + i * 101) % 256))); if (looksLikeWebcast(j.response)) junkOk = false; } catch {} }
+  ok(junkOk, '乱七八糟的数据帧不会被当成弹幕');
+  ok(normalizeRoom(' https://live.douyin.com/123456789?enter_from=x ') === '123456789' && normalizeRoom('live.douyin.com/abc_1.2') === 'abc_1.2' && normalizeRoom('  9876 54 ') === '987654' && normalizeRoom('') === '', '直播间号：整条网址、带空格都能认');
+  const c = parseDomLine('小糯米 12 奶茶不加糖：加班好累啊'), g = parseDomLine('老板：送出了 小心心 × 3'), l = parseDomLine('柚子：为主播点赞了'), e = parseDomLine('路人甲 来了'), f = parseDomLine('月亮：关注了主播');
+  ok(c.type === 'chat' && c.name === '奶茶不加糖' && c.text === '加班好累啊', '备用通道：弹幕文字（去掉粉丝牌）', JSON.stringify(c));
+  ok(g.type === 'gift' && g.gift === '小心心' && g.count === 3 && l.type === 'like' && e.type === 'enter' && e.name === '路人甲' && f.type === 'follow' && parseDomLine('没有冒号的一行') === null, '备用通道：礼物 / 点赞 / 进房 / 关注');
+  ok(classifyPage({ title: '验证码中间页', text: '' }) === 'verify' && classifyPage({ title: 'x', text: '', captcha: true }) === 'verify' && classifyPage({ title: '抖音直播', text: '直播已结束 看看其他直播' }) === 'offline'
+    && classifyPage({ title: '抖音', text: '你访问的页面不见了' }) === 'notfound' && classifyPage({ title: '直播', text: '弹幕', login: true }) === 'login' && classifyPage({ title: '糯糯的直播间', text: '聊天' }) === 'ok', '页面体检：验证码 / 未开播 / 号不对 / 要登录 / 正常');
 }
 
 section('礼物去重与连击');

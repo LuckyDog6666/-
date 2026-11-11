@@ -36,11 +36,55 @@
   .vol { display: grid; grid-template-columns: 70px 1fr 40px; align-items: center; gap: 8px; font-size: 14px; }
   .big { font-size: 15px; line-height: 1.7; }
   code { background: #fff0f6; padding: 1px 6px; border-radius: 6px; }
+  .wide { grid-column: 1 / -1; }
+  .link { display: grid; grid-template-columns: minmax(280px, 1.3fr) minmax(240px, 1fr); gap: 18px; align-items: start; }
+  @media (max-width: 760px) { .link { grid-template-columns: 1fr; } }
+  .light { display: flex; align-items: center; gap: 12px; font-size: 20px; font-weight: bold; }
+  .light .lamp { width: 22px; height: 22px; border-radius: 50%; background: #ccc; box-shadow: 0 0 0 4px rgba(0,0,0,0.05); flex: none; }
+  .light.ok .lamp { background: var(--ok); box-shadow: 0 0 12px rgba(52,199,123,0.7); } .light.warn .lamp { background: var(--warn); box-shadow: 0 0 12px rgba(255,176,32,0.7); } .light.err .lamp { background: var(--err); box-shadow: 0 0 12px rgba(255,92,108,0.7); }
+  .todo { margin: 10px 0 0; padding: 10px 14px; border-radius: 12px; background: #fff6e0; color: #8a5a00; font-size: 14px; line-height: 1.7; display: none; }
+  .todo.show { display: block; }
+  .steps { list-style: none; margin: 12px 0 0; padding: 0; font-size: 14px; line-height: 2; }
+  .steps li::before { content: '○'; display: inline-block; width: 1.6em; color: #c9b3bf; }
+  .steps li.ok::before { content: '✔'; color: var(--ok); } .steps li.wait::before { content: '…'; color: var(--warn); } .steps li.bad::before { content: '✘'; color: var(--err); }
+  .counts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .counts span { background: #fff0f6; border-radius: 10px; padding: 4px 10px; font-size: 13px; }
+  .counts b { color: var(--pink); font-size: 16px; margin-left: 4px; }
+  .shot { width: 100%; border-radius: 12px; border: 2px solid #f6cfe0; background: #fbf3f7; min-height: 120px; display: block; }
+  .shotnote { font-size: 12px; color: var(--muted); margin-top: 6px; line-height: 1.6; }
 </style>
 </head>
 <body>
 <header>🐾 糯糯的 ASMR 奇遇 · 控制台 <a href="/" target="_blank">打开游戏画面 ↗</a></header>
 <main>
+  <section class="card wide" id="linkCard">
+    <h2>🔌 直播间连接体检（弹幕、礼物有没有反应，看这里）</h2>
+    <div class="link">
+      <div>
+        <div class="light" id="lkLight"><span class="lamp"></span><span id="lkMsg">正在检查…</span></div>
+        <div class="todo" id="lkHint"></div>
+        <ul class="steps">
+          <li id="st1">监听浏览器已启动</li>
+          <li id="st2">打开了你的直播间页面</li>
+          <li id="st3">收到直播间数据</li>
+          <li id="st4">收到观众弹幕 —— 请用手机在自己直播间发一条弹幕试试</li>
+        </ul>
+        <div class="counts" id="lkCounts"></div>
+        <div class="hint" id="lkLast"></div>
+        <div class="btns" style="margin-top:12px">
+          <button id="lkShow">🪟 显示监听窗口</button>
+          <button id="lkHide">收起监听窗口</button>
+          <button data-ctl="restartListener">📡 重连直播间</button>
+          <button id="lkDiag">🩺 导出诊断</button>
+        </div>
+      </div>
+      <div>
+        <img class="shot" id="lkShot" alt="">
+        <div class="shotnote" id="lkShotNote">这里会显示监听窗口现在看到的页面（窗口收起时可能没有画面，点"显示监听窗口"即可）。</div>
+      </div>
+    </div>
+  </section>
+
   <section class="card">
     <h2>📡 运行状态</h2>
     <div class="row"><span class="k">直播数据</span><span class="v" id="sProvider">-</span></div>
@@ -147,7 +191,7 @@
 const $ = (id) => document.getElementById(id);
 const toast = (t) => { const m = $('msg'); m.textContent = t; m.classList.add('show'); clearTimeout(toast.t); toast.t = setTimeout(() => m.classList.remove('show'), 2200); };
 const post = (url, body) => fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }).then((r) => r.json());
-const STATE = { listening: ['ok', '正在监听'], connecting: ['warn', '连接中'], starting: ['warn', '启动中'], silent: ['warn', '暂无数据'], error: ['err', '出错'], idle: ['', '未启动'] };
+const STATE = { listening: ['ok', '正在监听'], connecting: ['warn', '连接中'], starting: ['warn', '启动中'], silent: ['warn', '暂无数据'], waiting: ['warn', '还没收到数据'], verify: ['err', '需要安全验证'], login: ['err', '需要登录'], notfound: ['err', '直播间号不对'], offline: ['warn', '还没开播'], neterror: ['err', '打不开抖音'], error: ['err', '出错'], idle: ['', '未启动'] };
 const fmtAgo = (ts) => { if (!ts) return '从未'; const s = Math.round((Date.now() - ts) / 1000); return s < 60 ? `${s} 秒前` : `${Math.round(s / 60)} 分钟前`; };
 
 let full = null;
@@ -198,6 +242,7 @@ async function refresh() {
   $('sRoom').textContent = s.room || '未填写';
   $('sFrames').textContent = p.frames != null ? `${p.frames} 帧 / ${p.events} 条事件，最近 ${fmtAgo(p.lastFrameAt)}` : (p.events != null ? `${p.events} 条事件` : '-');
   if (p.message && p.state !== 'listening') $('sFrames').textContent += ` · ${p.message}`;
+  renderLink(s, p, cls);
   const g = s.game;
   if (g && s.lastBeatAgo != null && s.lastBeatAgo < 20) {
     $('sGame').innerHTML = `<span class="dot ok"></span>运行中（${s.lastBeatAgo} 秒前心跳）`;
@@ -216,8 +261,57 @@ async function refresh() {
   if (!s.board.length) $('board').innerHTML = '<div>虚位以待</div>';
   s.board.forEach((u, i) => { const d = document.createElement('div'); const a = document.createElement('span'); a.textContent = `${i + 1}. ${u.name}`; const b = document.createElement('span'); b.textContent = u.value + ' 抖币'; d.append(a, b); $('board').appendChild(d); });
 }
+// ---- 连接体检 ----
+function renderLink(s, p, cls) {
+  const src = s.source;
+  const light = $('lkLight');
+  light.className = 'light ' + (cls || '');
+  const set = (id, st, text) => { const e = $(id); e.className = st; if (text) e.textContent = text; };
+  if (src !== 'douyin') {
+    $('lkMsg').textContent = { mock: '演示模式：随机模拟观众互动（没有连接真实直播间）', barragegrab: p.message || 'BarrageGrab 弹幕工具', none: '没有连接直播间（只能用下面的测试按钮）' }[src] || src;
+    light.className = 'light ' + (src === 'barragegrab' ? cls : 'warn');
+    $('lkHint').className = 'todo' + (src === 'mock' || src === 'none' ? ' show' : '');
+    $('lkHint').textContent = src === 'mock' || src === 'none' ? '正式开播前，请把下面"礼物数据来源"改成"抖音网页直播间"并填好直播间号，否则观众的弹幕和礼物不会有任何反应。' : '';
+    for (const id of ['st1', 'st2', 'st3', 'st4']) set(id, '');
+    $('lkCounts').textContent = ''; $('lkLast').textContent = '';
+    return;
+  }
+  $('lkMsg').textContent = p.message || (STATE[p.state] || ['', p.state])[1] || '未启动';
+  $('lkHint').className = 'todo' + (p.hint && p.state !== 'listening' ? ' show' : '');
+  $('lkHint').textContent = p.hint || '';
+  const started = p.state && p.state !== 'idle' && p.state !== 'starting' && !(p.state === 'error' && !p.page?.href);
+  const opened = !!(p.page && p.page.href && /^https?:/.test(p.page.href)) && !['notfound', 'neterror'].includes(p.page.kind);
+  const data = p.frames > 0;
+  const c = p.counts || {};
+  set('st1', started ? 'ok' : p.state === 'error' ? 'bad' : 'wait');
+  set('st2', !started ? '' : opened ? (p.page.kind === 'verify' || p.page.kind === 'login' ? 'bad' : 'ok') : ['notfound', 'neterror'].includes(p.page?.kind) ? 'bad' : 'wait', `打开了你的直播间页面${p.page?.title ? '（' + p.page.title.slice(0, 24) + '）' : ''}`);
+  set('st3', !opened ? '' : data ? 'ok' : 'wait', data ? `收到直播间数据（${p.frames} 帧${p.channel === 'dom' ? '，备用通道' : ''}）` : '收到直播间数据');
+  set('st4', !data ? '' : c.chat > 0 ? 'ok' : 'wait', c.chat > 0 ? `收到观众弹幕（${c.chat} 条）—— 互动正常` : '收到观众弹幕 —— 请用手机在自己直播间发一条弹幕试试');
+  $('lkCounts').textContent = '';
+  for (const [k, n] of [['chat', '弹幕'], ['like', '点赞'], ['gift', '礼物'], ['enter', '进房'], ['follow', '关注'], ['fansclub', '粉丝团']]) {
+    const sp = document.createElement('span'); sp.textContent = n; const b = document.createElement('b'); b.textContent = c[k] || 0; sp.appendChild(b); $('lkCounts').appendChild(sp);
+  }
+  const lc = p.last && p.last.chat, lg = p.last && p.last.gift;
+  $('lkLast').textContent = [lc ? `最近弹幕：${lc.name}：${lc.text}（${fmtAgo(lc.at)}）` : '', lg ? `最近礼物：${lg.name} ${lg.text}（${fmtAgo(lg.at)}）` : ''].filter(Boolean).join('　');
+  if (data && !c.chat && p.frames > 30 && (c.like || c.enter)) { $('lkHint').className = 'todo show'; $('lkHint').textContent = '已经收到点赞 / 进房，但还没有弹幕：先用手机发一条弹幕试试。如果发了这里还是 0，点"显示监听窗口"，在窗口里用抖音 App 扫码登录一个账号（建议小号）后再试。'; }
+}
+$('lkShow').onclick = async () => { const r = await post('/api/control', { cmd: 'showListener' }); toast(r.ok ? '监听窗口已显示（在任务栏里找"抖音直播"那个浏览器窗口）' : '监听浏览器还没启动'); };
+$('lkHide').onclick = async () => { const r = await post('/api/control', { cmd: 'hideListener' }); toast(r.ok ? '已收起' : '监听浏览器还没启动'); };
+$('lkDiag').onclick = async () => {
+  const r = await fetch('/api/diagnose').then((x) => x.json()).catch(() => null);
+  if (!r) return toast('导出失败');
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(r, null, 2)], { type: 'application/json' })); a.download = 'nuonuo-diagnose.json'; a.click();
+  toast(r.savedTo ? '诊断已保存到 ' + r.savedTo : '诊断已下载');
+};
+async function refreshShot() {
+  try {
+    const r = await fetch('/api/listener/shot', { cache: 'no-store' });
+    if (r.status === 200) { const b = await r.blob(); const old = $('lkShot').src; $('lkShot').src = URL.createObjectURL(b); if (old.startsWith('blob:')) URL.revokeObjectURL(old); $('lkShotNote').textContent = '监听窗口现在看到的页面（每 6 秒更新）。如果画面上是验证码或登录框：点"显示监听窗口"去处理。'; }
+  } catch {}
+}
 loadConfig().catch(() => {});
 refresh(); setInterval(refresh, 2000);
+refreshShot(); setInterval(refreshShot, 6000);
 </script>
 </body>
 </html>

@@ -21,6 +21,10 @@ export const SCHEMAS = {
   WebcastMemberMessage: { 1: ['common', 'msg', Common], 2: ['user', 'msg', User], 3: ['memberCount', 'u64'], 10: ['action', 'u64'] },
   WebcastRoomUserSeqMessage: { 1: ['common', 'msg', Common], 3: ['total', 'i64'], 7: ['totalUser', 'i64'], 8: ['totalUserStr', 'string'] },
   WebcastControlMessage: { 1: ['common', 'msg', Common], 2: ['status', 'int'] },
+  // 加入粉丝团 / 粉丝团升级（type 2 = 加入；点亮灯牌 1 抖币，是很有价值的互动）
+  WebcastFansclubMessage: { 1: ['common', 'msg', Common], 2: ['type', 'int'], 3: ['content', 'string'], 4: ['user', 'msg', User] },
+  // 表情弹幕
+  WebcastEmojiChatMessage: { 1: ['common', 'msg', Common], 2: ['user', 'msg', User], 5: ['defaultContent', 'string'] },
 };
 
 function user(u) {
@@ -33,27 +37,37 @@ export function decodePushFrame(buf) {
   const frame = decode(buf, SCHEMAS.PushFrame);
   if (!frame.payload || !frame.payload.length) return { frame, response: null };
   if (frame.payloadType && frame.payloadType !== 'msg') return { frame, response: null };
-  let body = frame.payload;
-  const compress = (frame.headers || []).find((h) => h.key === 'compress_type')?.value;
-  if (compress === 'gzip' || (body[0] === 0x1f && body[1] === 0x8b)) body = zlib.gunzipSync(body);
-  return { frame, response: decode(body, SCHEMAS.Response) };
+  const compress = (frame.headers || []).find((h) => h.key === 'compress_type')?.value || '';
+  const body = inflate(frame.payload, compress);
+  return { frame, compress, response: decode(body, SCHEMAS.Response) };
+}
+
+// 解压：抖音目前用 gzip；以后如果换成 zstd / brotli 也能解（Node 版本支持的话）
+function inflate(body, compress) {
+  if (compress === 'gzip' || (body[0] === 0x1f && body[1] === 0x8b)) return zlib.gunzipSync(body);
+  if ((compress === 'zstd' || (body[0] === 0x28 && body[1] === 0xb5 && body[2] === 0x2f && body[3] === 0xfd)) && zlib.zstdDecompressSync) return zlib.zstdDecompressSync(body);
+  if (compress === 'br' || compress === 'brotli') return zlib.brotliDecompressSync(body);
+  return body;
 }
 
 // 解码 HTTP 轮询（webcast/im/fetch）返回体：直接就是 Response
 export function decodeFetchBody(buf) {
-  let body = buf;
-  if (body[0] === 0x1f && body[1] === 0x8b) body = zlib.gunzipSync(body);
-  return decode(body, SCHEMAS.Response);
+  return decode(inflate(buf, ''), SCHEMAS.Response);
+}
+
+// 这个 Response 像不像真的直播间消息（按内容认，不看网址：抖音换了通道地址也认得出来）
+export function looksLikeWebcast(response) {
+  return !!(response && Array.isArray(response.messages) && response.messages.some((m) => typeof m.method === 'string' && /^Webcast[A-Za-z]+Message$/.test(m.method)));
 }
 
 /**
  * 把 Response 里的消息转成标准化原始事件（礼物还需要经过 GiftDeduper 去重合并）
  */
-export function messagesToEvents(response) {
+export function messagesToEvents(response, onUnknown) {
   const out = [];
   for (const m of response?.messages || []) {
     const schema = SCHEMAS[m.method];
-    if (!schema || !m.payload) continue;
+    if (!schema || !m.payload) { if (onUnknown && m.method) onUnknown(m.method); continue; }
     let d;
     try { d = decode(m.payload, schema); } catch { continue; }
     const msgId = d.common?.msgId || m.msgId || '';
@@ -78,6 +92,8 @@ export function messagesToEvents(response) {
       case 'WebcastMemberMessage': out.push({ type: 'enter', msgId, user: user(d.user), online: Number(d.memberCount || 0) }); break;
       case 'WebcastRoomUserSeqMessage': out.push({ type: 'online', msgId, count: Number(d.total || 0), totalUser: Number(d.totalUser || 0) }); break;
       case 'WebcastControlMessage': if (d.status === 3) out.push({ type: 'liveEnd', msgId }); break;
+      case 'WebcastFansclubMessage': if (d.type === 2) out.push({ type: 'fansclub', msgId, user: user(d.user) }); break;
+      case 'WebcastEmojiChatMessage': out.push({ type: 'chat', msgId, user: user(d.user), text: d.defaultContent || '[表情]', emoji: true }); break;
       default: break;
     }
   }

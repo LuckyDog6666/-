@@ -74,6 +74,7 @@ function onLiveEvent(ev) {
     if (board.add(ev.user, (Number(ev.gift?.diamond) || 1) * (Number(ev.gift?.count) || 1))) broadcast({ type: 'board', list: board.top() }, { store: false });
   }
   if (ev.type === 'follow') log(`[关注] ${ev.user?.name}`);
+  if (ev.type === 'fansclub') log(`[粉丝团] ${ev.user?.name} 加入了粉丝团`);
   if (ev.type === 'online') { recent.online = ev.count; return; }
   // 点赞、进房、分享不进补发缓冲（量大、没必要补发），把位置留给礼物和关注
   if (ev.type === 'like' || ev.type === 'enter' || ev.type === 'share') { broadcast(ev, { store: false }); return; }
@@ -271,6 +272,30 @@ const server = http.createServer(async (req, res) => {
       });
     }
     if (p === '/api/sounds') return send(res, 200, listCustomSounds());
+    // 监听窗口现在的画面（控制台里看一眼：是不是卡在验证码 / 登录上）
+    if (p === '/api/listener/shot') {
+      if (!isLocal(req)) return send(res, 403, {});
+      const img = provider && provider.screenshot ? await provider.screenshot() : null;
+      if (!img) return send(res, 204, '');
+      res.writeHead(200, { 'Content-Type': 'image/jpeg', 'Cache-Control': 'no-store' });
+      res.end(img);
+      return;
+    }
+    // 导出诊断：把监听状态、页面情况、最近的日志存成一个文件，方便发给技术人员
+    if (p === '/api/diagnose') {
+      if (!isLocal(req)) return send(res, 403, {});
+      let tail = [];
+      try { tail = fs.readFileSync(logFile(), 'utf8').split('\n').slice(-150); } catch {}
+      const report = {
+        at: new Date().toISOString(), node: process.version, platform: `${process.platform} ${process.arch}`, uptime: Math.round(process.uptime()),
+        source: cfg.source, room: cfg.room, provider: provider ? (provider.diagnose ? provider.diagnose() : provider.status()) : null,
+        game: lastBeatData, lastBeatAgo: lastBeat ? Math.round((Date.now() - lastBeat) / 1000) : null, clients: clients.size,
+        gameWindow: cfg.gameWindow, layout: cfg.game?.layout, gameLog: gameLog.slice(0, 20), log: tail,
+      };
+      const file = path.join(LOG_DIR, `diagnose-${new Date().toISOString().replace(/[:.]/g, '-')}.json`);
+      try { fs.writeFileSync(file, JSON.stringify(report, null, 2)); report.savedTo = file; } catch {}
+      return send(res, 200, report);
+    }
     if (p === '/api/test' && req.method === 'POST') {
       if (!isLocal(req)) return send(res, 403, {});
       const b = await readBody(req);
@@ -279,6 +304,7 @@ const server = http.createServer(async (req, res) => {
       else if (b.type === 'like') onLiveEvent({ type: 'like', user, count: Number(b.count) || 10 });
       else if (b.type === 'follow') onLiveEvent({ type: 'follow', user });
       else if (b.type === 'enter') onLiveEvent({ type: 'enter', user });
+      else if (b.type === 'fansclub') onLiveEvent({ type: 'fansclub', user });
       else if (b.type === 'chat') onLiveEvent({ type: 'chat', user, text: String(b.text || '').slice(0, 60) });
       return send(res, 200, { ok: true });
     }
@@ -287,6 +313,10 @@ const server = http.createServer(async (req, res) => {
       const b = await readBody(req);
       if (b.cmd === 'restartGame') { const c = gameChild; gameChild = null; killTree(c); setTimeout(launchGame, 2000); }
       else if (b.cmd === 'restartListener') startProvider();
+      else if (b.cmd === 'showListener' || b.cmd === 'hideListener') {
+        const ok = provider && provider.setVisible ? await provider.setVisible(b.cmd === 'showListener') : false;
+        return send(res, 200, { ok });
+      }
       else if (b.cmd === 'clearBoard') { board.clear(); broadcast({ type: 'board', list: [] }, { store: false }); }
       else if (b.cmd === 'shutdown') { send(res, 200, { ok: true }); shutdown(); return; }
       else broadcast({ type: 'control', ...b }, { store: false });
