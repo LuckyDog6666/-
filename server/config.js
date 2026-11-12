@@ -21,6 +21,7 @@ export const DEFAULTS = {
   forwardChat: true,
   mock: { pace: 1, gifts: true, intervalSec: [45, 110] },
   board: { resetHour: 5, size: 5 },
+  points: {},   // 每种互动算多少应援值（默认见 server/points.js）
   watchdog: { heartbeatTimeoutSec: 60, bootGraceSec: 120 },
   game: {
     layout: 'auto',
@@ -28,7 +29,7 @@ export const DEFAULTS = {
     post: true,
     shadowSize: 2048,
     reloadHours: 6,
-    stageSeconds: 210,
+    stageSeconds: 270,
     showSoundLabels: true,
     showEnter: true,
     enterInterval: 10,
@@ -89,6 +90,22 @@ export function loadConfig() {
   }
   const cfg = deepMerge(DEFAULTS, user);
   cfg.room = String(cfg.room || '').trim().replace(/^https?:\/\/live\.douyin\.com\//, '').replace(/[?#/].*$/, '');
+  migrate(cfg, user);
+  return cfg;
+}
+
+// 老版本留下来的 config.json：把当时的默认值换成现在的默认值（用户自己改过的不动）
+export function migrate(cfg, user) {
+  const W = user && user.gameWindow;
+  // v4 以前没有 orientation，默认是 1280×720 的横屏窗口。抖音观众竖屏看，横屏在手机上只有一小条：改成自动大小的竖屏。
+  // （想用横屏：控制台里"画面方向"选横屏，或者在 config.json 里写 "orientation": "landscape"）
+  if (W && W.orientation === undefined && !(W.height > W.width)) {
+    cfg.gameWindow.orientation = 'portrait';
+    cfg.gameWindow.width = 0; cfg.gameWindow.height = 0;
+  }
+  if (cfg.game && cfg.game.layout === 'landscape' && (!W || W.orientation === undefined)) cfg.game.layout = 'auto';
+  const G = user && user.game && user.game.gifts;
+  if (G && G.smallCooldown === 14) cfg.game.gifts.smallCooldown = 8; // 以前小礼物要攒 14 秒才答谢，观众以为没反应
   return cfg;
 }
 

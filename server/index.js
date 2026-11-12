@@ -13,6 +13,7 @@ import { DouyinProvider } from './providers/douyin.js';
 import { BarrageGrabProvider } from './providers/barragegrab.js';
 import { MockProvider } from './providers/mock.js';
 import { Board } from './board.js';
+import { makePoints } from './points.js';
 
 const major = Number(process.versions.node.split('.')[0]);
 if (major < 22) {
@@ -66,30 +67,9 @@ function broadcast(ev, { store = true } = {}) {
 const board = new Board(path.join(DATA_DIR, 'board.json'), cfg.board);
 const chatWindow = { t: 0, n: 0 };
 
-// ---------------- 应援值：每一种互动都算分（不花钱的点赞、弹幕、关注也能上榜） ----------------
-// 礼物 1 抖币 = 10 分；点赞 1 分；弹幕 3 分（同一个人 20 秒内最多算 4 条，防刷屏）；关注 30；加入粉丝团 50；分享 20；进房 1
-const PTS = Object.assign({ like: 1, chat: 3, enter: 1, share: 20, follow: 30, fansclub: 50, giftPerDiamond: 10, likeCapPerEvent: 50 }, cfg.points || {});
-const chatRate = new Map();
-function pointsFor(ev) {
-  const u = ev.user;
-  if (!u || !(u.id || u.name)) return 0;
-  switch (ev.type) {
-    case 'gift': return Math.max(1, Number(ev.gift?.diamond) || 1) * Math.max(1, Number(ev.gift?.count) || 1) * PTS.giftPerDiamond;
-    case 'like': return Math.min(PTS.likeCapPerEvent, Math.max(1, Number(ev.count) || 1)) * PTS.like;
-    case 'chat': {
-      const id = String(u.id || u.name), now = Date.now();
-      let r = chatRate.get(id);
-      if (!r || now - r.t > 20000) { r = { t: now, n: 0 }; chatRate.set(id, r); }
-      if (chatRate.size > 5000) for (const [k, v] of chatRate) if (now - v.t > 20000) chatRate.delete(k);
-      return ++r.n <= 4 ? PTS.chat : 0;
-    }
-    case 'follow': return PTS.follow;
-    case 'fansclub': return PTS.fansclub;
-    case 'share': return PTS.share;
-    case 'enter': return PTS.enter;
-    default: return 0;
-  }
-}
+// ---------------- 应援值：每一种互动都算分（见 points.js） ----------------
+const points = makePoints(cfg.points || {});
+const pointsFor = (ev) => points.pointsFor(ev);
 let boardTimer = null;
 function boardChanged() {
   if (boardTimer) return;

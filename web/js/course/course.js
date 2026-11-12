@@ -61,7 +61,7 @@ export class Course {
       else { const t = pool.find(hot); if (t) gdefs[1] = t; }
     }
     const skin = st.crisp || {};
-    const extra = (type, more = {}) => ({ type, gimmick: true, bed: skin.bed, bank: skin.bank, ...more });
+    const extra = (type, more = {}) => ({ type, gimmick: true, bed: skin.bed, bank: skin.bank, ...(type === 'crisp' ? { skin: skin.skin || 'cookie' } : {}), ...more });
     const pick = (o.suspense || (r.next() < 0.5 ? 'boxes' : 'crisp'));
     const S = sdefs, G = gdefs.map((g) => ({ ...g, gimmick: true }));
     const out = [S[0], extra('worries')];
@@ -69,7 +69,7 @@ export class Course {
     if (S[1]) out.push(S[1]);
     out.push(extra('egg'));
     if (S[2]) out.push(S[2]);
-    out.push(extra(pick, pick === 'crisp' ? { skin: skin.skin || 'cookie' } : {}));
+    out.push(extra(pick));
     if (G[1]) out.push(G[1]);
     for (const d of S.slice(3)) out.push(d);
     if (o.domino ?? r.next() < 0.6) out.push(extra('domino'));

@@ -13,7 +13,7 @@ import { Gimmick, GIMMICK_TYPES } from './gimmicks.js';
 import { roundedBox } from '../world/geo.js';
 import { Tex } from '../render/textures.js';
 import { textSprite, setSpriteText } from '../render/label.js';
-import { collectibleMesh } from '../game/collection.js';
+import { collectibleMesh } from '../game/collectibleMesh.js';
 import { WORRIES } from '../game/cheer.js';
 import { Spring, TAU, clamp, lerp, ease } from '../core/util.js';
 

@@ -59,7 +59,7 @@ async function main() {
   fitWindow();
   const cfgAll = await loadConfig();
   const cfg = Object.assign({
-    pixelRatio: 1.25, shadowSize: 2048, reloadHours: 6, stageSeconds: 210, showSoundLabels: true,
+    pixelRatio: 1.25, shadowSize: 2048, reloadHours: 6, stageSeconds: 270, showSoundLabels: true,
     audio: {}, gifts: {}, hud: {},
   }, cfgAll.game || {});
   if (params.get('layout')) cfg.layout = params.get('layout');

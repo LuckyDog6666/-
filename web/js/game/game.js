@@ -27,7 +27,7 @@ export class Game {
     this.timers = new Timers();
     this.gifts = new GiftManager(cfg.gifts || {});
     this.rng = new Rng((Date.now() ^ 0x9e3779b9) >>> 0);
-    this.director = new Director(this.rng, { stageSeconds: cfg.stageSeconds || 210 });
+    this.director = new Director(this.rng, { stageSeconds: cfg.stageSeconds || 270 });
     this.cam = new CameraDirector(camera);
     this.stageNo = Number(safeGet('nuonuo.stage')) || 0;
     this.totalSteps = Number(safeGet('nuonuo.steps')) || 0;

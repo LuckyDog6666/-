@@ -75,7 +75,8 @@ export class Interaction {
         hud.tick(`+${pts} ${name}`, 'gold');
         hud.flyHearts(6);
         // 立刻回应：屏幕中间弹出"收到礼物"，糯糯开心一下；舞蹈在最近的安全点补上
-        if (!g.dancing) hud.reveal({ tag: '🎁 收到礼物', cls: 'sr', title: `谢谢 ${name}！`, sub: `${info.giftName} ×${info.count} · 糯糯马上给你跳舞`, secs: 2.4 });
+        // （正在投票 / 挑战时不弹大卡片，免得盖住面板；右边的提示条和飘字照样有）
+        if (!g.dancing && !hud.root.classList.contains('prompting')) hud.reveal({ tag: '🎁 收到礼物', cls: 'sr', title: `谢谢 ${name}！`, sub: `${info.giftName} ×${info.count} · 糯糯马上给你跳舞`, secs: 2.4 });
         g.particles.burst('hearts', p.x, p.y + 0.8, p.z, { colors: ['#ff8fb3', '#ff6fa3', '#ffd166'], count: 5 });
         pet.expr('happy', 'open', 1.6);
         g.sfx('plop', p, { gain: -7, main: false });

@@ -5,7 +5,11 @@ import { encode } from '../server/douyin/proto.js';
 import { decodePushFrame, decodeFetchBody, messagesToEvents, looksLikeWebcast, GiftDeduper } from '../server/douyin/decode.js';
 import { normalizeRoom, parseDomLine, classifyPage } from '../server/providers/douyin.js';
 import { BarrageGrabProvider } from '../server/providers/barragegrab.js';
-import { stripComments, deepMerge, DEFAULTS } from '../server/config.js';
+import { stripComments, deepMerge, DEFAULTS, migrate } from '../server/config.js';
+import { makePoints } from '../server/points.js';
+import { Cheer, cleanWords, WORRIES } from '../web/js/game/cheer.js';
+import { Collection, CATALOG, SETS, RARITY } from '../web/js/game/collection.js';
+import { Interaction } from '../web/js/game/interaction.js';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -94,6 +98,80 @@ section('直播间监听：按内容识别、页面体检、备用通道');
   ok(g.type === 'gift' && g.gift === '小心心' && g.count === 3 && l.type === 'like' && e.type === 'enter' && e.name === '路人甲' && f.type === 'follow' && parseDomLine('没有冒号的一行') === null, '备用通道：礼物 / 点赞 / 进房 / 关注');
   ok(classifyPage({ title: '验证码中间页', text: '' }) === 'verify' && classifyPage({ title: 'x', text: '', captcha: true }) === 'verify' && classifyPage({ title: '抖音直播', text: '直播已结束 看看其他直播' }) === 'offline'
     && classifyPage({ title: '抖音', text: '你访问的页面不见了' }) === 'notfound' && classifyPage({ title: '直播', text: '弹幕', login: true }) === 'login' && classifyPage({ title: '糯糯的直播间', text: '聊天' }) === 'ok', '页面体检：验证码 / 未开播 / 号不对 / 要登录 / 正常');
+}
+
+section('v4：应援值、应援条、盲盒图鉴、投票、烦恼过滤');
+{
+  // 服务器给每种互动算分
+  const P = makePoints();
+  const u = (n) => ({ id: 'u' + n, name: '观众' + n });
+  ok(P.pointsFor({ type: 'gift', user: u(1), gift: { diamond: 9, count: 2 } }) === 180 && P.pointsFor({ type: 'like', user: u(1), count: 999 }) === 50 && P.pointsFor({ type: 'follow', user: u(1) }) === 30 && P.pointsFor({ type: 'fansclub', user: u(1) }) === 50, '应援值：礼物 / 点赞（封顶）/ 关注 / 粉丝团');
+  let chat = 0;
+  for (let i = 0; i < 10; i++) chat += P.pointsFor({ type: 'chat', user: u(2), text: 'x' }, 1000 + i);
+  ok(chat === 12 && P.pointsFor({ type: 'chat', user: u(2) }, 30000) === 3 && P.pointsFor({ type: 'chat', user: {} }) === 0, '应援值：同一个人刷屏只算前 4 条，过一会儿恢复', chat);
+  // 应援条
+  const c = new Cheer();
+  let fills = 0;
+  for (let i = 0; i < 300; i++) { c.update(1); if (c.add({ type: 'like', count: 4, pts: 4, user: u(3) }).filled) fills++; }
+  ok(fills >= 2 && fills <= 6 && c.goal > 200, '应援条：热闹的直播间不会几秒就满（自动加长）', `${fills} 次, goal=${c.goal}`);
+  const quiet = new Cheer();
+  let steps = 0;
+  while (!quiet.addSteps(1) && steps < 1000) steps++;
+  ok(steps > 60 && steps < 300, '应援条：没人互动时，糯糯自己踩的脚步也能慢慢攒满（每关大约一个盲盒）', steps);
+  const m = new Cheer();
+  m.add({ type: 'chat', pts: 3, user: u(4) }); m.add({ type: 'gift', pts: 100, user: u(5) }); m.add({ type: 'enter', pts: 1, user: u(6) });
+  ok(m.mvp().name === '观众5' && m.heat() > 0, '本关 MVP = 应援最多的观众');
+  // 烦恼过滤
+  const okWords = ['加班', '周一！！', 'KPI', '老板画饼', '累死了', '早 八'].map((w) => cleanWords(w));
+  const bad = ['加我微信123', '13800138000', '！！！', '好累啊啊啊啊啊啊啊啊啊', 'http://a.cn', '傻逼', '左', '111', '哈哈哈', ''].map((w) => cleanWords(w));
+  ok(okWords.join('|') === '加班|周一|KPI|老板画饼|累死了|早八' && bad.every((w) => w === ''), '弹幕上屏过滤：烦恼能过，广告 / 号码 / 脏话 / 投票用字不上屏', okWords.join('|') + ' / ' + bad.join('|'));
+  ok(WORRIES.length >= 20 && WORRIES.every((w) => cleanWords(w) === w), '内置的"打工人烦恼清单"都能通过过滤');
+  // 图鉴
+  ok(CATALOG.length === 35 && SETS.length === 7 && SETS.every((s) => CATALOG.filter((x) => x.set === s).length === 5) && new Set(CATALOG.map((x) => x.id)).size === 35 && CATALOG.every((x) => RARITY[x.r]), '图鉴：7 个系列 × 5 款，编号不重复');
+  const rng = new Rng(7);
+  const col = new Collection(rng);
+  const seen = { n: 0, r: 0, sr: 0, ssr: 0 };
+  let setDone = 0, allDone = 0, draws = 0;
+  while (!allDone && draws < 3000) { const r = col.draw(0.3); draws++; seen[r.item.r]++; if (r.setDone) setDone++; if (r.allDone) allDone++; }
+  ok(allDone === 1 && setDone === 7 && col.round === 2 && col.count === 0 && draws > 60 && draws < 1500, '图鉴：抽得完、集齐一套会庆祝、全部集齐开启下一轮', `${draws} 抽`);
+  const dist = { n: 0, r: 0, sr: 0, ssr: 0 }, big = new Collection(new Rng(11));
+  for (let i = 0; i < 4000; i++) dist[big.draw(0).item.r]++;
+  ok(dist.n > dist.r * 1.4 && dist.r > dist.sr * 1.8 && dist.sr > dist.ssr * 2 && dist.ssr > 20, '图鉴：稀有度从普通到传说依次变少（传说约 2%）', JSON.stringify(dist));
+  const hot = { n: 0, r: 0, sr: 0, ssr: 0 }, big2 = new Collection(new Rng(12));
+  for (let i = 0; i < 4000; i++) hot[big2.draw(1).item.r]++;
+  ok(hot.ssr > dist.ssr * 2 && hot.n < dist.n * 0.7, '图鉴：直播间越热（点赞越多），越容易出稀有款', JSON.stringify(hot));
+  const hi = new Collection(new Rng(9));
+  let rare = 0;
+  for (let i = 0; i < 200; i++) if (hi.draw(0, 'r').item.r !== 'n') rare++;
+  ok(rare === 200, '图鉴：保底稀有（宝箱 / 大奖礼盒）不会出普通款');
+  // 投票（弹幕里各种写法都认）
+  const calls = [];
+  const stub = new Proxy({}, { get: (_, k) => (k === 'portrait' ? true : (...a) => { calls.push(k); }) });
+  const game = { cfg: {}, rng: new Rng(3), hud: stub, time: 0, director: { onChat: () => null, votes: new Map(), cheer() {} }, _allowedStages: () => [], gifts: { add: () => ({}) }, particles: { burst() {} }, pet: { root: { position: { x: 0, y: 0, z: 0 } }, expr() {} }, sfx() {}, pendingWaves: [], dancing: false };
+  const it = new Interaction(game);
+  it.chatAt = 0;
+  let result = null;
+  it.poll({ title: 't', seconds: 8, options: [{ key: '1', match: ['一', '粉'] }, { key: '2', match: ['二', '黄'] }, { key: '3', match: ['三', '蓝'] }] }).then((r) => { result = r; });
+  const say = (id, text) => it.onLive({ type: 'chat', user: { id, name: id }, text, pts: 3 });
+  say('a', '1'); say('b', '2222'); say('c', '我选3号'); say('d', '选黄'); say('e', '二！'); say('a', '2'); say('f', '今天好累'); say('g', '12');
+  ok(it.poll_.counts.join() === '0,4,1', '投票：1 / 2222 / 我选3号 / 选黄 / 二！ 都认；同一个人改票只算最后一次', it.poll_.counts.join());
+  game.time = 9; it.update(0.1);
+  await new Promise((r) => setTimeout(r, 0));
+  ok(result && result.pick === 1 && !result.auto && result.voters.length === 5, '投票：时间到，票多的赢', JSON.stringify(result && { pick: result.pick, n: result.voters.length }));
+  ok(it.worryQ.length === 1 && it.worryQ[0].text === '今天好累', '投票期间写的烦恼照样排队等踩');
+  let auto = null;
+  it.chatAt = -999; // 一分钟没人说话
+  it.poll({ title: 't', seconds: 9, options: [{ key: '左' }, { key: '右' }] }).then((r) => { auto = r; });
+  ok(Math.abs(it.poll_.until - (game.time + 4)) < 1e-6, '直播间没人说话时投票只等 4 秒');
+  game.time += 5; it.update(0.1);
+  await new Promise((r) => setTimeout(r, 0));
+  ok(auto && auto.auto && (auto.pick === 0 || auto.pick === 1), '没人投票：糯糯自己随机选');
+  // 老配置迁移
+  const old = { gameWindow: { width: 1280, height: 720 }, game: { gifts: { smallCooldown: 14 } } };
+  const mg = migrate(deepMerge(DEFAULTS, old), old);
+  const keep = { gameWindow: { orientation: 'landscape', width: 1280, height: 720 } };
+  const kp = migrate(deepMerge(DEFAULTS, keep), keep);
+  ok(mg.gameWindow.orientation === 'portrait' && mg.gameWindow.width === 0 && mg.game.gifts.smallCooldown === 8 && kp.gameWindow.orientation === 'landscape' && kp.gameWindow.width === 1280, '老版本的 config.json 自动改成竖屏；明确选了横屏的保持不变');
 }
 
 section('礼物去重与连击');
