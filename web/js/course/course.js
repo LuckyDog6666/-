@@ -9,6 +9,8 @@ import { buildEnvironment } from '../world/envs.js';
 import { createStation } from './stations.js';
 import { TASK_TYPES } from './tasks.js';
 import { createGimmick } from './gimmicks.js';
+import './suspense.js';   // 注册新的悬念 / 解压段落（盲盒蛋、烦恼泡泡、多米诺、三选一礼盒、脆脆桥）
+import './challenge.js';  // 终点挑战（砸宝箱）
 import { Rng, clamp } from '../core/util.js';
 
 export const PATH_Y = 0.035; // 小路（软垫）的表面高度
@@ -35,26 +37,50 @@ export class Course {
 
   vcMat(o = {}) { return this.M.soft('#ffffff', { vc: true, rough: o.rough ?? 0.65, rim: o.rim ?? 0.35 }); }
 
-  // 路线编排：站点（首站固定 = 本世界招牌）+ 闯关元素（滑梯/蹦床放在"转"的位置），交替排列
+  // 路线编排（v4）：一关里要有"解压"也要有"悬念"，而且相邻两段尽量不是同一种玩法。
+  //   招牌解压站 → 烦恼泡泡 → 闯关元素 → 解压站 → 盲盒蛋 → 解压站 → 三选一礼盒 / 脆脆桥 → 滑梯或蹦床 → （多米诺）→ 巨型终点 → 砸宝箱
+  // 以前是 4 个解压站 + 3 个闯关元素来回交替，看两关就腻了；现在解压站减到 3 个，换成 4~5 段新玩法。
   plan() {
-    const st = this.stage, r = this.rng;
+    const st = this.stage, r = this.rng, o = this.opts;
     let sdefs = st.stations.map((d) => ({ ...d }));
     if (!st.fixedOrder) {
       for (let i = sdefs.length - 1; i > 1; i--) { const j = 1 + r.int(0, i - 1); [sdefs[i], sdefs[j]] = [sdefs[j], sdefs[i]]; }
-      sdefs = sdefs.slice(0, this.opts.stations || 4);
+      sdefs = sdefs.slice(0, o.stations || 3);
+    } else if (sdefs.length > 4) {
+      // 厨房 / 打扫是有先后顺序的任务链：去掉中间的一个，保持顺序
+      sdefs.splice(1 + r.int(0, sdefs.length - 3), 1);
     }
     const pool = (st.gimmicks || []).map((d) => ({ ...d }));
     r.shuffle(pool);
-    if (this.opts.forceGimmick) { const k = pool.findIndex((g) => g.type === this.opts.forceGimmick); if (k > 0) pool.unshift(pool.splice(k, 1)[0]); }
-    const want = Math.min(pool.length, sdefs.length - 1, this.opts.gimmicks ?? 3);
-    let gdefs = pool.slice(0, want);
-    // "转"：第二个闯关元素最好是画面最热闹的滑梯/蹦床
-    const twist = gdefs.findIndex((g) => g.type === 'slide' || g.type === 'bounce');
-    if (twist >= 0 && gdefs.length > 1 && twist !== 1 && !(this.opts.forceGimmick && twist === 0)) [gdefs[1], gdefs[twist]] = [gdefs[twist], gdefs[1]];
-    if (twist < 0) { const t = pool.find((g) => g.type === 'slide' || g.type === 'bounce'); if (t && gdefs.length) gdefs[Math.min(1, gdefs.length - 1)] = t; }
-    const out = [];
-    sdefs.forEach((d, i) => { out.push(d); if (i < gdefs.length) out.push({ ...gdefs[i], gimmick: true }); });
+    // 两个闯关元素：第二个最好是画面最热闹的滑梯 / 蹦床（"转"）
+    let gdefs = pool.slice(0, Math.min(pool.length, o.gimmicks ?? 2));
+    const hot = (g) => g.type === 'slide' || g.type === 'bounce';
+    if (gdefs.length > 1 && !hot(gdefs[1])) {
+      const k = gdefs.findIndex(hot);
+      if (k >= 0) [gdefs[1], gdefs[k]] = [gdefs[k], gdefs[1]];
+      else { const t = pool.find(hot); if (t) gdefs[1] = t; }
+    }
+    const skin = st.crisp || {};
+    const extra = (type, more = {}) => ({ type, gimmick: true, bed: skin.bed, bank: skin.bank, ...more });
+    const pick = (o.suspense || (r.next() < 0.5 ? 'boxes' : 'crisp'));
+    const S = sdefs, G = gdefs.map((g) => ({ ...g, gimmick: true }));
+    const out = [S[0], extra('worries')];
+    if (G[0]) out.push(G[0]);
+    if (S[1]) out.push(S[1]);
+    out.push(extra('egg'));
+    if (S[2]) out.push(S[2]);
+    out.push(extra(pick, pick === 'crisp' ? { skin: skin.skin || 'cookie' } : {}));
+    if (G[1]) out.push(G[1]);
+    for (const d of S.slice(3)) out.push(d);
+    if (o.domino ?? r.next() < 0.6) out.push(extra('domino'));
     out.push({ ...st.finale });
+    out.push(extra('chest', st.chest || {}));
+    // 调试：?gim=xxx 把某一种闯关元素 / 新玩法挪到第二段（没有就临时加一个）
+    if (o.forceGimmick) {
+      let k = out.findIndex((d) => d.gimmick && d.type === o.forceGimmick);
+      if (k < 0) { const g = pool.find((x) => x.type === o.forceGimmick); out.splice(1, 0, g ? { ...g, gimmick: true } : extra(o.forceGimmick)); }
+      else if (k !== 1) out.splice(1, 0, out.splice(k, 1)[0]);
+    }
     return out;
   }
 
@@ -169,7 +195,7 @@ export class Course {
   // 一段一段的软垫小路（像桌面上的绒布跑道）；跳跳石、气球、摇摇桥那里是"断开"的
   _buildPath() {
     const st = this.stage;
-    const gaps = this.gimmicks.filter((g) => g.def.type === 'hop' || g.def.type === 'float' || g.def.type === 'bridge').map((g) => [g.x0 + 0.02, g.x1 - 0.02]);
+    const gaps = this.gimmicks.filter((g) => ['hop', 'float', 'bridge', 'crisp'].includes(g.def.type)).map((g) => [g.x0 + 0.02, g.x1 - 0.02]);
     const pieces = [];
     let a = -1.2;
     for (const [g0, g1] of gaps) { pieces.push([a, g0]); a = g1; }

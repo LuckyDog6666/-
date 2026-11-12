@@ -57,20 +57,21 @@ export class CameraDirector {
         const c = o.at || p;
         return { look: V(c.x, g + 0.4, c.z * 0.5), off: P ? V(5.5, 3.6, 5.5) : V(6.0, 2.8, 4.2), lambda: 0.9 };
       }
-      case 'macro': { // 平视的正前方近景：小脚踩进材质、身后一串脚印、小脸都在画面里（ASMR 核心镜头）
+      case 'macro': { // 正前方近景：小脚踩进材质、身后一串脚印、小脸都在画面里（ASMR 核心镜头）
         const k = this.heading * 0.65;
-        const lo = rotY(V(-0.3 * sc, 0, 0), k);
-        return { look: V(p.x + lo.x, g + 0.45 * sc, p.z * 0.85 + lo.z), off: rotY((P ? V(2.5, 0.85, 1.35) : V(2.45, 0.62, 1.25)).multiplyScalar(big), k), lambda: 1.6, fit: true };
+        // 竖屏：糯糯放在正中间（水平视角只有 30°，偏一点就出画面了），机位抬高一些——身后的一串脚印沿着画面往上延伸
+        const lo = rotY(V(P ? 0 : -0.3 * sc, 0, 0), k);
+        return { look: V(p.x + lo.x, g + (P ? 0.36 : 0.45) * sc, p.z * (P ? 1 : 0.85) + lo.z), off: rotY((P ? V(2.4, 1.5, 1.0) : V(2.45, 0.62, 1.25)).multiplyScalar(big), k), lambda: 1.6, fit: P ? 0.62 : true };
       }
       case 'face': { // 小脸近景（享受、眯眼、坐下）：在糯糯面朝的方向
         const d = this._facingDir(pet);
         const s = P ? 2.9 : 2.7;
-        return { look: V(p.x, g + 0.5 * sc, p.z), off: V(d.x * s + d.z * 0.45, (P ? 0.85 : 0.68) * sc, d.z * s - d.x * 0.45).multiplyScalar(sc > 1.1 ? 1.4 : 1), lambda: 1.5, fit: true };
+        return { look: V(p.x, g + (P ? 0.44 : 0.5) * sc, p.z), off: V(d.x * s + d.z * 0.45, (P ? 0.85 : 0.68) * sc, d.z * s - d.x * 0.45).multiplyScalar(sc > 1.1 ? 1.4 : 1), lambda: 1.5, fit: P ? 0.6 : true };
       }
       case 'audience': { // 对着观众（跳舞、挥手、谢谢老板）：正面中景
         const d = this._facingDir(pet);
         const s = (P ? 4.2 : 3.5) * big;
-        return { look: V(p.x, g + 0.62 * sc, p.z), off: V(d.x * s, (P ? 1.5 : 1.15) * big, d.z * s), lambda: 2.0, fit: true };
+        return { look: V(p.x, g + (P ? 0.5 : 0.62) * sc, p.z), off: V(d.x * s, (P ? 1.5 : 1.15) * big, d.z * s), lambda: 2.0, fit: P ? 0.52 : true };
       }
       case 'trail': { // 看脚印：抬高机位，看清整块被踩过的材质
         const c = o.at || V(p.x - 1, g, p.z);
@@ -87,7 +88,31 @@ export class CameraDirector {
         const c = o.at || p;
         const s = o.dist || 1;
         const base = o.off ? o.off.clone().multiplyScalar(P ? 1.18 : 1) : (P ? V(0.8, 1.4, 2.95) : V(0.92, 1.08, 2.5));
-        return { look: V(c.x, (c.y ?? g) + (o.lookY ?? 0.32), c.z ?? 0), off: base.multiplyScalar(s * big), lambda: 1.5 };
+        const look = V(c.x, (c.y ?? g) + (o.lookY ?? 0.32), c.z ?? 0);
+        const off = base.multiplyScalar(s * big);
+        if (P) {
+          // 竖屏的水平视角很窄：糯糯和手上的活儿要一起框进来——看向两者中间，并退到两边都装得下
+          const cam = this.camera, th = Math.tan((cam.fov * Math.PI) / 360) * (cam.aspect || 0.5625);
+          look.x = (c.x + p.x) / 2;
+          look.y = Math.max(look.y, g + 0.34 * sc);
+          // 两者都装得下，而且糯糯最多占画面宽度的六成（上面要留给面板）
+          const need = Math.max((Math.abs(c.x - p.x) / 2 + 0.7 * sc) / (th * 0.9), (PET_W * sc) / (2 * th * 0.6));
+          const len = off.length();
+          if (len < need) off.multiplyScalar(need / len);
+          look.y += off.length() * Math.tan((cam.fov * Math.PI) / 360) * 0.1; // 主体放在画面中间偏下
+        }
+        return { look, off, lambda: 1.5 };
+      }
+      case 'frame': { // 把一个球形范围（糯糯 + 眼前的东西）完整地框进画面中间：竖屏、横屏通用（v4 的新玩法都用它）
+        const c = typeof o.center === 'function' ? o.center() : o.center || V(p.x, g + 0.5, p.z);
+        const cam = this.camera;
+        const tv = Math.tan((cam.fov * Math.PI) / 360), th = tv * (cam.aspect || 16 / 9);
+        // 竖屏：上面一截是我们的面板、下面三分之一是抖音的弹幕，主体只能放在中间那一段；横屏上下留一点边
+        const half = Math.atan(Math.min(tv * (P ? 0.44 : 0.8), th * (P ? 0.92 : 0.8)));
+        const d = ((o.radius || 1) * (o.zoom || 1)) / Math.sin(half);
+        const look = c.clone();
+        if (P) look.y += d * tv * 0.11; // 主体放在画面中间偏下（约 55% 的高度）：上面三分之一是面板和投票
+        return { look, off: (o.dir || V(0.5, 0.4, 0.77)).clone().normalize().multiplyScalar(d), lambda: o.lambda || 1.7 };
       }
       case 'point': { // 任意固定机位：o.pos 机位，o.look 看向（滑梯底部仰拍等）
         const look = typeof o.look === 'function' ? o.look() : o.look || p;
@@ -99,21 +124,24 @@ export class CameraDirector {
         const off = rotY(o.off ? o.off.clone() : V(2.4, 1.2, 1.4), k);
         // lookFromPet：看向的高度相对糯糯本身（飘在空中时也居中），否则相对地面
         const ly = o.lookY == null ? p.y + 0.4 : o.lookFromPet ? p.y + o.lookY : g + o.lookY;
-        return { look: V(p.x + (o.lookAhead || 0), ly, p.z * 0.7), off: off.multiplyScalar(P ? 1.2 : 1), lambda: o.lambda || 1.6, fit: true };
+        if (P) off.z *= 0.6; // 竖屏：少往侧面偏，糯糯和它脚下的东西排成上下一列
+        return { look: V(p.x + (P ? 0 : o.lookAhead || 0), ly, p.z * (P ? 1 : 0.7)), off: off.multiplyScalar(P ? 1.2 : 1), lambda: o.lambda || 1.6, fit: P ? 0.56 : true };
       }
       default: { // front：走路时的正面跟拍（3/4 正面，脸和身后的路都看得到）
         const k = this.heading * 0.65;
-        const lo = rotY(V(-0.25 * sc, 0, 0), k);
-        return { look: V(p.x + lo.x, g + 0.42 * sc, p.z * 0.75 + lo.z), off: rotY((P ? V(2.8, 1.55, 1.55) : V(2.75, 1.12, 1.3)).multiplyScalar(big), k), lambda: 1.45, fit: true };
+        const lo = rotY(V(P ? 0 : -0.25 * sc, 0, 0), k);
+        return { look: V(p.x + lo.x, g + (P ? 0.38 : 0.42) * sc, p.z * (P ? 1 : 0.75) + lo.z), off: rotY((P ? V(2.9, 1.5, 1.25) : V(2.75, 1.12, 1.3)).multiplyScalar(big), k), lambda: 1.45, fit: P ? 0.56 : true };
       }
     }
   }
 
   // 以糯糯为主体的机位最近能靠多近：糯糯最多占画面高度的 62%、宽度的 78%
   // （竖屏的水平视角很窄，主要受宽度限制）
-  _minDist(sc) {
+  // fracW：竖屏时糯糯占画面宽度的比例（抖音的界面会盖住上下，主体不能太大；不同机位不一样）
+  _minDist(sc, fracW) {
     const cam = this.camera;
     const tv = Math.tan((cam.fov * Math.PI) / 360), th = tv * (cam.aspect || 16 / 9);
+    if (fracW) return (PET_W * sc) / (2 * th * fracW);
     return Math.max((PET_H * sc) / (2 * tv * 0.62), (PET_W * sc) / (2 * th * 0.78));
   }
 
@@ -132,7 +160,7 @@ export class CameraDirector {
     const shot = this._shot(ctx);
     const off = shot.off;
     if (shot.fit) {
-      const md = this._minDist(pet.root.scale.x);
+      const md = this._minDist(pet.root.scale.x, typeof shot.fit === 'number' ? shot.fit : null);
       if (off.length() < md) off.setLength(md);
     }
     // 极轻的"呼吸感"

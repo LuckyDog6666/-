@@ -26,9 +26,9 @@ export class GiftManager {
   constructor(cfg = {}) {
     this.cfg = Object.assign({
       comboWindow: 2.2,       // 连击合并窗口（秒）
-      smallCooldown: 14,      // 小礼物跳舞冷却（秒）
+      smallCooldown: 8,       // 小礼物跳舞冷却（秒）
       maxDanceShare: 0.65,    // 最近 60 秒内跳舞时间占比上限（保证闯关进度）
-      minAdventure: 8,        // 跳完舞至少闯关几秒（小礼物）
+      minAdventure: 5,        // 跳完舞至少闯关几秒（小礼物）
       tierThresholds: [10, 100, 1000],
       giftValues: {},         // 礼物名 -> 抖币（当消息里没有价格时使用）
     }, cfg);

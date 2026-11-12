@@ -35,7 +35,17 @@ async function loadConfig() {
 
 // 让游戏窗口的"画面区域"正好是设定的大小（--window-size 设的是含标题栏的外框）
 function fitWindow() {
-  const cw = Number(params.get('cw')), ch = Number(params.get('ch'));
+  let cw = Number(params.get('cw')), ch = Number(params.get('ch'));
+  const fit = params.get('fit');
+  if (fit) {
+    // 自动大小：屏幕放得下的最大 9:16（竖屏）/ 16:9（横屏）窗口。直播伴侣捕获这个窗口后会拉伸到整个画布，窗口越大越清楚
+    const dw = Math.max(0, window.outerWidth - window.innerWidth), dh = Math.max(0, window.outerHeight - window.innerHeight);
+    const maxW = (screen.availWidth || 1280) - dw - 8, maxH = (screen.availHeight || 720) - dh - 8;
+    const ar = fit === 'portrait' ? 9 / 16 : 16 / 9;
+    ch = Math.min(maxH, fit === 'portrait' ? 1920 : 1080); cw = Math.round(ch * ar);
+    if (cw > maxW) { cw = maxW; ch = Math.round(cw / ar); }
+    try { window.moveTo((screen.availLeft || 0) + 4, (screen.availTop || 0) + 2); } catch {}
+  }
   if (!cw || !ch) return;
   const fix = () => {
     const dw = window.outerWidth - window.innerWidth, dh = window.outerHeight - window.innerHeight;

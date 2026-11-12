@@ -14,11 +14,12 @@ export const DEFAULTS = {
   host: '127.0.0.1',
   browserPath: '',
   launchGame: true,
-  gameWindow: { width: 1280, height: 720, x: 40, y: 40, fullscreen: false, deviceScaleFactor: 0 },
+  // orientation: portrait 竖屏（默认：抖音观众竖着拿手机看）/ landscape 横屏；width、height 填 0 = 自动（屏幕放得下的最大 9:16 或 16:9）
+  gameWindow: { orientation: 'portrait', width: 0, height: 0, x: 20, y: 10, fullscreen: false, deviceScaleFactor: 0 },
   listener: { visible: false, reloadIfSilentSec: 150, blockVideo: true, cdpPort: 19333 },
   barrageGrabUrl: 'ws://127.0.0.1:8888',
   forwardChat: true,
-  mock: { intervalSec: [15, 45] },
+  mock: { pace: 1, gifts: true, intervalSec: [45, 110] },
   board: { resetHour: 5, size: 5 },
   watchdog: { heartbeatTimeoutSec: 60, bootGraceSec: 120 },
   game: {
@@ -33,9 +34,10 @@ export const DEFAULTS = {
     enterInterval: 10,
     stages: [],
     chatCommands: true,
+    chatOnScreen: true,   // 观众弹幕里写的烦恼显示在画面上（有敏感词过滤）；不想显示观众的字就改成 false
     audio: { master: 1.0, sfx: 0.85, ambience: 0.6, music: 0.5, spatial: 'stereo' },
-    gifts: { tierThresholds: [10, 100, 1000], smallCooldown: 14, comboWindow: 2.2, maxDanceShare: 0.65, minAdventure: 8, giftValues: {} },
-    hud: { showBoard: true, showTips: true, boardSize: 5, tips: [] },
+    gifts: { tierThresholds: [10, 100, 1000], smallCooldown: 8, comboWindow: 2.2, maxDanceShare: 0.65, minAdventure: 5, giftValues: {} },
+    hud: { showBoard: true, showTips: true, showLink: true, boardSize: 5, tips: [] },
   },
 };
 

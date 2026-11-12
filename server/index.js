@@ -65,13 +65,45 @@ function broadcast(ev, { store = true } = {}) {
 
 const board = new Board(path.join(DATA_DIR, 'board.json'), cfg.board);
 const chatWindow = { t: 0, n: 0 };
+
+// ---------------- 应援值：每一种互动都算分（不花钱的点赞、弹幕、关注也能上榜） ----------------
+// 礼物 1 抖币 = 10 分；点赞 1 分；弹幕 3 分（同一个人 20 秒内最多算 4 条，防刷屏）；关注 30；加入粉丝团 50；分享 20；进房 1
+const PTS = Object.assign({ like: 1, chat: 3, enter: 1, share: 20, follow: 30, fansclub: 50, giftPerDiamond: 10, likeCapPerEvent: 50 }, cfg.points || {});
+const chatRate = new Map();
+function pointsFor(ev) {
+  const u = ev.user;
+  if (!u || !(u.id || u.name)) return 0;
+  switch (ev.type) {
+    case 'gift': return Math.max(1, Number(ev.gift?.diamond) || 1) * Math.max(1, Number(ev.gift?.count) || 1) * PTS.giftPerDiamond;
+    case 'like': return Math.min(PTS.likeCapPerEvent, Math.max(1, Number(ev.count) || 1)) * PTS.like;
+    case 'chat': {
+      const id = String(u.id || u.name), now = Date.now();
+      let r = chatRate.get(id);
+      if (!r || now - r.t > 20000) { r = { t: now, n: 0 }; chatRate.set(id, r); }
+      if (chatRate.size > 5000) for (const [k, v] of chatRate) if (now - v.t > 20000) chatRate.delete(k);
+      return ++r.n <= 4 ? PTS.chat : 0;
+    }
+    case 'follow': return PTS.follow;
+    case 'fansclub': return PTS.fansclub;
+    case 'share': return PTS.share;
+    case 'enter': return PTS.enter;
+    default: return 0;
+  }
+}
+let boardTimer = null;
+function boardChanged() {
+  if (boardTimer) return;
+  boardTimer = setTimeout(() => { boardTimer = null; broadcast({ type: 'board', list: board.top() }, { store: false }); }, 1500);
+}
+
 function onLiveEvent(ev) {
   if (ev.type === 'status') { recent.status = ev; broadcast(ev, { store: false }); return; }
+  const pts = pointsFor(ev);
+  if (pts > 0) { ev.pts = pts; if (ev.type !== 'enter' && board.add(ev.user, pts)) boardChanged(); }
   if (ev.type === 'gift') {
     recent.gift.unshift({ ...ev, ts: Date.now() });
     recent.gift.length = Math.min(recent.gift.length, 30);
     log(`[礼物] ${ev.user?.name} 送出 ${ev.gift?.name} ×${ev.gift?.count}（${ev.gift?.diamond || '?'} 抖币）`);
-    if (board.add(ev.user, (Number(ev.gift?.diamond) || 1) * (Number(ev.gift?.count) || 1))) broadcast({ type: 'board', list: board.top() }, { store: false });
   }
   if (ev.type === 'follow') log(`[关注] ${ev.user?.name}`);
   if (ev.type === 'fansclub') log(`[粉丝团] ${ev.user?.name} 加入了粉丝团`);
@@ -120,11 +152,12 @@ async function launchGame() {
   fs.mkdirSync(profile, { recursive: true });
   await killByProfile('nuonuo-game-profile');
   const W = cfg.gameWindow || {};
+  const [ww, wh] = windowSize();
   const args = [
     `--app=${gameUrl()}`,
     `--user-data-dir=${profile}`,
-    `--window-size=${W.width || 1280},${W.height || 720}`,
-    `--window-position=${W.x ?? 40},${W.y ?? 40}`,
+    `--window-size=${ww},${wh}`,
+    `--window-position=${W.x ?? 20},${W.y ?? 10}`,
     '--autoplay-policy=no-user-gesture-required',
     '--ignore-gpu-blocklist',
     '--enable-gpu-rasterization',
@@ -150,10 +183,18 @@ async function launchGame() {
     setTimeout(launchGame, wait);
   });
 }
+// 游戏窗口大小：填了 width / height 就用填的；没填（0）就按方向给一个起步大小，页面打开后再自己放大到屏幕放得下的最大尺寸
+function windowSize() {
+  const W = cfg.gameWindow || {};
+  const portrait = (W.orientation || 'portrait') !== 'landscape';
+  if (W.width > 0 && W.height > 0) return [W.width, W.height, false];
+  return portrait ? [540, 960, true] : [1280, 720, true];
+}
 function gameUrl() {
   const layout = cfg.game?.layout && cfg.game.layout !== 'auto' ? `&layout=${cfg.game.layout}` : '';
   const W = cfg.gameWindow || {};
-  const size = W.fullscreen ? '' : `&cw=${W.width || 1280}&ch=${W.height || 720}`;
+  const [w, h, auto] = windowSize();
+  const size = W.fullscreen ? '' : auto ? `&fit=${(W.orientation || 'portrait') !== 'landscape' ? 'portrait' : 'landscape'}` : `&cw=${w}&ch=${h}`;
   return `http://127.0.0.1:${cfg.port}/?mode=live${layout}${size}`;
 }
 setInterval(() => {
@@ -232,6 +273,8 @@ const server = http.createServer(async (req, res) => {
       // 补发 2 分钟内、页面还没收到的事件（页面刷新/重连时不丢礼物）
       if (since) for (const e of ring) if (e.id > since && Date.now() - e.ts < 120000) res.write(e.data);
       res.write(`id: ${seq}\ndata: ${JSON.stringify({ type: 'board', list: board.top() })}\n\n`);
+      // 刚连上的页面马上知道直播间连没连上（状态只在变化时广播）
+      if (recent.status && recent.status.type) res.write(`id: ${++seq}\ndata: ${JSON.stringify(recent.status)}\n\n`); // 要带自己的编号：页面按编号去重
       clients.add(res);
       req.on('close', () => clients.delete(res));
       return;
@@ -242,14 +285,15 @@ const server = http.createServer(async (req, res) => {
       if (!isLocal(req)) return send(res, 403, { error: '只允许本机修改' });
       const patch = await readBody(req);
       const key = (c) => JSON.stringify([c.source, c.room, c.barrageGrabUrl, c.listener?.visible]);
-      const before = key(cfg);
+      const before = key(cfg), winBefore = JSON.stringify(cfg.gameWindow);
       saveConfig(patch);
       cfg = loadConfig();
       if (ARGS.has('--mock')) cfg.source = 'mock';
       if (ARGS.has('--no-launch')) cfg.launchGame = false;
       log('[控制台] 配置已保存');
       if (before !== key(cfg)) startProvider();
-      broadcast({ type: 'control', cmd: 'reload' }, { store: false });
+      if (winBefore !== JSON.stringify(cfg.gameWindow) && gameChild) { const c = gameChild; gameChild = null; killTree(c); setTimeout(launchGame, 2000); }
+      else broadcast({ type: 'control', cmd: 'reload' }, { store: false });
       return send(res, 200, { ok: true });
     }
     if (p === '/api/heartbeat' && req.method === 'POST') {
@@ -306,6 +350,19 @@ const server = http.createServer(async (req, res) => {
       else if (b.type === 'enter') onLiveEvent({ type: 'enter', user });
       else if (b.type === 'fansclub') onLiveEvent({ type: 'fansclub', user });
       else if (b.type === 'chat') onLiveEvent({ type: 'chat', user, text: String(b.text || '').slice(0, 60) });
+      return send(res, 200, { ok: true });
+    }
+    // 游戏给一批观众加分（猜中了礼盒、帮糯糯过了关……）
+    if (p === '/api/award' && req.method === 'POST') {
+      if (!isLocal(req)) return send(res, 403, {});
+      const b = await readBody(req);
+      const pts = Math.max(0, Math.min(500, Number(b.pts) || 0));
+      let changed = false;
+      for (const u of (Array.isArray(b.users) ? b.users : []).slice(0, 80)) {
+        if (!u || !u.id) continue;
+        if (board.add({ id: String(u.id).slice(0, 64), name: String(u.name || '').slice(0, 20) }, pts)) changed = true;
+      }
+      if (changed) boardChanged();
       return send(res, 200, { ok: true });
     }
     if (p === '/api/control' && req.method === 'POST') {

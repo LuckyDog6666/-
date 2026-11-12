@@ -8,8 +8,11 @@ import { Pet } from '../pet/pet.js';
 import { DANCES } from '../pet/dances.js';
 import { GiftManager, TIERS } from './giftManager.js';
 import { CameraDirector } from './camera.js';
-import { Rng, Timers, clamp, damp, rand, pick, escapeText } from '../core/util.js';
+import { Rng, Timers, clamp, damp, rand, pick, escapeText, ease } from '../core/util.js';
 import { textPoints } from './textPoints.js';
+import { Interaction } from './interaction.js';
+import { ensureFont } from '../render/label.js';
+import { EggSegment, WorryBubble, Fx } from '../course/suspense.js';
 
 const THANK_LINES = ['谢谢老板～♥', '老板大气！', '比心心～', '爱你哟～', '啾咪～', '谢谢宝～', '老板万福！', '最喜欢你啦～'];
 const DANCE_SUFFIX = ['糯糯给你跳支舞～', '糯糯开心到转圈圈～', '收到啦，比心心！', '老板发财，天天开心～'];
@@ -44,6 +47,10 @@ export class Game {
     this.startedAt = performance.now();
     this.lastProgressT = 0;
     this.focus = null; // 当前的站点 / 闯关元素
+    this.extras = [];  // 不属于路线的临时物件（天上掉下来的盲盒蛋、飘下来的烦恼泡泡），每帧也要更新
+    this.fx = new Fx();
+    this.lastEggAt = -1e9;
+    this.interact = new Interaction(this);
     this.api = this._makeApi();
   }
 
@@ -61,6 +68,7 @@ export class Game {
     this.hud.setSteps(this.totalSteps);
     this.hud.setAttribution(this.audio.attribution);
     await this.audio.ensure(COMMON_SOUNDS.filter((id) => id !== 'music_dance'));
+    await Promise.race([ensureFont(), sleepReal(3000)]); // 画面里的文字牌（烦恼泡泡、礼盒号码）要用界面的字体
     this.loop();
   }
 
@@ -85,6 +93,26 @@ export class Game {
       yAt: (x, z) => self.course.yAt(x, z),
       rng: () => self.rng.next(),
       get pathSound() { return (self.stage && self.stage.pathSound) || 'path_step'; },
+      // ---- v4：互动、悬念 ----
+      get time() { return self.time; },
+      poll: (o) => self.interact.poll(o),
+      prompt: (o) => self.hud.prompt(o),
+      promptUpdate: (o) => self.hud.promptUpdate(o),
+      promptHide: () => self.hud.promptHide(),
+      reveal: (o) => self.hud.reveal(o),
+      tick: (t, k) => self.hud.tick(t, k),
+      toast: (t, k, life) => self.hud.toast(t, k, life),
+      heat: () => self.interact.cheer.heat(),
+      viewerPts: () => self.interact.cheer.viewerTotal,       // 观众累计贡献的应援值（挑战里用前后差值算"这几秒涨了多少"）
+      cheerGoal: () => self.interact.cheer.goal,
+      addCheer: (pts) => { if (self.interact.cheer._gain(pts)) self.interact._filled('糯糯'); },
+      grantEgg: (why) => { const c = self.interact.cheer; c.pending = Math.min(c.cfg.maxPending, c.pending + 1); self.interact.eggBy = why || ''; },
+      openBox: (o) => self.interact.openBox(o),
+      takeWorry: () => self.interact.takeWorry(),
+      defaultWorry: () => self.interact.defaultWorry(),
+      award: (users, pts, why) => self.interact.award(users, pts, why),
+      // 屏幕"右边"在世界里是哪个方向（"左 / 右"的牌子按它来定）
+      camRight: () => new THREE.Vector3().setFromMatrixColumn(self.camera.matrixWorld, 0),
     };
   }
 
@@ -129,6 +157,8 @@ export class Game {
     this.pet.root.scale.setScalar(1);
     this.giantUntil = 0;
     this.skipRequested = false;
+    this._clearExtras();
+    this.hud.promptHide();
     if (this.course) { this.course.dispose(); this.course = null; }
     this.particles.clear();
     this.stageNo++;
@@ -150,7 +180,8 @@ export class Game {
     this.pet.setAccessory(stage.accessory);
     if (this.time > this.crownUntil) this.pet.setCrown(false);
     this.stageSteps = 0;
-    this.hud.setStage({ n: this.stageNo, name: stage.name, stations: this.course.segments.map((s) => ({ label: s.label || s.def.label, kind: s.kind })) });
+    this.hud.setStage({ n: this.stageNo, name: stage.name, stations: this.course.segments.map((s) => ({ label: s.label || s.def.label, kind: s.kind, suspense: !!(s.suspense || s.challenge) })) });
+    this.interact.cheer.beginLevel();
     this.hud.setMeter(0);
     this.hud.setVotes(null);
     const p = this.course.start;
@@ -168,8 +199,8 @@ export class Game {
   async intro() {
     this.state = 'intro';
     await this.hud.irisTo(false, 1000);
-    const title = this.hud.showTitle(this.stageNo, this.stage.name, this.voted ? `观众投票选出的世界（${this.voted} 票）～ ${this.stage.subtitle}` : this.stage.subtitle, 3.4);
-    await this.wait(1.8);
+    const title = this.hud.showTitle(this.stageNo, this.stage.name, this.voted ? `观众投票选出的世界（${this.voted} 票）～ ${this.stage.subtitle}` : this.stage.subtitle, 2.6);
+    await this.wait(1.2);
     const p = this.pet.root.position;
     this.particles.burst('poof', p.x, p.y, p.z, { colors: ['#ffffff', '#ffe3f1'] });
     this.sfx('land_soft', p, { gain: -2 });
@@ -178,7 +209,7 @@ export class Game {
     this.faceCamera();
     this.cam.set('audience');
     this.pet.expr('happy', 'open', 1.6);
-    await this.pet.idleAction('wave', 1.3);
+    await this.pet.idleAction('wave', 1.1);
     await title;
     this.pet.face(FORWARD);
     this.cam.set('front');
@@ -208,9 +239,19 @@ export class Game {
     this.hud.setMeter(1);
     const p = pet.root.position;
     this.particles.burst('confetti', p.x, p.y + 1.2, p.z, { colors: ['#ff8fb3', '#ffd166', '#7fd6ff', '#9be89b', '#c9a0ff'], count: 40, floor: PATH_Y });
-    this.hud.toast(`「${this.stage.name}」通关！本关踩了 ${this.stageSteps} 下，解压度 100% ✨`, 'follow', 5000);
+    // 本关结算：宝箱砸开了没有、图鉴进度、本关应援最多的人（点名感谢）
+    const chest = this.course.segments.find((q) => q.challenge);
+    const mvp = this.interact.cheer.mvp();
+    const col = this.interact.col;
+    this.hud.reveal({
+      tag: chest && chest.result === false ? '通关（宝箱没砸开）' : '🎉 通关', cls: chest && chest.result === false ? '' : 'win', title: `「${this.stage.short || this.stage.name}」通关！`,
+      sub: `踩了 ${this.stageSteps} 下 · 图鉴 ${col.count}/${col.total}${mvp ? ` · 本关 MVP：${escapeText(mvp.name, 8)}` : ''}`, secs: 4.2,
+    });
+    if (mvp) this.hud.toast(`👑 本关 MVP：${escapeText(mvp.name, 8)}（应援 ${Math.round(mvp.pts)}）`, 'gold', 6000);
     await pet.idleAction('celebrate', 1.4);
-    await pet.idleAction('wave', 1.2);
+    if (mvp) { this.hud.say(`谢谢 ${escapeText(mvp.name, 8)} 的应援～`); }
+    await pet.idleAction('wave', 1.4);
+    this.hud.unsay();
     const next = this._allowedStages().filter((s) => s.id !== this.stage.id);
     this.hud.setVotes(null);
     if (next.length) this.hud.say('下一关想去哪里？弹幕告诉糯糯～');
@@ -235,6 +276,8 @@ export class Game {
       const s = segs[i];
       // 在两段之间的小路上处理礼物（传入刚完成的那一段，不会提前"用掉"下一段）
       await this.serviceInterrupts(i > 0 && segs[i - 1].kind === 'station' ? segs[i - 1] : null);
+      // 应援条攒满的奖励盲盒、观众刚写的烦恼：也在两段之间兑现（十几秒之内就能看到）
+      if (i > 0 && !this.skipRequested) await this.betweenSegments();
       // 弹幕点播：在两段之间的小路上也能做（厨房、打扫世界大多是任务站，不会让观众等太久）
       const req = this.director.takeRequest();
       if (req) await this.doRequestOnPath(req);
@@ -519,7 +562,7 @@ export class Game {
     this.stageSteps++;
     if (this.totalSteps % 10 === 0) safeSet('nuonuo.steps', String(this.totalSteps));
     this.hud.setSteps(this.totalSteps);
-    if (this.course) this.hud.setMeter(this.course.progress());
+    if (this.interact.cheer.addSteps(1)) this.interact._filled('糯糯');
   }
 
   // 糯糯转过身面向镜头（观众）
@@ -705,52 +748,74 @@ export class Game {
   }
 
   // ---------------- 直播互动 ----------------
-  onLive(ev) {
-    switch (ev.type) {
-      case 'gift': {
-        const info = this.gifts.add(ev);
-        this.hud.toast(`${info.name} 送出 ${info.giftName} ×${info.count}`, 'gift');
-        const p = this.pet.root.position;
-        this.particles.burst('hearts', p.x, p.y + 0.8, p.z, { colors: ['#ff8fb3', '#ff6fa3'], count: 3 });
-        this.director.cheer(0.15);
-        break;
-      }
-      case 'like': {
-        this.hud.addLikes(Number(ev.count) || 1);
-        this.director.cheer(0.01);
-        if (this.time - this.lastLikeFx > 1.6) {
-          this.lastLikeFx = this.time;
-          const p = this.pet.root.position;
-          this.particles.burst('hearts', p.x, p.y + 0.9, p.z, { colors: ['#ff8fb3', '#ffb3d1', '#ff6fa3'], count: 2 + Math.min(4, Math.floor((ev.count || 1) / 5)) });
-        }
-        break;
-      }
-      case 'follow': {
-        const name = escapeText(ev.user?.name, 12);
-        this.hud.toast(`欢迎 ${name} 关注糯糯～`, 'follow');
-        if (this.pendingWaves.length < 2) this.pendingWaves.push(name);
-        break;
-      }
-      case 'enter': {
-        if (this.cfg.showEnter === false) break;
-        if (this.time - (this._lastEnter || -1e9) < (this.cfg.enterInterval || 10)) break;
-        this._lastEnter = this.time;
-        this.hud.toast(`欢迎 ${escapeText(ev.user?.name, 12)} 来看糯糯～`, 'enter', 4000);
-        break;
-      }
-      case 'chat': {
-        if (this.cfg.chatCommands === false) break;
-        const r = this.director.onChat(ev.text, this._allowedStages());
-        if (!r) break;
-        const name = escapeText(ev.user?.name, 10);
-        if (r.kind === 'vote') { this.hud.setVotes(this.director.votes, STAGES); if (this.time - (this._lastVoteToast || -1e9) > 4) { this._lastVoteToast = this.time; this.hud.toast(`${name} 投票：下一关去「${r.stage.name}」`, 'enter', 3500); } }
-        else if (r.kind === 'here') { if (this.time - (this._lastVoteToast || -1e9) > 4) { this._lastVoteToast = this.time; this.hud.toast(`${name}：现在就在「${r.stage.name}」啦～`, 'enter', 3000); } }
-        else if (r.kind === 'action') this.hud.toast(`${name}：${String(ev.text || '').slice(0, 12)} → 糯糯收到！`, 'enter', 3500);
-        else if (r.kind === 'pace') this.hud.toast(`${name}：${r.say}`, 'enter', 3000);
-        break;
-      }
-      default: break;
+  // 每一条直播事件（点赞 / 弹幕 / 关注 / 礼物 / 连接状态）都交给互动层：立刻在画面上回应，并推动应援条
+  onLive(ev) { this.interact.onLive(ev); }
+
+  // 两段之间的空档：兑现攒满的盲盒、把观众刚写的烦恼顶破
+  async betweenSegments() {
+    const c = this.interact.cheer;
+    if (c.pending > 0 && this.time - this.lastEggAt > 40) { // 奖励盲盒之间至少隔 40 秒：不能一直在开盲盒
+      c.take();
+      try { await this.bonusEgg(this.interact.eggBy); } catch (e) { console.error('[bonus egg]', e); }
+      this.lastEggAt = this.time;
+      await this.serviceInterrupts(null);
     }
+    if (this.interact.worryQ.length) { try { await this.popWorries(3); } catch (e) { console.error('[worries]', e); } }
+  }
+
+  _ctx() { return { M: this.course.M, G: this.course.G, rng: this.course.rng, stage: this.stage }; }
+  _clearExtras() {
+    for (const e of this.extras) { try { this.scene.remove(e.group || e.g); e.dispose && e.dispose(); } catch {} }
+    this.extras = [];
+    this.fx.clear();
+  }
+
+  // 应援条攒满的奖励：天上掉下来一个盲盒蛋，就落在糯糯身边
+  async bonusEgg(by) {
+    const pet = this.pet, p = pet.root.position;
+    const egg = new EggSegment(this._ctx(), { type: 'egg', bonus: true, by, length: 1.5, eggX: 0.75, eggZ: 0.5, label: '应援盲盒', say: by && by !== '糯糯' ? `${by} 点亮的盲盒！` : '应援盲盒掉下来啦！' }).build();
+    egg.x0 = p.x - 0.75;
+    egg.x1 = egg.x0 + egg.length;
+    egg.group.position.set(egg.x0, PATH_Y, 0);
+    this.scene.add(egg.group);
+    this.extras.push(egg);
+    this.cam.set('frame', { center: V(p.x, 0.9, 0.2), radius: 1.5, dir: V(0.22, 0.3, 0.93) });
+    await egg.dropIn(this.api);
+    await egg.run(this.api);
+    // 蛋壳留在原地一小会儿，下一关开始时一起清掉
+    this.pet.face(FORWARD);
+    this.cam.set('front');
+  }
+
+  // 观众刚写的烦恼：变成带名字的泡泡从上面飘下来，糯糯跳起来用头顶破
+  async popWorries(max = 3) {
+    const list = [];
+    while (list.length < max) { const w = this.interact.takeWorry(); if (!w) break; list.push(w); }
+    if (!list.length) return;
+    const pet = this.pet, p = pet.root.position;
+    const cols = ['#ffb3cf', '#a8dcff', '#ffe08a', '#c9b6ff', '#a8ecc0'];
+    this.faceCamera();
+    this.cam.set('frame', { center: V(p.x, p.y + 1.05, p.z), radius: 1.45, dir: V(0.3, 0.16, 0.94) });
+    pet.expr('wide', 'o', 1, 'up');
+    for (let i = 0; i < list.length; i++) {
+      const w = list[i];
+      const b = new WorryBubble(this._ctx(), w.text, w.name, cols[i % cols.length]);
+      b.group = b.g;
+      b.g.position.set(p.x, p.y + 3.0, p.z);
+      this.scene.add(b.g);
+      this.extras.push(b);
+      const yPop = p.y + 1.42;
+      await this.fx.run(0.6, (u) => { b.g.position.y = p.y + 3.0 + (yPop - p.y - 3.0) * ease.outCubic(u); });
+      const hop = pet.hop(p.clone(), { height: 0.5, dur: 0.56, anticipation: 0.1, keepFacing: true });
+      await this.wait(0.36);
+      b.pop(this.api, this.fx, V(p.x, yPop + 0.15, p.z));
+      await hop;
+      this.sfx('land_soft', p, { gain: -5, main: false });
+      await this.wait(0.25);
+    }
+    pet.expr('happy', 'open', 1.2);
+    pet.face(FORWARD);
+    this.cam.set('front');
   }
 
   async serviceInterrupts(s) {
@@ -760,13 +825,14 @@ export class Game {
       await this.thankDance(ev, s);
     }
     if (this.pendingWaves.length && this.time - this.lastWave > 12 && !this.dancing) {
-      const name = this.pendingWaves.shift();
+      const w = this.pendingWaves.shift();
+      const name = typeof w === 'string' ? w : w.name, why = typeof w === 'string' ? '的关注' : w.why;
       this.lastWave = this.time;
       const prev = this.cam.mode, prevOpts = this.cam.opts;
       this.faceCamera();
       this.cam.set('audience');
       this.pet.expr('happy', 'open', 1.6);
-      this.hud.say(`谢谢 ${name} 的关注～`);
+      this.hud.say(`谢谢 ${name} ${why}～`);
       await this.pet.idleAction('wave', 1.6);
       this.hud.unsay();
       this.pet.face(FORWARD);
@@ -941,6 +1007,9 @@ export class Game {
     this.time += dt;
     this.timers.update(dt);
     this.gifts.update(dt);
+    this.interact.update(dt);
+    this.fx.update(dt);
+    for (const e of this.extras) e.update(dt);
     if (this.state === 'play' && !this.dancing) this.director.tick(dt);
     if (this.pet) {
       this.pet.update(dt);
@@ -1004,6 +1073,8 @@ export class Game {
       queued: this.gifts.queued, steps: this.totalSteps, stageSteps: this.stageSteps, levelsPlayed: this.stagesPlayed,
       station: this.focus ? (this.focus.label || this.focus.def.label) : null, segment: this.focus ? this.focus.kind : null,
       progress: this.course ? Math.round(this.course.progress() * 100) : 0, cam: this.cam.mode,
+      cheer: Math.round(this.interact.cheer.frac() * 100), cheerGoal: this.interact.cheer.goal, eggs: this.interact.cheer.pending,
+      collection: `${this.interact.col.count}/${this.interact.col.total}`, worries: this.interact.worryQ.length,
     };
   }
 

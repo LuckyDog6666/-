@@ -11,7 +11,7 @@ const SNOW = '#f8fbff', SNOW_P = '#b4c7e6';
 
 export const STAGES = [
   {
-    id: 'snow', env: 'outdoor', voteKeys: ['雪', '冰'], name: '雪国棉花糖谷', subtitle: '咯吱咯吱，每一脚都是新鲜的雪',
+    id: 'snow', env: 'outdoor', voteKeys: ['雪', '冰'], name: '雪国棉花糖谷', short: '雪国', crisp: { skin: 'ice', bed: '#e6f2fb', bank: '#ffffff' }, subtitle: '咯吱咯吱，每一脚都是新鲜的雪',
     sky: ['#7fb2ea', '#cfe3f8', '#f2f8ff'], fog: '#dde9f8', fogRange: [18, 60], exposure: 0.95, film: { glow: 0.3, threshold: 0.92, saturation: 1.12 },
     hemi: ['#ffffff', '#a9c2ea', 1.0], sun: ['#fff1e0', 2.4], ambient: 0.35,
     ground: '#e6effb', groundAlt: '#d3e2f6', hills: ['#eaf2fd', '#d9e6f8', '#c9dbf3'], path: '#d7e6f8', pathSide: '#a9c2e4',
@@ -35,7 +35,7 @@ export const STAGES = [
     finale: { type: 'soft', label: '超大雪蛋糕', sound: { step: 'snow_step', heavy: 'snow_crunch', special: 'snow_press' }, color: SNOW, colorPressed: SNOW_P, colorSide: '#f4f8ff', trayColor: '#bcd3ee', thickness: 0.34, depth: 0.14, rim: 0.5, glitter: '#ffffff', fx: 'snow', fxColors: ['#ffffff'], length: 3.0, width: 2.2, kneadable: true, finale: true },
   },
   {
-    id: 'forest', env: 'outdoor', voteKeys: ['落叶', '叶子', '秋天', '树叶', '森林'], name: '秋日落叶林', subtitle: '沙沙脆脆的落叶，软软的小泥坑',
+    id: 'forest', env: 'outdoor', voteKeys: ['落叶', '叶子', '秋天', '树叶', '森林'], name: '秋日落叶林', short: '落叶林', crisp: { skin: 'cookie', bed: '#c9a27a', bank: '#e9c48f' }, subtitle: '沙沙脆脆的落叶，软软的小泥坑',
     sky: ['#f6b67a', '#fbd9a8', '#fff2dc'], fog: '#f8dfba', fogRange: [16, 55], exposure: 1.02,
     hemi: ['#fff1dc', '#c98b5a', 0.95], sun: ['#ffdcb0', 2.5], ambient: 0.32,
     ground: '#ecc890', groundAlt: '#dcae73', hills: ['#e9a25a', '#c8763a', '#9fbf6a', '#f2c46a'], path: '#f4dab0', pathSide: '#c99b62',
@@ -59,7 +59,7 @@ export const STAGES = [
     finale: { type: 'crunch', label: '超大落叶山', piece: 'leaf', count: 600, pile: true, colors: ['#f29b4b', '#e9603b', '#f7c548', '#d77a3a', '#ffd34d'], sound: { step: 'leaves_step', heavy: 'leaves_crunch' }, trayColor: '#b07a45', length: 3.0, width: 2.2, finale: true },
   },
   {
-    id: 'slime', env: 'outdoor', voteKeys: ['史莱姆', '果冻', '捏捏', '起泡胶'], name: '史莱姆果冻工坊', subtitle: '黏黏的、Q 弹的、慢慢回弹的',
+    id: 'slime', env: 'outdoor', voteKeys: ['史莱姆', '果冻', '捏捏', '起泡胶'], name: '史莱姆果冻工坊', short: '史莱姆', crisp: { skin: 'cookie', bed: '#fff0f6', bank: '#ffffff' }, subtitle: '黏黏的、Q 弹的、慢慢回弹的',
     sky: ['#c9a3ff', '#f3d9ff', '#fff0fb'], fog: '#f6e2ff', fogRange: [16, 52], exposure: 1.0,
     hemi: ['#fff4ff', '#c9a3ee', 0.95], sun: ['#fff1fb', 2.3], ambient: 0.38,
     ground: '#f6e3ff', groundAlt: '#ffe1f0', hills: ['#ffc2e3', '#e3c9ff', '#c9f0ff', '#fff0a8'], path: '#fff3fb', pathSide: '#e7c4f2',
@@ -83,7 +83,7 @@ export const STAGES = [
     finale: { type: 'squishy', label: '超大捏捏', count: 1, shape: 'blob', colors: ['#ffc6dd'], sound: { step: 'squishy_press', special: 'slime_squish' }, length: 2.6, width: 2.2, kneadable: true, finale: true },
   },
   {
-    id: 'rain', env: 'outdoor', voteKeys: ['水洼', '下雨', '泥巴', '雨天', '荷叶'], name: '雨天水洼花园', subtitle: '滴答滴答，踩水花、戳泡泡',
+    id: 'rain', env: 'outdoor', voteKeys: ['水洼', '下雨', '泥巴', '雨天', '荷叶'], name: '雨天水洼花园', short: '雨天花园', crisp: { skin: 'ice', bed: '#a8c79c', bank: '#cfe6c4' }, subtitle: '滴答滴答，踩水花、戳泡泡',
     sky: ['#7ea9cc', '#c0d9e8', '#eef6f6'], fog: '#d4e3ea', fogRange: [20, 62], exposure: 1.02, film: { glow: 0.42, saturation: 1.14 },
     hemi: ['#f2fbff', '#7fa3b5', 1.0], sun: ['#f6fbff', 1.9], ambient: 0.45,
     ground: '#bfe3ad', groundAlt: '#9fd18f', hills: ['#94cf86', '#7dbf78', '#b4dfa4'], path: '#eef5e8', pathSide: '#a9c49f',
@@ -107,7 +107,7 @@ export const STAGES = [
     finale: { type: 'water', label: '超大水坑', color: '#7fc4e6', sound: { step: 'water_splash' }, trayColor: '#86ad7d', length: 3.0, width: 2.2, finale: true },
   },
   {
-    id: 'beach', env: 'outdoor', voteKeys: ['沙', '海边', '贝壳', '沙滩'], name: '彩虹沙滩', subtitle: '软软的沙子，圆圆的贝壳，咕噜咕噜的泡泡',
+    id: 'beach', env: 'outdoor', voteKeys: ['沙', '海边', '贝壳', '沙滩'], name: '彩虹沙滩', short: '沙滩', crisp: { skin: 'cookie', bed: '#f2d7a8', bank: '#f8e4bd' }, subtitle: '软软的沙子，圆圆的贝壳，咕噜咕噜的泡泡',
     sky: ['#5fbff0', '#bfe8f7', '#fff6e4'], fog: '#e3f3f6', fogRange: [18, 62], exposure: 1.0,
     hemi: ['#fff8ec', '#77b9cf', 0.95], sun: ['#fff1d6', 2.6], ambient: 0.32, sea: true,
     ground: '#f8e4bd', groundAlt: '#f0d3a0', hills: ['#f6dcae', '#9fdc8a', '#f2c98a'], path: '#fcefd4', pathSide: '#dcbc87',
@@ -131,7 +131,7 @@ export const STAGES = [
     finale: { type: 'soft', label: '超大沙堡', sound: { step: 'sand_step', special: 'sand_press' }, color: '#ffd9a8', colorPressed: '#e9a865', colorSide: '#f7cb95', trayColor: '#e9c48c', thickness: 0.32, depth: 0.12, rim: 0.55, grain: true, fx: 'crumbs', fxColors: ['#ffd9a8'], length: 3.0, width: 2.2, kneadable: true, finale: true },
   },
   {
-    id: 'toy', env: 'outdoor', voteKeys: ['键盘', '糖纸', '玩具', '按压', '积木'], name: '软糖键盘小屋', subtitle: '咔哒咔哒的大键帽，沙沙的糖纸',
+    id: 'toy', env: 'outdoor', voteKeys: ['键盘', '糖纸', '玩具', '按压', '积木'], name: '软糖键盘小屋', short: '键盘小屋', crisp: { skin: 'cookie', bed: '#f1d7c0', bank: '#fff4e8' }, subtitle: '咔哒咔哒的大键帽，沙沙的糖纸',
     sky: ['#ffc896', '#ffe9d1', '#fff8ef'], fog: '#fff0e0', fogRange: [16, 52], exposure: 1.0,
     hemi: ['#fff8ef', '#e9b98f', 0.95], sun: ['#ffeeda', 2.2], ambient: 0.4,
     ground: '#f7e5d3', groundAlt: '#f1d7c0', hills: ['#ffd6e8', '#d6ecff', '#fff3c2', '#dcf7d6'], path: '#fff4e8', pathSide: '#e8c6a6',
@@ -155,7 +155,7 @@ export const STAGES = [
     finale: { type: 'popit', label: '超大按压泡泡', big: true, sound: { step: 'plop_pop' }, length: 3.0, width: 2.2, finale: true },
   },
   {
-    id: 'kitchen', env: 'kitchen', voteKeys: ['厨房', '做饭', '松饼', '切菜', '煎饼', '蛋糕'], name: '糯糯小厨房', subtitle: '切切蔬菜、打打蛋、煎一摞香香的松饼',
+    id: 'kitchen', env: 'kitchen', voteKeys: ['厨房', '做饭', '松饼', '切菜', '煎饼', '蛋糕'], name: '糯糯小厨房', short: '厨房', crisp: { skin: 'cookie', bed: '#e3e9ef', bank: '#ffffff' }, subtitle: '切切蔬菜、打打蛋、煎一摞香香的松饼',
     sky: ['#ffe9d6', '#fff4e8', '#fff8f0'], fog: '#fff1e2', fogRange: [12, 40], exposure: 1.0,
     hemi: ['#fff6ea', '#e8c4a0', 1.0], sun: ['#fff0dc', 2.2], ambient: 0.42,
     wall: '#fff3e8', tile: '#ffdfe9', cabinet: '#ffd6e2',
@@ -179,7 +179,7 @@ export const STAGES = [
     finale: { type: 'squishy', label: '超大松饼塔', count: 1, shape: 'pancakes', colors: ['#f0b45a'], sound: { step: 'squishy_press', special: 'slime_squish' }, length: 2.6, width: 2.2, kneadable: true, finale: true },
   },
   {
-    id: 'clean', env: 'room', voteKeys: ['打扫', '扫地', '房间', '叠衣服', '收纳', '洗澡'], name: '糯糯大扫除', subtitle: '扫一扫、擦一擦，房间亮晶晶',
+    id: 'clean', env: 'room', voteKeys: ['打扫', '扫地', '房间', '叠衣服', '收纳', '洗澡'], name: '糯糯大扫除', short: '大扫除', crisp: { skin: 'cookie', bed: '#e8d2bd', bank: '#ffffff' }, subtitle: '扫一扫、擦一擦，房间亮晶晶',
     sky: ['#ffe9f2', '#fff4f8', '#fff8fb'], fog: '#fff1f6', fogRange: [12, 40], exposure: 1.0,
     hemi: ['#fff6fa', '#e8c4d4', 1.0], sun: ['#fff4ea', 2.1], ambient: 0.45,
     wall: '#fff2f7', wall2: '#ffe4ee', curtain: '#c9e8ff', sofa: '#ffc2d8',
@@ -209,7 +209,9 @@ export const stageById = (id) => STAGES.find((s) => s.id === id) || STAGES[0];
 
 // 一个世界用到的所有声音 id（换世界时只加载这些，其余的释放，长时间运行内存稳定）
 export function soundsForStage(st) {
-  const ids = new Set([st.ambience, st.pathSound, 'land_soft', 'path_step', 'purr', 'whoosh', 'bounce', 'slide_roll', 'wood_step', 'place', 'plop', 'cloth']);
+  const ids = new Set([st.ambience, st.pathSound, 'land_soft', 'path_step', 'purr', 'whoosh', 'bounce', 'slide_roll', 'wood_step', 'place', 'plop', 'cloth',
+    // v4 新玩法（盲盒蛋、烦恼泡泡、多米诺、礼盒、脆脆桥、宝箱）用到的声音
+    'ice_crack', 'plop_pop', 'bubble_pop', 'snow_crunch', 'leaves_crunch', 'key_thock', 'gravel_step']);
   for (const d of [...st.stations, st.finale]) {
     for (const k of ['step', 'heavy', 'special', 'pull']) if (d.sound && d.sound[k]) ids.add(d.sound[k]);
     for (const id of TASK_SOUNDS[d.type] || []) ids.add(id);

@@ -39,7 +39,7 @@ void main(){
   #include <colorspace_fragment>
 }`;
 
-class Gimmick {
+export class Gimmick {
   constructor(ctx, def) {
     this.ctx = ctx;
     this.def = def;
