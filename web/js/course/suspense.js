@@ -79,8 +79,9 @@ export class Suspense extends Gimmick {
     const side = o.side || 0, rv = side ? G.camRight() : null;
     const dx = rv ? rv.x * side : 0, dz = rv ? rv.z * side : 0;
     const mesh = collectibleMesh(res.item, this.ctx.rng, o.size || 0.46);
-    const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: Tex.soft(), color: new THREE.Color(rar.color), transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false, fog: false }));
-    halo.scale.set(1.25, 1.25, 1);
+    const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: Tex.soft(), color: new THREE.Color(rar.color), transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending, depthWrite: false, fog: false }));
+    // 光晕只罩住手办自己：再大就会照到旁边糯糯的眼睛上，深色的瞳孔被染成金色，看起来像眼睛变了颜色
+    halo.scale.set(0.92, 0.92, 1);
     halo.position.y = 0.25;
     const g = new THREE.Group();
     g.add(halo); g.add(mesh);
@@ -565,7 +566,8 @@ export class BoxesSegment extends Suspense {
     b.g.remove(h);
     h.position.set(b.x + h.position.x, b.g.position.y + h.position.y, this.bz + h.position.z);
     this.group.add(h);
-    this.shard(h, V((Math.random() - 0.5) * 0.7, 3.0 + Math.random() * 0.5, 1.25 + Math.random() * 0.4), { life: 1.5, floor: 0.03 });
+    // 飞到最高点就缩小消失（不落地：厨房的台面窄，落下来会悬在台面外面）
+    this.shard(h, V((Math.random() - 0.5) * 0.7, 3.0 + Math.random() * 0.5, 1.0 + Math.random() * 0.3), { life: 0.62 });
     return G.wait(0.3);
   }
   async run(G) {
