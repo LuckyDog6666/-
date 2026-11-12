@@ -410,7 +410,7 @@ export class Game {
     this.cam.set('wide', { at: this.course.world(s, s.length / 2, 0, 0.3) });
     pet.expr('wide', 'open', 1.5);
     this.hud.say(`哇！是${s.def.label}！`);
-    if (this.cfg.chatCommands !== false) this.hud.toast(`这关快结束啦～弹幕说世界名字投票下一关（雪/落叶/史莱姆/水洼/沙滩/键盘/厨房/打扫）`, 'enter', 7000);
+    if (this.cfg.chatCommands !== false) this.hud.toast(`🗺️ 下一关去哪？弹幕说：雪 / 沙滩 / 厨房 / 史莱姆…`, 'enter', 7000);
     await pet.idleAction('peek', 1.0);
     this.hud.unsay();
     this.hud.floatStation(s.def.label);

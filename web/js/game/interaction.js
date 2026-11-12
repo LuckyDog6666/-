@@ -99,7 +99,7 @@ export class Interaction {
       case 'chat': this.stats.chat++; this.chatAt = g.time; this._chat(ev, name, pts); break;
       case 'follow': {
         this.stats.follow++;
-        hud.toast(`➕ 欢迎 ${name} 关注糯糯～`, 'follow');
+        hud.toast(`➕ ${name} 关注了糯糯～`, 'follow');
         hud.tick(`+${pts} ${name} 关注`, 'gold');
         hud.flyHearts(4);
         if (g.pendingWaves.length < 2) g.pendingWaves.push({ name, why: '的关注' });
@@ -114,7 +114,7 @@ export class Interaction {
         break;
       }
       case 'share': {
-        hud.toast(`📣 ${name} 把直播间分享出去了，谢谢～`, 'follow');
+        hud.toast(`📣 谢谢 ${name} 的分享～`, 'follow');
         hud.tick(`+${pts} ${name} 分享`, 'gold');
         break;
       }
@@ -166,7 +166,7 @@ export class Interaction {
     const hud = this.g.hud;
     this.eggBy = name;
     hud.cheerFull();
-    hud.toast(`🎉 应援条满了！${name} 点亮了盲盒 🎁`, 'gold', 6000);
+    hud.toast(`🎉 ${name} 点亮了盲盒 🎁`, 'gold', 6000);
     hud.flyHearts(8);
   }
 

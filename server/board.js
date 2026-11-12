@@ -1,4 +1,4 @@
-// 今日感谢榜：按抖币累计，每天在设定的时间（默认早上 5 点）自动清零，数据保存在 data/board.json。
+// 今日应援榜：按应援值累计（点赞、弹幕、关注、礼物都算，见 points.js），每天在设定的时间（默认早上 5 点）自动清零，数据保存在 data/board.json。
 import fs from 'node:fs';
 
 export class Board {

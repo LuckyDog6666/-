@@ -285,8 +285,11 @@ body.portrait .prompt .prate { margin-top: calc(var(--s) * 6); }
 body.portrait .tips.now { font-size: calc(var(--s) * 32); }
 body.portrait .votes { left: calc(var(--s) * 20); top: calc(var(--s) * 474); font-size: calc(var(--s) * 24); max-width: calc(var(--s) * 372); white-space: normal; }
 body.portrait .toasts { top: calc(var(--s) * 520); right: calc(var(--s) * 20); width: calc(var(--s) * 420); }
-body.portrait .toast { font-size: calc(var(--s) * 28); padding: calc(var(--s) * 8) calc(var(--s) * 18); border-radius: calc(var(--s) * 26); }
-body.portrait .banner { top: calc(var(--s) * 330); }
+/* 竖屏的提示条窄：长句子折成两行，不要把名字截成省略号 */
+body.portrait .toast { font-size: calc(var(--s) * 28); padding: calc(var(--s) * 8) calc(var(--s) * 18); border-radius: calc(var(--s) * 26); white-space: normal; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-height: 1.24; }
+/* 竖屏：横幅占满整个宽度再居中（left:50% 的写法只给半个屏幕宽，"谢谢 XX 老板！"会被折成两行） */
+body.portrait .banner { top: calc(var(--s) * 330); left: 3%; right: 3%; max-width: none; transform: scale(0); }
+body.portrait .banner.show { transform: scale(1); }
 body.portrait .banner .t1 { font-size: calc(var(--s) * 60); }
 body.portrait .banner.super .t1 { font-size: calc(var(--s) * 66); }
 body.portrait .banner .t2 { font-size: calc(var(--s) * 28); }

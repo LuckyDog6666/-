@@ -17,7 +17,7 @@ const DEFAULT_TIPS = [
   '💬 弹幕写下你的烦恼（比如「加班」），糯糯帮你一脚踩扁',
   '👍 点赞给糯糯应援，应援条满了天上掉盲盒 🎁',
   '🎁 送任意礼物：糯糯当场跳舞谢你，名字上应援榜',
-  '🚪 遇到岔路口，弹幕发 1 / 2 / 3 帮糯糯选',
+  '🎁 遇到礼盒发 1 / 2 / 3，脆脆桥发「左」「右」',
   '🎧 戴上耳机：每种材质都是真实录制的 ASMR',
   '🐾 弹幕发「踩奶」「坐」「跳」「转圈」，糯糯照做',
   '🗺️ 想去哪个世界？弹幕说「雪 / 沙滩 / 厨房 / 史莱姆…」',
@@ -181,7 +181,8 @@ export class Hud {
   toast(text, kind = 'gift', life = 6000) {
     const t = h('div', `toast ${kind}`, this.elToasts, text);
     this.toastList.push(t);
-    while (this.toastList.length > (this.portrait ? 3 : 5)) { const old = this.toastList.shift(); old.remove(); }
+    // 竖屏最多同时两条：提示条就在糯糯头顶上，叠多了会挡住小脸
+    while (this.toastList.length > (this.portrait ? 2 : 5)) { const old = this.toastList.shift(); old.remove(); }
     setTimeout(() => { t.classList.add('out'); setTimeout(() => { t.remove(); this.toastList = this.toastList.filter((x) => x !== t); }, 520); }, life);
   }
 

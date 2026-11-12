@@ -73,8 +73,11 @@ export class Suspense extends Gimmick {
     this.trash = [];
   }
   // 开出来的手办：从 at（局部坐标）升起来、转一圈给大家看、再飞向图鉴
+  // o.side：升起来的同时往屏幕右边（负数 = 左边）飘这么远。糯糯站在盒子后面看的时候，手办不会正好挡住它的小脸
   async revealItem(G, res, at, o = {}) {
     const rar = res.rarity;
+    const side = o.side || 0, rv = side ? G.camRight() : null;
+    const dx = rv ? rv.x * side : 0, dz = rv ? rv.z * side : 0;
     const mesh = collectibleMesh(res.item, this.ctx.rng, o.size || 0.46);
     const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: Tex.soft(), color: new THREE.Color(rar.color), transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false, fog: false }));
     halo.scale.set(1.25, 1.25, 1);
@@ -86,7 +89,7 @@ export class Suspense extends Gimmick {
     this.group.add(g);
     this.spin.push(mesh);
     this.trash.push(mesh, halo.material);
-    const wp = this.W(at.x, at.y + 0.5, at.z);
+    const wp = this.W(at.x + dx, at.y + 0.5, at.z + dz);
     G.reveal({
       tag: `${rar.name}${res.isNew ? ' · NEW' : ''}`, cls: rar.cls, title: res.item.name, secs: (o.hold ?? 2.0) + 0.9,
       sub: res.isNew ? `【${res.item.set}系列】图鉴 ${res.allDone ? res.total : res.count}/${res.total}${res.by ? ` · ${res.by} 点亮` : ''}` : `已经有 ${res.times - 1} 个啦，换成应援值 +8`,
@@ -98,7 +101,15 @@ export class Suspense extends Gimmick {
     else if (res.item.r === 'r') { G.burst('stars', wp, { colors: cols, count: 14 }); G.burst('sparkles', wp, { colors: cols, count: 12 }); }
     else { G.burst('confetti', wp, { colors: ['#ff8fb3', '#ffd166', '#7fd6ff', '#9be89b', '#c9a0ff'], count: res.item.r === 'ssr' ? 70 : 40 }); G.burst('stars', wp, { colors: cols, count: 18 }); G.camBump(res.item.r === 'ssr' ? 0.07 : 0.04); }
     G.pet.expr(res.item.r === 'n' ? 'happy' : 'wide', 'open', 2.2);
-    await this.fx.run(0.55, (u) => { g.scale.setScalar(Math.max(0.01, ease.outBack(u))); g.position.y = at.y + 0.42 * ease.outCubic(u); });
+    // 糯糯被"啵"地吓一小跳，往另一边让半步：小脸和手办并排入镜
+    const pp = G.pet.root.position;
+    const step = rv ? G.pet.hop(V(pp.x - dx * 0.5, pp.y, pp.z - dz * 0.5), { height: 0.16, dur: 0.4, keepFacing: true }) : null;
+    await this.fx.run(0.55, (u) => {
+      const k = ease.outCubic(u);
+      g.scale.setScalar(Math.max(0.01, ease.outBack(u)));
+      g.position.set(at.x + dx * k, at.y + 0.42 * k, at.z + dz * k);
+    });
+    if (step) await step;
     await G.wait(o.hold ?? 2.0);
     await this.fx.run(0.4, (u) => { g.scale.setScalar(Math.max(0.01, 1 - u)); g.position.y += 0.02 + u * 0.05; });
     this.group.remove(g);
@@ -266,7 +277,7 @@ export class EggSegment extends Suspense {
       this.shard(m, V(Math.cos(a) * (1 + Math.random()), 2.2 + Math.random() * 1.6, Math.sin(a) * (1 + Math.random())), { life: 1.3, floor: 0.02 });
     }
     const res = G.openBox({ boost: b, min: this.def.min || 'n', by: this.def.by || '' });
-    await this.revealItem(G, res, V(e.x, 0.12, e.z));
+    await this.revealItem(G, res, V(e.x, 0.12, e.z), { side: 0.46 });
     pet.expr('happy', 'smile', 1.2);
     // 从蛋的旁边绕出去
     G.cam('front');
@@ -511,7 +522,7 @@ export class BoxesSegment extends Suspense {
       g.add(body);
       const rb = new THREE.Mesh(G.get('box|rib', () => roundedBox(0.07, S * 0.79, S + 0.012, 0.01, 2).translate(0, S * 0.39, 0)), M.soft(rib, { rough: 0.5, rim: 0.3 }));
       g.add(rb);
-      // 盖子：铰链在后面（远离镜头的一边），向后翻开
+      // 盖子：打开的时候整个"啵"地弹飞（见 _open）
       const hinge = new THREE.Group();
       hinge.position.set(0, S * 0.78, -S / 2);
       const lid = new THREE.Mesh(G.get('box|lid', () => roundedBox(S + 0.05, 0.1, S + 0.05, 0.035, 3).translate(0, 0.05, S / 2)), M.soft(col, { rough: 0.5, rim: 0.45 }));
@@ -548,7 +559,14 @@ export class BoxesSegment extends Suspense {
     b.open = true;
     const wp = this.W(b.x, 0.35, this.bz);
     if (loud) G.sfx('place', wp, { gain: -2, main: false });
-    return this.fx.run(0.35, (u) => { b.hinge.rotation.x = -1.9 * ease.outBack(u); });
+    // 盖子"啵"地弹起来、朝镜头这边翻着跟头飞出去。
+    // （以前是向后翻开：竖起来的盖子正好夹在礼盒和糯糯中间，竖屏里把它的小脸挡掉一半）
+    const h = b.hinge;
+    b.g.remove(h);
+    h.position.set(b.x + h.position.x, b.g.position.y + h.position.y, this.bz + h.position.z);
+    this.group.add(h);
+    this.shard(h, V((Math.random() - 0.5) * 0.7, 3.0 + Math.random() * 0.5, 1.25 + Math.random() * 0.4), { life: 1.5, floor: 0.03 });
+    return G.wait(0.3);
   }
   async run(G) {
     const pet = G.pet, c = this.c;
@@ -587,7 +605,7 @@ export class BoxesSegment extends Suspense {
       G.burst('confetti', wp, { colors: RAINBOW, count: 44 });
       G.camBump(0.035);
       const res = G.openBox({ boost: 0.55, min: 'r' });
-      await this.revealItem(G, res, V(b.x, 0.3, this.bz), { hold: 1.8 });
+      await this.revealItem(G, res, V(b.x, 0.3, this.bz), { hold: 1.8, side: b.x > this.c + 0.1 ? -0.46 : 0.46 });
       msg = '大奖';
     } else if (b.what === 'small') {
       // 小奖：一把糖果（应援值）
